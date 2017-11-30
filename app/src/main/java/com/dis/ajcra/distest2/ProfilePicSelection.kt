@@ -18,6 +18,7 @@ import android.net.Uri
 import android.os.Environment
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.view.View
 import android.widget.Button
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.experimental.withTimeout
@@ -68,19 +69,8 @@ class ProfilePicSelection : AppCompatActivity() {
                     perms,
                     EXTERNAL_STORAGE_REQUEST);
         } else {
-            takeProfilePic()
+            //takeProfilePic()
         }
-    }
-
-    fun takeProfilePic() {
-        Log.d("STATE", "Take pic called")
-        var values = ContentValues()
-        values.put(MediaStore.Images.Media.TITLE, "Profile Picture")
-        values.put(MediaStore.Images.Media.DESCRIPTION, "A picture of your face")
-        imageUri  = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        var intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
-        startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
     }
 
     fun exifToDegs(exifRotation: Int): Float {
@@ -196,7 +186,7 @@ class ProfilePicSelection : AppCompatActivity() {
             EXTERNAL_STORAGE_REQUEST -> {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    takeProfilePic()
+                    //takeProfilePic()
                 } else {
                     Log.d("STATE", "DENIED")
                 }

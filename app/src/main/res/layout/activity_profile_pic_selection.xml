@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.dis.ajcra.distest2.ProfilePicSelection">
+
     <com.theartofdev.edmodo.cropper.CropImageView
         xmlns:custom="http://schemas.android.com/apk/res-auto"
         android:id="@+id/cropImageView"
@@ -13,7 +14,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         custom:cropAspectRatioX="1"
-        custom:cropAspectRatioY="1"/>
+        custom:cropAspectRatioY="1"
+        android:visibility="gone"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

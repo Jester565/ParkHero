@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         cognitoManager = CognitoManager.GetInstance(this)
         s3Client =  AmazonS3Client(cognitoManager.credentialsProvider)
 
-        var intent = Intent(this, ProfilePicSelection::class.java)
+        var intent = Intent(this, CameraActivity::class.java)
         startActivity(intent)
     }
 
