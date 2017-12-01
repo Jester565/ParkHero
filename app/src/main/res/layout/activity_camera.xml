@@ -8,16 +8,18 @@
     tools:context="com.dis.ajcra.distest2.CameraActivity">
 
     <com.otaliastudios.cameraview.CameraView
-        android:id="@+id/camera"
+        android:id="@+id/camera_camera"
         android:keepScreenOn="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cameraFacing="back"/>
+        app:cameraFacing="back"
+        android:layout_centerVertical="true"/>
 
     <LinearLayout
+        android:id="@+id/camera_topbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/camera"
+        android:layout_alignParentTop="true"
         android:orientation="horizontal"
         android:layout_marginTop="3dp">
         <Space
@@ -25,10 +27,11 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/cameraBar"
-            android:src="@drawable/camera_rear_white"
+            android:id="@+id/camera_switchcambutton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:src="@drawable/ic_camera_front_black_24dp"
+            android:scaleType="fitXY"
             android:background="#00000000"
             android:adjustViewBounds="true"/>
         <Space
@@ -36,10 +39,11 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/cameraBar"
-            android:src="@drawable/flash_white"
+            android:id="@+id/camera_flashbutton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:src="@drawable/ic_flash_auto_black_24dp"
+            android:scaleType="fitXY"
             android:background="#00000000"
             android:adjustViewBounds="true"/>
         <Space
@@ -51,18 +55,45 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/camera"
-        android:id="@+id/picButtons"
+        android:id="@+id/camera_recordlowbar"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
         android:layout_marginBottom="10dp">
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/pictureButton"
+            android:id="@+id/camera_stopbutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/stop_white"
+            app:elevation="4dp"
+            android:layout_centerHorizontal="true"
+            app:fabSize="normal"
+            android:scaleType="center"
+            app:rippleColor="@color/colorPrimaryDark"/>
+        <TextView
+            android:id="@+id/camera_durationtext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="30dp"
+            android:layout_toLeftOf="@+id/camera_stopbutton"/>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/camera_lowbar"
+        android:layout_marginBottom="10dp">
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/camera_picturebutton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/camera_white"
             app:elevation="4dp"
             android:layout_centerHorizontal="true"
             app:fabSize="normal"
-            android:scaleType="center"/>
+            android:scaleType="center"
+            app:rippleColor="@color/colorPrimaryDark"/>
 
         <android.support.design.widget.FloatingActionButton
             android:layout_width="wrap_content"
@@ -70,10 +101,11 @@
             android:src="@drawable/record_white"
             app:elevation="4dp"
             android:layout_marginRight="30dp"
-            android:layout_toLeftOf="@+id/pictureButton"
+            android:layout_toLeftOf="@+id/camera_picturebutton"
             android:layout_centerVertical="true"
             app:fabSize="mini"
-            android:scaleType="center"/>
+            android:scaleType="center"
+            android:id="@+id/camera_recordbutton"/>
 
         <android.support.design.widget.FloatingActionButton
             android:layout_width="wrap_content"
@@ -81,25 +113,37 @@
             android:src="@drawable/gallery_white"
             app:elevation="4dp"
             android:layout_marginLeft="30dp"
-            android:layout_toRightOf="@+id/pictureButton"
+            android:layout_toRightOf="@+id/camera_picturebutton"
+            android:id="@+id/camera_gallerybutton"
             android:layout_centerVertical="true"
             app:fabSize="mini"
             android:scaleType="center"/>
     </RelativeLayout>
 
+    <LinearLayout
+        android:id="@+id/camera_imglayout"
+        android:layout_width="44dp"
+        android:layout_height="200dp"
+        android:layout_alignLeft="@+id/camera_camera"
+        android:layout_centerVertical="true"
+        android:orientation="vertical">
+
+    </LinearLayout>
+
     <SeekBar
         android:id="@+id/brightBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/picButtons"
+        android:layout_above="@+id/camera_lowbar"
         android:layout_marginBottom="10dp"
         android:minWidth="160dp"
         android:layout_centerHorizontal="true"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Brightness"
+    <ImageView
+        android:layout_width="17dp"
+        android:layout_height="17dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_lightbulb_outline_black_24dp"
         android:layout_above="@+id/brightBar"
         android:layout_centerHorizontal="true"/>
 

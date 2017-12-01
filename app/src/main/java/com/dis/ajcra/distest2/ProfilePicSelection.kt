@@ -42,7 +42,7 @@ class ProfilePicSelection : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile_pic_selection)
         cognitoManager = CognitoManager.GetInstance(this)
-        s3Cacher = S3Cacher(this)
+        //s3Cacher = S3Cacher(this)
 
         //rekClient = AmazonRekognitionClient(cognitoManager.credentialsProvider)
         googleVision = GoogleVisionClient()
@@ -55,11 +55,13 @@ class ProfilePicSelection : AppCompatActivity() {
                 var stream = ByteArrayOutputStream()
                 bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
                 var objKey = cognitoManager.federatedID + "/" + "profilePic.png"
+                /*
                 if (s3Cacher.putObj(objKey, stream.toByteArray())) {
                     Log.d("STATE", "Profile pic uploaded & cached")
                 } else {
                     Log.d("STATE", "Profile pic upload failed")
                 }
+                */
             }
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED

@@ -7,10 +7,13 @@ import android.content.Context.MODE_PRIVATE
 import android.renderscript.ScriptGroup
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.google.common.io.Flushables.flush
 import java.io.*
+import java.lang.Exception
 
 
 /**
@@ -21,78 +24,40 @@ class S3Cacher {
     companion object {
         val BUCKET_NAME = "disneyapp"
     }
-    private lateinit var s3Client: AmazonS3Client
+    /*
     private lateinit var ctx: Context
-    private lateinit var lastModFile: File
-    private lateinit var lastModMap: HashMap<String, Long>
+    private lateinit var transferUtil: TransferUtility
 
-    constructor(ctx: Context) {
-        this.ctx = ctx
+    constructor(appCtx: Context) {
+        this.ctx = appCtx
         var cognitoManager = CognitoManager.GetInstance(ctx)
-        s3Client = AmazonS3Client(cognitoManager.credentialsProvider)
-        lastModFile = File(ctx.filesDir, "lastModTimes")
-        if (lastModFile.exists()) {
-            val inputStream = ObjectInputStream(lastModFile.inputStream())
-            lastModMap = inputStream.readObject() as HashMap<String, Long>
-            inputStream.close()
-        } else {
-            lastModFile.createNewFile()
-            lastModMap = HashMap<String, Long>()
-            var lastModFileOut = ObjectOutputStream(lastModFile.outputStream())
-            lastModFileOut.writeObject(lastModMap)
-            lastModFileOut.flush()
-            lastModFileOut.close()
-        }
+        var s3Client = AmazonS3Client(cognitoManager.credentialsProvider)
+        transferUtil = TransferUtility(s3Client, this.ctx)
     }
 
     fun convertObjKeyToAndroidFSName(objKey: String): String {
         return objKey.replace('/', '%')
     }
 
-    fun setLastModTime(objKey: String, lastModTime: Long) {
-        lastModMap.put(objKey, lastModTime)
-        var lastModFileOut = ObjectOutputStream(lastModFile.outputStream())
-        lastModFileOut.writeObject(lastModMap)
-        lastModFileOut.flush()
-        lastModFileOut.close()
-    }
-
-    fun putObjNoCache(objKey: String, inputStream: InputStream, knownSize: Long = -1): Boolean {
-        var size = knownSize
-        if (knownSize < 0) {
-            size = inputStream.readBytes().size.toLong()
-        }
-        var metadata = ObjectMetadata()
-        metadata.contentLength = size
-        var putObjReq = PutObjectRequest(BUCKET_NAME, objKey, inputStream, metadata)
-        try {
-            //put object in s3Bucket
-            s3Client.putObject(putObjReq)
-            return true
-        } catch (e: AmazonServiceException) {
-            return false
-        } catch (e: AmazonClientException) {
-            return false
-        }
-    }
-
     fun putObj(objKey: String, barr: ByteArray): Boolean {
         var fileName = convertObjKeyToAndroidFSName(objKey)
-        var file = createTempFile(fileName, null, ctx.cacheDir)
+        var file = File(ctx.filesDir, fileName)
         file.writeBytes(barr)
-        var putObjReq = PutObjectRequest(BUCKET_NAME, objKey, file)
-        //Save lastModTime
-        var lastModTime = putObjReq.metadata.lastModified.time
-        setLastModTime(objKey, lastModTime)
-        try {
-            //put object in s3Bucket
-            s3Client.putObject(putObjReq)
-            return true
-        } catch (e: AmazonServiceException) {
-            return false
-        } catch (e: AmazonClientException) {
-            return false
-        }
+
+        var observer = transferUtil.upload(BUCKET_NAME, objKey, file)
+        observer.setTransferListener(object: TransferListener {
+            override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+
+            }
+
+            override fun onStateChanged(id: Int, state: TransferState?) {
+
+            }
+
+            override fun onError(id: Int, ex: Exception?) {
+
+            }
+        })
     }
 
     fun getObjAsBytes(objKey: String, checkLastMod: Boolean = false): ByteArray? {
@@ -150,4 +115,5 @@ class S3Cacher {
             return null
         }
     }
+    */
 }
