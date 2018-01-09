@@ -4,53 +4,82 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.dis.ajcra.distest2.CameraActivity">
+    tools:context="com.dis.ajcra.distest2.CameraFragment">
 
-    <com.otaliastudios.cameraview.CameraView
-        android:id="@+id/camera_camera"
-        android:keepScreenOn="true"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/camera_galleryslider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cameraFacing="back"
-        android:layout_centerVertical="true"/>
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="68dp"
+        sothree:umanoShadowHeight="4dp"
+        sothree:umanoFadeColor="#AA0000"
+        sothree:umanoOverlay="true">
+        <!--
+       <android.support.v4.widget.Space
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content" />
 
-    <LinearLayout
-        android:id="@+id/camera_topbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:orientation="horizontal"
-        android:layout_marginTop="3dp">
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-        <ImageButton
-            android:id="@+id/camera_switchcambutton"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:src="@drawable/ic_camera_front_black_24dp"
-            android:scaleType="fitXY"
-            android:background="#00000000"
-            android:adjustViewBounds="true"/>
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-        <ImageButton
-            android:id="@+id/camera_flashbutton"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:src="@drawable/ic_flash_auto_black_24dp"
-            android:scaleType="fitXY"
-            android:background="#00000000"
-            android:adjustViewBounds="true"/>
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-    </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <com.otaliastudios.cameraview.CameraView
+                android:id="@+id/camera_camera"
+                android:keepScreenOn="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cameraFacing="back"
+                android:layout_centerVertical="true"/>
+
+            <LinearLayout
+                android:id="@+id/camera_topbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:orientation="horizontal"
+                android:layout_marginTop="3dp">
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+                <ImageButton
+                    android:id="@+id/camera_switchcambutton"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_camera_front_black_24dp"
+                    android:scaleType="fitXY"
+                    android:background="#00000000"
+                    android:adjustViewBounds="true"/>
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+                <ImageButton
+                    android:id="@+id/camera_flashbutton"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_flash_auto_black_24dp"
+                    android:scaleType="fitXY"
+                    android:background="#00000000"
+                    android:adjustViewBounds="true"/>
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#AAFF0000"
+            android:id="@+id/camera_gallerylayout"/>
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -120,16 +149,7 @@
             android:scaleType="center"/>
     </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/camera_imglayout"
-        android:layout_width="44dp"
-        android:layout_height="200dp"
-        android:layout_alignLeft="@+id/camera_camera"
-        android:layout_centerVertical="true"
-        android:orientation="vertical">
-
-    </LinearLayout>
-
+    <!--
     <SeekBar
         android:id="@+id/brightBar"
         android:layout_width="wrap_content"
@@ -146,5 +166,5 @@
         android:src="@drawable/ic_lightbulb_outline_black_24dp"
         android:layout_above="@+id/brightBar"
         android:layout_centerHorizontal="true"/>
-
+    -->
 </RelativeLayout>

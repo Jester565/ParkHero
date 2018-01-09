@@ -34,7 +34,6 @@ class ProfilePicSelection : AppCompatActivity() {
     lateinit var picView: CropImageView
     lateinit var doneButton: Button
     lateinit var googleVision: GoogleVisionClient
-    lateinit var s3Cacher: S3Cacher
     lateinit var cognitoManager: CognitoManager
     var imageUri: Uri? = null
 

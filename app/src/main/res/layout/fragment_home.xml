@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.dis.ajcra.distest2.HomeFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="145dp" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.01"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="1">
+
+                <ImageButton
+                    android:id="@+id/imageButton2"
+                    android:layout_width="80dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/home_sidebutton_bg"
+                    android:scaleType="fitXY"
+                    app:srcCompat="@drawable/camera_outline2" />
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/home_profilepic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="100dp"
+                        app:srcCompat="@color/colorAccent" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="username"
+                        android:layout_below="@+id/home_profilepic"
+                        android:layout_marginTop="-25dp"
+                        android:textSize="20dp"
+                        android:background="@drawable/home_sidebutton_bg"
+                        android:layout_centerHorizontal="true"
+                        android:textAlignment="center"/>
+                </RelativeLayout>
+
+                <ImageButton
+                    android:id="@+id/imageButton"
+                    android:layout_width="79dp"
+                    android:layout_height="71dp"
+                    android:background="@drawable/home_sidebutton_bg"
+                    android:scaleType="fitXY"
+                    app:srcCompat="@drawable/edit_icon" />
+
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:gravity="center"
+            android:text="Party"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+</LinearLayout>
