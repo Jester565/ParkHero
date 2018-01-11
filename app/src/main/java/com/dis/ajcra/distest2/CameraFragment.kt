@@ -107,8 +107,29 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             }
         }
 
-        override fun onVideoTaken(video: File?) {
-            Log.d("STATE", "Video captured")
+        override fun onVideoTaken(file: File?) {
+            if (file != null) {
+                Log.d("STATE", "Uploading video")
+                async {
+                    cloudFileManager.upload(cognitoManager.federatedID + "/pictures/" + file.name, file.toURI(), object : CloudFileListener() {
+                        override fun onError(id: Int, ex: Exception?) {
+
+                        }
+
+                        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+
+                        }
+
+                        override fun onStateChanged(id: Int, state: TransferState?) {
+
+                        }
+
+                        override fun onComplete(id: Int, file: File) {
+                            Log.d("STATE", "VIDEO UPLOADED")
+                        }
+                    })
+                }
+            }
         }
     }
 
@@ -154,7 +175,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             //Set camera to take video
             cameraView.sessionType = SessionType.VIDEO
             //Provide file the recorded video should go to
-            var file = File(activity.filesDir, "vid2")
+            var file = File(activity.filesDir, UUID.randomUUID().toString() + ".mp4")
             cameraView.startCapturingVideo(file)
 
             //Show the record bar

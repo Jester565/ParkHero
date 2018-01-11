@@ -1,7 +1,13 @@
 package com.dis.ajcra.distest2
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.content.ClipData
+import android.content.ClipDescription
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
@@ -12,9 +18,12 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
+import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
@@ -29,6 +38,7 @@ interface GalleryFragmentListener {
     fun onDragChange(dragging: Boolean)
 }
 
+/*
 interface GridItemTouchHelperAdapter {
     fun onItemMove(sourcePos: Int, targetPos: Int)
 }
@@ -64,13 +74,14 @@ class GridItemTouchHelperCallback: ItemTouchHelper.Callback {
 
     }
 }
+*/
 
 class GalleryFragment : Fragment() {
     private lateinit var cfm: CloudFileManager
     private lateinit var pictures: ArrayList<String>
     lateinit var recyclerView: RecyclerView
     private lateinit var adapter: GalleryFragmentAdapter
-    private var helperCB: GridItemTouchHelperCallback? = null
+    private lateinit var sendButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,11 +99,88 @@ class GalleryFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.setItemViewCacheSize(50)
         recyclerView.setDrawingCacheEnabled(true)
-        helperCB = GridItemTouchHelperCallback(adapter)
-        var helper = ItemTouchHelper(helperCB)
-        helper.attachToRecyclerView(recyclerView)
         var gfl = parentFragment as GalleryFragmentListener
         gfl.onRecyclerViewCreated(recyclerView)
+        sendButton = rootView.findViewById(R.id.gallery_sendbtn)
+        var intent = Intent(activity, ScrollGalleryActivity::class.java)
+        startActivity(intent)
+        recyclerView.setOnDragListener(object: View.OnDragListener {
+            override fun onDrag(p0: View?, evt: DragEvent?): Boolean {
+                if (evt?.action == DragEvent.ACTION_DRAG_STARTED) {
+                    sendButton.alpha = 0f
+                    sendButton.visibility = View.VISIBLE
+                    sendButton.animate().setDuration(CameraFragment.BAR_TRANSITION_MILLIS).alpha(1f).setListener(object: AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator?) {
+
+                        }
+                    })
+                }
+                return true
+            }
+        })
+        sendButton.setOnDragListener(object: View.OnDragListener {
+            override fun onDrag(view: View?, evt: DragEvent?): Boolean {
+                Log.d("STATE", "on drag called")
+                if (evt != null && view != null) {
+                    Log.d("STATE", "od")
+                    when (evt.action) {
+                        DragEvent.ACTION_DRAG_STARTED -> {
+                            Log.d("STATE", "Drag started")
+                            view.alpha = 0f
+                            view.visibility = View.VISIBLE
+                            view.animate().setDuration(CameraFragment.BAR_TRANSITION_MILLIS).alpha(1f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+
+                                }
+                            })
+                        }
+                        DragEvent.ACTION_DRAG_ENTERED -> {
+                            Log.d("STATE", "Drag entered")
+                            view.animate().setDuration(100).scaleX(1.5f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+
+                                }
+                            })
+                            view.animate().setDuration(100).scaleY(1.5f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+
+                                }
+                            })
+                        }
+                        DragEvent.ACTION_DRAG_EXITED -> {
+                            Log.d("STATE", "Drag exited")
+                            view.animate().setDuration(100).scaleX(1f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+
+                                }
+                            })
+
+                            view.animate().setDuration(100).scaleY(1f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+
+                                }
+                            })
+                        }
+                        DragEvent.ACTION_DROP -> {
+                            Log.d("STATE", "Drag drop")
+                            view.setBackgroundColor(Color.RED)
+                        }
+                        DragEvent.ACTION_DRAG_ENDED -> {
+                            Log.d("STATE", "Drag ended")
+                            view.animate().setDuration(CameraFragment.BAR_TRANSITION_MILLIS).alpha(0f).setListener(object: AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator?) {
+                                    view.visibility = View.GONE
+                                    view.scaleX = 1f
+                                    view.scaleY = 1f
+                                    view.setBackgroundColor(Color.GRAY)
+                                }
+                            })
+                        }
+                    }
+                }
+                return true
+            }
+        })
 
         async(UI) {
             Log.d("STATE", "Running ui")
@@ -115,15 +203,11 @@ class GalleryFragment : Fragment() {
     }
 
     fun setDrag(mode: Boolean) {
-        helperCB?.canDrag = mode
+
     }
 
     //should contain click listeners, can have different ViewHolders
-    class GalleryFragmentAdapter: RecyclerView.Adapter<GalleryFragmentAdapter.ViewHolder>, GridItemTouchHelperAdapter {
-        override fun onItemMove(sourcePos: Int, targetPos: Int) {
-            Log.d("STATE", "Item moved")
-        }
-
+    class GalleryFragmentAdapter: RecyclerView.Adapter<GalleryFragmentAdapter.ViewHolder> {
         private var cfm: CloudFileManager
         private var dataset: ArrayList<String>
 
@@ -139,6 +223,20 @@ class GalleryFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+            holder?.imgView?.tag = position.toString()
+            holder?.imgView?.setOnLongClickListener(object: View.OnLongClickListener {
+                override fun onLongClick(view: View?): Boolean {
+                    if (view != null) {
+                        var item = ClipData.Item(view.tag as String)
+                        var mimeTypes: Array<String> = Array<String>(1, {ClipDescription.MIMETYPE_TEXT_PLAIN})
+
+                        var dragData = ClipData(view.tag as String, mimeTypes, item)
+                        var shadow = View.DragShadowBuilder(view)
+                        view.startDragAndDrop(dragData, shadow, holder, 0)
+                    }
+                    return true
+                }
+            })
             async {
                 cfm.download(dataset[position], object: CloudFileListener() {
                     override fun onError(id: Int, ex: Exception?) {

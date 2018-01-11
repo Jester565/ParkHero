@@ -77,6 +77,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:orientation="vertical"
             android:background="#AAFF0000"
             android:id="@+id/camera_gallerylayout"/>
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>

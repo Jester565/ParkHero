@@ -23,6 +23,10 @@ class DraggableViewPager: ViewPager {
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
-        return (draggable && super.onInterceptTouchEvent(ev))
+        try {
+            return (draggable && super.onInterceptTouchEvent(ev))
+        } catch(e: IllegalArgumentException) {
+            return false
+        }
     }
 }

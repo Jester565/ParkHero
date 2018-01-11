@@ -51,4 +51,6 @@ dependencies {
     compile "android.arch.persistence.room:runtime:1.0.0-alpha1"
     kapt "android.arch.persistence.room:compiler:1.0.0-alpha1"
     compile 'com.github.kittinunf.fuel:fuel-android:1.12.+'
+    implementation 'com.github.chrisbanes:PhotoView:2.0.0'
+    implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
 }
