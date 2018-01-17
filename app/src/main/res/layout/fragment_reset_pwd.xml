@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/reset_titleText"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:gravity="center"
+        android:text="Reset Password"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="24sp" />
+    <ProgressBar
+        style="?android:progressBarStyleLarge"
+        android:id="@+id/reset_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/reset_usernameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="123dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/reset_usernameField"
+            android:layout_width="match_parent"
+            android:layout_height="66dp"
+            android:layout_weight="0.00"
+            android:ems="10"
+            android:hint="Username"
+            android:inputType="textPersonName" />
+
+        <Button
+            android:id="@+id/reset_usernameButton"
+            android:layout_width="108dp"
+            android:layout_height="match_parent"
+            android:text="Continue" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reset_codeLayout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="242dp"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/reset_codeField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.03"
+            android:ems="10"
+            android:hint="Code"
+            android:inputType="number"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.04"
+            android:gravity="center"
+            android:text="Enter the code sent to you above and we will reset your password to what you put below." />
+
+        <EditText
+            android:id="@+id/reset_pwdField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.03"
+            android:ems="10"
+            android:hint="New Password"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/reset_resetButton"
+            android:layout_width="242dp"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Reset Password" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/reset_msgText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.12"
+        android:gravity="center" />
+</LinearLayout>

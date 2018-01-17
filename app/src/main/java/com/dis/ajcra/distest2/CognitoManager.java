@@ -273,7 +273,7 @@ public class CognitoManager {
         });
     }
 
-    interface ResendCodeHandler {
+    public interface ResendCodeHandler {
         void onSuccess(String delvMeth, String delvDest);
         void onFailure(Exception ex);
     }

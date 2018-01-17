@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ProgressBar
+        style="?android:progressBarStyleLarge"
+        android:id="@+id/register_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/register_linearLayout"
+        android:layout_width="362dp"
+        android:layout_height="379dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:weightSum="1"
+        tools:layout_editor_absoluteY="3dp">
+
+        <TextView
+            android:id="@+id/register_titleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.06"
+            android:gravity="center"
+            android:text="Join the Team!"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            tools:layout_editor_absoluteX="110dp"
+            tools:layout_editor_absoluteY="16dp" />
+
+        <EditText
+            android:id="@+id/register_usernameField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Username"
+            android:inputType="text"
+            tools:layout_editor_absoluteX="40dp"
+            tools:layout_editor_absoluteY="55dp" />
+
+        <EditText
+            android:id="@+id/register_emailField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            tools:layout_editor_absoluteX="42dp"
+            tools:layout_editor_absoluteY="117dp" />
+
+        <EditText
+            android:id="@+id/register_pwdField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Password"
+            android:inputType="textPassword"
+            tools:layout_editor_absoluteX="42dp"
+            tools:layout_editor_absoluteY="179dp" />
+
+        <CheckBox
+            android:id="@+id/register_rememberDeviceCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.09"
+            android:checked="true"
+            android:text="Remember Device" />
+
+        <Button
+            android:id="@+id/register_submitButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Create Account"
+            android:textColor="?android:attr/textColorPrimary"
+            tools:layout_editor_absoluteX="120dp"
+            tools:layout_editor_absoluteY="255dp" />
+
+        <TextView
+            android:id="@+id/register_msgText"
+            android:layout_width="match_parent"
+            android:layout_height="76dp"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</LinearLayout>

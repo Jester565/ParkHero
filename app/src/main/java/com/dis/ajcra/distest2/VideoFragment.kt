@@ -11,8 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
-import com.github.chrisbanes.photoview.PhotoView
-import com.github.kittinunf.fuel.Fuel.Companion.download
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
