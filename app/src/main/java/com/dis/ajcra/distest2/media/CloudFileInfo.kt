@@ -1,4 +1,4 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import android.arch.persistence.room.*
 

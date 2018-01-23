@@ -27,13 +27,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ProfilePicSelection" />
+        <activity android:name=".prof.ProfilePicSelection" />
 
         <service
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
 
-        <activity android:name=".ScrollGalleryActivity" />
+        <activity android:name=".media.ScrollGalleryActivity" />
+        <activity android:name=".login.LoginActivity" />
+        <activity android:name=".login.RegisterActivity" />
+        <activity android:name=".login.VerifyActivity" />
+        <activity android:name=".login.ResetPwdActivity" />
+        <activity android:name=".FriendActivity" />
+        <activity android:name=".ProfileActivity"></activity>
     </application>
 
 </manifest>

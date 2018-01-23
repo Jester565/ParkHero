@@ -1,16 +1,11 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 import com.google.api.client.extensions.android.json.AndroidJsonFactory
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.services.vision.v1.Vision
 import com.google.api.services.vision.v1.VisionRequestInitializer
 import com.google.api.services.vision.v1.model.*
-import id.zelory.compressor.Compressor
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.*
 
 /**

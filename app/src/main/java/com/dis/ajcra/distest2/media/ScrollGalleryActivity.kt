@@ -1,7 +1,8 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import android.os.Bundle
 import android.support.v4.app.FragmentActivity
+import com.dis.ajcra.distest2.R
 
 class ScrollGalleryActivity : FragmentActivity() {
     private lateinit var scrollGalleryFragment: ScrollGalleryFragment

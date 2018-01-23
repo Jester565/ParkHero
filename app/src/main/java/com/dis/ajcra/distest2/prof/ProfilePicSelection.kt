@@ -1,8 +1,7 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.prof
 
 import android.Manifest
 import android.app.Activity
-import android.content.ContentValues
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -15,11 +14,12 @@ import kotlinx.coroutines.experimental.async
 import android.graphics.Bitmap
 import android.media.ExifInterface
 import android.net.Uri
-import android.os.Environment
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.view.View
 import android.widget.Button
+import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.media.GoogleVisionClient
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.experimental.withTimeout
 import java.io.ByteArrayInputStream

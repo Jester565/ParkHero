@@ -65,6 +65,16 @@
             tools:layout_editor_absoluteX="42dp"
             tools:layout_editor_absoluteY="179dp" />
 
+        <EditText
+            android:id="@+id/register_confirmPwdField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Confirm Password"
+            android:inputType="textPassword"
+            tools:layout_editor_absoluteX="42dp"
+            tools:layout_editor_absoluteY="179dp" />
+
         <CheckBox
             android:id="@+id/register_rememberDeviceCheckBox"
             android:layout_width="match_parent"

@@ -2,13 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.dis.ajcra.distest2.ScrollGalleryFragment">
+    tools:context="com.dis.ajcra.distest2.media.ScrollGalleryFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <com.dis.ajcra.distest2.DraggableViewPager
+    <com.dis.ajcra.distest2.util.DraggableViewPager
         android:id="@+id/scrollgallery_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        ></com.dis.ajcra.distest2.DraggableViewPager>
+        ></com.dis.ajcra.distest2.util.DraggableViewPager>
 
 </FrameLayout>

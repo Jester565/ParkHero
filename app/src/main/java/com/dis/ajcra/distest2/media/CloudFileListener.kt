@@ -1,4 +1,4 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import java.io.File

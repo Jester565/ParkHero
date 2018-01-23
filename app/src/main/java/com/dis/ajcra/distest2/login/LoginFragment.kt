@@ -1,8 +1,9 @@
+package com.dis.ajcra.distest2.login
+
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.view.ViewPager
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -10,10 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.MultiFactorAuthenticationContinuation
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
 import com.dis.ajcra.distest2.*
-import com.dis.ajcra.distest2.AnimationUtils.Crossfade
-import org.w3c.dom.Text
+import com.dis.ajcra.distest2.util.AnimationUtils.Crossfade
 import java.lang.Exception
 
 class LoginFragment : Fragment() {
@@ -26,11 +25,14 @@ class LoginFragment : Fragment() {
     private lateinit var pwdField: EditText
     private lateinit var loginButton: Button
     private lateinit var forgotPwdButton: Button
+    private lateinit var registerButton: Button
     private lateinit var msgText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pwd = arguments.getString(PWD_PARAM)
+        if (arguments.containsKey("pwd")) {
+            pwd = arguments.getString(PWD_PARAM)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -50,13 +52,19 @@ class LoginFragment : Fragment() {
             loginButton = rootView.findViewById(R.id.login_loginButton)
             forgotPwdButton = rootView.findViewById(R.id.login_resetPwdButton)
             msgText = rootView.findViewById(R.id.login_msgText)
+            registerButton = rootView.findViewById(R.id.login_registerButton)
         }
 
         if (username != null) {
             usernameField.setText(username)
         }
-        if (pwdField != null) {
+        if (pwd != null) {
             pwdField.setText(pwd)
+        }
+
+        registerButton.setOnClickListener {
+            var intent = Intent(context, RegisterActivity::class.java)
+            startActivity(intent)
         }
 
         var textChangeListener = object: TextWatcher {
@@ -83,10 +91,8 @@ class LoginFragment : Fragment() {
         }
 
         forgotPwdButton.setOnClickListener {
-            /*
-            val intent = Intent(this@LoginFragment, ResetPwdActivity::class.java)
+            val intent = Intent(context, ResetPwdActivity::class.java)
             startActivity(intent)
-            */
         }
         if (username != null && pwd != null) {
             login()
@@ -103,23 +109,21 @@ class LoginFragment : Fragment() {
                 startActivity(intent)
             }
 
-            override fun onMFA(continuation: MultiFactorAuthenticationContinuation?) {
+            override fun onMFA(continuation: MultiFactorAuthenticationContinuation) {
 
             }
 
-            override fun onFailure(ex: Exception?) {
+            override fun onFailure(ex: Exception) {
                 msgText.text = ex!!.message
                 loginButton.setBackgroundColor(Color.RED)
                 loginButton.text = "ERROR"
                 Crossfade(loginLayout, progressBar)
             }
 
-            override fun onUnverified(ex: Exception?) {
-                /*
-                val intent = Intent(this@LoginFragment, VerifyActivity::class.java)
+            override fun onUnverified(ex: Exception) {
+                val intent = Intent(context, VerifyActivity::class.java)
                 intent.putExtra("pwd", pwdField.text.toString())
                 startActivity(intent)
-                */
             }
         })
     }
@@ -127,10 +131,11 @@ class LoginFragment : Fragment() {
     companion object {
         private val PWD_PARAM = "pwd"
 
-        fun newInstance(pwd: String): LoginFragment {
+        fun newInstance(pwd: String? = null): LoginFragment {
             val fragment = LoginFragment()
             val args = Bundle()
-            args.putString(PWD_PARAM, pwd)
+            if (pwd != null)
+                args.putString(PWD_PARAM, pwd)
             fragment.arguments = args
             return fragment
         }

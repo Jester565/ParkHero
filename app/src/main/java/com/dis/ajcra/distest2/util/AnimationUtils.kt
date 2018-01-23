@@ -1,4 +1,4 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.util
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter

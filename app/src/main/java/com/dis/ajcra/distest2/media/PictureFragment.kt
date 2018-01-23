@@ -1,7 +1,5 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
-import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.graphics.BitmapFactory
 import android.support.v4.app.Fragment
@@ -10,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
+import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.github.chrisbanes.photoview.PhotoView
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async

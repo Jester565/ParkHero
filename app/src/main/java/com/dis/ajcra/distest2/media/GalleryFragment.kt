@@ -1,34 +1,28 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.ClipData
 import android.content.ClipDescription
-import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Contacts
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.TextView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.dis.ajcra.distest2.CameraFragment
+import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import java.io.File
 
@@ -102,8 +96,6 @@ class GalleryFragment : Fragment() {
         var gfl = parentFragment as GalleryFragmentListener
         gfl.onRecyclerViewCreated(recyclerView)
         sendButton = rootView.findViewById(R.id.gallery_sendbtn)
-        var intent = Intent(activity, ScrollGalleryActivity::class.java)
-        startActivity(intent)
         recyclerView.setOnDragListener(object: View.OnDragListener {
             override fun onDrag(p0: View?, evt: DragEvent?): Boolean {
                 if (evt?.action == DragEvent.ACTION_DRAG_STARTED) {
@@ -192,10 +184,8 @@ class GalleryFragment : Fragment() {
             Log.d("STATE", "Aquired objects")
             if (objs != null) {
                 for (obj in objs) {
-                    for (i in 1..10) {
-                        pictures.add(obj.key)
-                        adapter.notifyItemInserted(pictures.size - 1)
-                    }
+                    pictures.add(obj.key)
+                    adapter.notifyItemInserted(pictures.size - 1)
                 }
             }
         }

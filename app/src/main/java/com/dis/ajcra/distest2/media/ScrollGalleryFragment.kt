@@ -1,7 +1,5 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
-import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -11,7 +9,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewParent
+import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 

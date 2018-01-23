@@ -1,8 +1,8 @@
+package com.dis.ajcra.distest2.login
+
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.view.ViewPager
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -10,10 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ForgotPasswordContinuation
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
-import com.dis.ajcra.distest2.*
-import com.dis.ajcra.distest2.AnimationUtils.Crossfade
-import org.w3c.dom.Text
+import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.util.AnimationUtils.Crossfade
 import java.lang.Exception
 
 class ResetPwdFragment : Fragment() {
@@ -77,25 +75,23 @@ class ResetPwdFragment : Fragment() {
                 Crossfade(progressBar, userLayout)
                 cognitoManager.resetPwd(usernameField.text.toString(), object: CognitoManager.ResetPwdHandler {
                     override fun onSuccess() {
-                        /*
-                        var intent = Intent(this@ResetPwdFragment, LoginActivity::class.java)
+                        var intent = Intent(context, LoginActivity::class.java)
                         intent.putExtra("pwd", pwdField.text.toString())
                         startActivity(intent)
-                        */
                     }
 
-                    override fun onContinuation(continuation: ForgotPasswordContinuation?) {
+                    override fun onContinuation(continuation: ForgotPasswordContinuation) {
                         Crossfade(codeLayout, progressBar)
                         pwdResetButton.setOnClickListener { v ->
                             v.isEnabled = false
-                            continuation!!.setVerificationCode(codeField.text.toString())
-                            continuation!!.setPassword(pwdField.text.toString())
-                            continuation!!.continueTask()
+                            continuation.setVerificationCode(codeField.text.toString())
+                            continuation.setPassword(pwdField.text.toString())
+                            continuation.continueTask()
                         }
                     }
 
-                    override fun onFailure(ex: Exception?) {
-                        msgText.text = ex!!.message
+                    override fun onFailure(ex: Exception) {
+                        msgText.text = ex.message
                         if (pwdField.length() == 0) {
                             Crossfade(userLayout, progressBar)
                         } else {
@@ -120,14 +116,5 @@ class ResetPwdFragment : Fragment() {
         }
         pwdField.addTextChangedListener(codeTextChangeListener)
         codeField.addTextChangedListener(codeTextChangeListener)
-    }
-
-    companion object {
-        fun newInstance(): VerifyFragment {
-            val fragment = VerifyFragment()
-            val args = Bundle()
-            fragment.arguments = args
-            return fragment
-        }
     }
 }

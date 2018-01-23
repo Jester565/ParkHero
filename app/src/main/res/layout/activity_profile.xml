@@ -4,10 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.dis.ajcra.distest2.media.ScrollGalleryActivity">
-    <LinearLayout
-        android:id="@+id/scrollgalleryactivity_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"></LinearLayout>
+    tools:context="com.dis.ajcra.distest2.ProfileActivity">
+
 </android.support.constraint.ConstraintLayout>

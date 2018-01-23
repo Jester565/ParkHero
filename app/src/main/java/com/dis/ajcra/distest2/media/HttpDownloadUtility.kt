@@ -1,4 +1,4 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
@@ -59,7 +59,7 @@ class HttpDownloadUtility {
     fun download(remoteUrl: String, downloadFile: File, listener: TransferListener): Int {
         var id = idCounter++
 
-        var downloadReq = HttpDownloadRequest(id, object: TransferListener {
+        var downloadReq = HttpDownloadRequest(id, object : TransferListener {
             override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
                 listener.onProgressChanged(id, bytesCurrent, bytesTotal)
             }

@@ -1,25 +1,20 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.media
 
 import android.arch.persistence.room.Room
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import com.amazonaws.HttpMethod
 import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.mobileconnectors.s3.transfermanager.Transfer
 import com.amazonaws.mobileconnectors.s3.transferutility.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.*
 import kotlinx.coroutines.experimental.async
-import org.apache.http.impl.client.BasicCredentialsProvider
 import java.io.File
 import java.net.URI
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 
 abstract class CloudFileObserver: TransferListener {
     var utilID:AtomicInteger = AtomicInteger(-1)
