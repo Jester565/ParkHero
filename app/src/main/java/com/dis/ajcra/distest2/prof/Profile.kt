@@ -2,6 +2,8 @@ package com.dis.ajcra.distest2.prof
 
 import android.util.Log
 import com.dis.ajcra.distest2.DisneyAppClient
+import com.dis.ajcra.distest2.model.AddFriendInput
+import com.dis.ajcra.distest2.model.RemoveFriendInput
 import com.dis.ajcra.distest2.model.UserInfo
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
@@ -68,5 +70,29 @@ open class Profile {
             Log.d("STATE", "Could not get inviate status: " + ex.message)
         }
         inviteStatus
+    }
+
+    fun addFriend(): Deferred<Boolean> = async {
+        var nowFriend = false
+        try {
+            var input = AddFriendInput()
+            input.friendId = id
+            var output = apiClient.addfriendPost(input)
+            nowFriend = output.nowFriend
+        } catch(ex: Exception) {
+            Log.d("STATE","Add friend error: " + ex.message)
+        }
+        nowFriend
+    }
+
+    fun removeFriend() = async {
+        var nowFriend = false
+        try {
+            var input = RemoveFriendInput()
+            input.friendId = id
+            apiClient.removefriendPost(input)
+        } catch(ex: Exception) {
+            Log.d("STATE", "Could not remove friend: " + ex.message)
+        }
     }
 }

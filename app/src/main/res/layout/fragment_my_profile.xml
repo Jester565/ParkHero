@@ -1,0 +1,42 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.dis.ajcra.distest2.MyProfileFragment">
+
+    <ImageView
+        android:id="@+id/myprofile_profimg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/edit_icon"
+        android:layout_alignBottom="@+id/myprofile_profimg"
+        android:layout_alignRight="@+id/myprofile_profimg"/>
+
+    <TextView
+        android:id="@+id/myprofile_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="30dp"
+        android:background="@color/colorPrimaryDark"
+        android:layout_below="@+id/myprofile_profimg"
+        android:gravity="center"/>
+
+    <Button
+        android:id="@+id/myprofile_logoutButton"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/myprofile_name"
+        android:textSize="20dp"
+        android:background="#EE0000"
+        android:layout_centerHorizontal="true"
+        android:text="Logout"/>
+
+</RelativeLayout>

@@ -39,7 +39,8 @@
         <activity android:name=".login.VerifyActivity" />
         <activity android:name=".login.ResetPwdActivity" />
         <activity android:name=".FriendActivity" />
-        <activity android:name=".ProfileActivity"></activity>
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".MyProfileActivity"></activity>
     </application>
 
 </manifest>

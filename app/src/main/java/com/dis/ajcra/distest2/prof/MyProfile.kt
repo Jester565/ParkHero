@@ -37,13 +37,6 @@ class MyProfile: Profile {
         apiClient.renameuserPost(input)
     }
 
-    fun addFriend(friendId: String): Deferred<Boolean> = async {
-        var input = AddFriendInput()
-        input.friendId = friendId
-        var output = apiClient.addfriendPost(input)
-        output.nowFriend
-    }
-
     fun removeFriend(friendId: String) = async {
         var input = RemoveFriendInput()
         input.friendId = friendId

@@ -36,6 +36,7 @@ class HomeFragment : Fragment() {
     lateinit var signUpButton: Button
     lateinit var accountLayout: View
     lateinit var friendButton: ImageButton
+    lateinit var myProfileButton: ImageButton
     var myProfile: MyProfile? = null
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -44,6 +45,7 @@ class HomeFragment : Fragment() {
         signInButton = rootView.findViewById(R.id.home_signin)
         signUpButton = rootView.findViewById(R.id.home_signup)
         friendButton = rootView.findViewById(R.id.home_friendbutton)
+        myProfileButton = rootView.findViewById(R.id.home_myprofileButton)
         profileNameText = rootView.findViewById(R.id.home_name)
         accountLayout = rootView.findViewById(R.id.home_accountlayout)
         cognitoManager = CognitoManager.GetInstance(activity.applicationContext)
@@ -67,6 +69,11 @@ class HomeFragment : Fragment() {
 
         friendButton.setOnClickListener {
             var intent = Intent(this@HomeFragment.context, FriendActivity::class.java)
+            startActivity(intent)
+        }
+
+        myProfileButton.setOnClickListener {
+            var intent = Intent(this@HomeFragment.context, MyProfileActivity::class.java)
             startActivity(intent)
         }
         return rootView
