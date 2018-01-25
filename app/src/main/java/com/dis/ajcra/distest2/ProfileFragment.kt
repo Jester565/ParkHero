@@ -33,7 +33,8 @@ class ProfileFragment : Fragment() {
 
     private lateinit var profImg: ImageView
     private lateinit var nameText: TextView
-    private lateinit var friendButton: Button
+    private lateinit var acceptButton: Button
+    private lateinit var declineButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +53,8 @@ class ProfileFragment : Fragment() {
         if (rootView != null) {
             profImg = rootView.findViewById(R.id.profile_profimg)
             nameText = rootView.findViewById(R.id.profile_name)
-            friendButton = rootView.findViewById(R.id.profile_button)
+            acceptButton = rootView.findViewById(R.id.profile_acceptButton)
+            declineButton = rootView.findViewById(R.id.profile_declineButton)
 
             async {
                 var profilePicUrl = profile.getProfilePicUrl().await()
@@ -101,12 +103,15 @@ class ProfileFragment : Fragment() {
     }
 
     fun initFriendStatus(status: Int) {
-        friendButton.isEnabled = true
+        acceptButton.isEnabled = true
+        acceptButton.visibility = View.GONE
+
         if (status == 0) {
-            friendButton.text = "Send Friend Request"
-            friendButton.setOnClickListener {
+            acceptButton.visibility = View.VISIBLE
+            acceptButton.text = "Send Friend Request"
+            acceptButton.setOnClickListener {
                 Log.d("STATE", "Add friend called")
-                friendButton.isEnabled = false
+                acceptButton.isEnabled = false
                 async(UI) {
                     var nowFriend = profile.addFriend().await()
                     if (nowFriend) {
@@ -117,15 +122,43 @@ class ProfileFragment : Fragment() {
                 }
             }
         } else if (status == 1) {
-            friendButton.text = "Cancel Friend Request"
-            friendButton.setOnClickListener {
+            declineButton.visibility = View.VISIBLE
+            declineButton.text = "Cancel Friend Request"
+            declineButton.setOnClickListener {
+                declineButton.isEnabled = false
                 async(UI) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
             }
         } else if (status == 2) {
-            friendButton.text = "Accept Friend Request"
+            acceptButton.visibility = View.VISIBLE
+            declineButton.visibility = View.VISIBLE
+            acceptButton.text = "Accept Friend Request"
+            declineButton.text = "Decline Friend Request"
+            acceptButton.setOnClickListener {
+                acceptButton.isEnabled = false
+                declineButton.isEnabled = false
+                async(UI) {
+                    var nowFriend = profile.addFriend().await()
+                    if (nowFriend) {
+                        initFriendStatus(3)
+                    } else {
+                        initFriendStatus(1)
+                    }
+                }
+            }
+
+            declineButton.setOnClickListener {
+                acceptButton.isEnabled = false
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.removeFriend().await()
+                    initFriendStatus(0)
+                }
+            }
+        } else {
+
         }
     }
 
