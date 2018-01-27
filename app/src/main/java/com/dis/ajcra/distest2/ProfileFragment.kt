@@ -105,12 +105,12 @@ class ProfileFragment : Fragment() {
     fun initFriendStatus(status: Int) {
         acceptButton.isEnabled = true
         acceptButton.visibility = View.GONE
+        declineButton.visibility = View.GONE
 
         if (status == 0) {
             acceptButton.visibility = View.VISIBLE
             acceptButton.text = "Send Friend Request"
             acceptButton.setOnClickListener {
-                Log.d("STATE", "Add friend called")
                 acceptButton.isEnabled = false
                 async(UI) {
                     var nowFriend = profile.addFriend().await()

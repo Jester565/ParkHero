@@ -1,17 +1,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-    <EditText
-        android:id="@+id/friend_searchfield"
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search All Users"/>
-
+        android:text="Invitations"
+        android:textSize="30dp"/>
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/friend_recycler"
+        android:id="@+id/invitelist_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/gallery_tab"></android.support.v7.widget.RecyclerView>
+        ></android.support.v7.widget.RecyclerView>
+
 </LinearLayout>

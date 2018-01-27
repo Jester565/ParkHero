@@ -1,7 +1,10 @@
 package com.dis.ajcra.distest2.prof
 
+import android.util.Log
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
+import com.dis.ajcra.distest2.FriendInvite
+import com.dis.ajcra.distest2.Invite
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.model.*
 import com.dis.ajcra.distest2.prof.Profile
@@ -9,16 +12,6 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 
 class MyProfile: Profile {
-    class Invite {
-        var isOwner: Boolean
-        var targetProfile: Profile
-
-        constructor(isOwner: Boolean, targetProfile: Profile) {
-            this.isOwner = isOwner
-            this.targetProfile = targetProfile
-        }
-    }
-
     constructor(apiClient: DisneyAppClient, id: String)
         :super(apiClient, id)
     {
@@ -44,11 +37,25 @@ class MyProfile: Profile {
     }
 
     fun getInvites(): Deferred<List<Invite>> = async {
-        var output = apiClient.getinvitesGet(null)
         var invArr = ArrayList<Invite>()
-        for (inviteInfo in output.invites) {
-            invArr.add(Invite(inviteInfo.isOwner, Profile(apiClient, inviteInfo.user)))
+        try {
+            var output = apiClient.getinvitesGet(null)
+            for (inviteInfo in output.invites) {
+                invArr.add(FriendInvite(Profile(apiClient, inviteInfo.user), inviteInfo.isOwner))
+            }
+        } catch (ex: Exception) {
+            Log.d("STATE", " Get Invites Ex: " + ex.message)
         }
         invArr
+    }
+
+    fun setEndpointArn(arn: String) = async {
+        try {
+            var input = CreateEndpointInput()
+            input.endpointArn = arn
+            apiClient.createendpointPost(input)
+        } catch (ex: Exception) {
+            Log.d("STATE", "Set endpoint exception: " + ex.message)
+        }
     }
 }

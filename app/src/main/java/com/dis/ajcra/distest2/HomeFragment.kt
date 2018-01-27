@@ -53,6 +53,8 @@ class HomeFragment : Fragment() {
         s3Client =  AmazonS3Client(cognitoManager.credentialsProvider)
         async(UI) {
             myProfile = profileManager.genMyProfile().await()
+            val intent = Intent(this@HomeFragment.context, TokenIntentService::class.java)
+            this@HomeFragment.activity.startService(intent)
             profileNameText.text = myProfile!!.getName().await()
             if (!cognitoManager.isLoggedIn().await()) {
                 accountLayout.visibility = View.VISIBLE
@@ -68,7 +70,7 @@ class HomeFragment : Fragment() {
         }
 
         friendButton.setOnClickListener {
-            var intent = Intent(this@HomeFragment.context, FriendActivity::class.java)
+            var intent = Intent(this@HomeFragment.context, UserSearchActivity::class.java)
             startActivity(intent)
         }
 

@@ -9,7 +9,7 @@ class ResetPwdActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_verify)
+        setContentView(R.layout.activity_reset_pwd)
         resetPwdFragment = ResetPwdFragment()
         var transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.resetpwdactivity_layout, resetPwdFragment).commit()

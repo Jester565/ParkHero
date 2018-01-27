@@ -5,7 +5,9 @@ import android.util.Log
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
 import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.model.CreateEndpointInput
 import com.dis.ajcra.distest2.model.CreateUserInput
+import com.dis.ajcra.distest2.model.UserInfo
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 
@@ -50,6 +52,10 @@ class ProfileManager {
         return Profile(apiClient, id)
     }
 
+    fun getProfile(info: UserInfo): Profile {
+        return Profile(apiClient, info)
+    }
+
     fun createMyProfile(): Deferred<MyProfile> = async {
         var myProfile = null
         try {
@@ -67,9 +73,13 @@ class ProfileManager {
     fun getUsers(prefix: String): Deferred<ArrayList<Profile>> = async {
         var profiles = ArrayList<Profile>()
         try {
-            val output = apiClient.getusersGet(prefix)
-            for (userInfo in output.users) {
-                profiles.add(Profile(apiClient, userInfo))
+            val output = apiClient.getusersGet("true", prefix)
+            var i = 0
+            while (i < output.users.size) {
+                var profile = Profile(apiClient, output.users[i])
+                profile.inviteStatus = output.inviteStatuses[i]
+                profiles.add(profile)
+                i++
             }
         } catch (ex: Exception) {
             Log.d("STATE", "Get users exception: " + ex.message)

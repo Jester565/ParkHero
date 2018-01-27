@@ -32,15 +32,38 @@
         <service
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
-
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.example.gcm" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name="com.dis.ajcra.distest2.DisGcmListener"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="com.dis.ajcra.distest2.DisIDListener"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
         <activity android:name=".media.ScrollGalleryActivity" />
         <activity android:name=".login.LoginActivity" />
         <activity android:name=".login.RegisterActivity" />
         <activity android:name=".login.VerifyActivity" />
         <activity android:name=".login.ResetPwdActivity" />
-        <activity android:name=".FriendActivity" />
+        <activity android:name=".UserSearchActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".MyProfileActivity"></activity>
+        <service android:name=".TokenIntentService"></service>
     </application>
 
 </manifest>

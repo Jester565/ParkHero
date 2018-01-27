@@ -16,6 +16,7 @@ open class Profile {
     var name: String? = null
     var aquiredProfilePic: Boolean = false
     var profilePicUrl: String? = null
+    var inviteStatus: Int = -1
     var apiClient: DisneyAppClient
 
     constructor(apiClient: DisneyAppClient, id: String) {
@@ -53,21 +54,26 @@ open class Profile {
     }
 
     fun getFriends(): Deferred<List<Profile>> = async {
-        var output = apiClient.getfriendsGet(id)
         var friendArr = ArrayList<Profile>()
-        for (friendInfo in output.friends) {
-            friendArr.add(Profile(apiClient, friendInfo))
+        try {
+            var output = apiClient.getfriendsGet(id)
+            for (friendInfo in output.friends) {
+                friendArr.add(Profile(apiClient, friendInfo))
+            }
+        } catch (ex: Exception) {
+            Log.d("STATE", "Could not get friends: " + ex.message)
         }
         friendArr
     }
 
     fun getInviteStatus(): Deferred<Int> = async {
-        var inviteStatus = -1
-        try {
-            var output = apiClient.getinvitestatusGet(id)
-            inviteStatus = output.inviteStatus
-        } catch (ex: Exception) {
-            Log.d("STATE", "Could not get inviate status: " + ex.message)
+        if (inviteStatus < 0) {
+            try {
+                var output = apiClient.getinvitestatusGet(id)
+                inviteStatus = output.inviteStatus
+            } catch (ex: Exception) {
+                Log.d("STATE", "Could not get inviate status: " + ex.message)
+            }
         }
         inviteStatus
     }

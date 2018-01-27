@@ -1,7 +1,5 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
 
 android {
@@ -39,8 +37,6 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-sns:2.2.+'
     implementation 'com.amazonaws:aws-android-sdk-s3:2.2.+'
     implementation 'com.amazonaws:aws-android-sdk-rekognition:2.6.+'
-    implementation 'com.google.android.gms:play-services-auth:10.2.1'
-    implementation 'com.google.android.gms:play-services-gcm:10.2.1'
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
     compile 'com.google.api-client:google-api-client-android:1.22.0'
     compile 'com.google.apis:google-api-services-vision:v1-rev357-1.22.0'
@@ -54,4 +50,7 @@ dependencies {
     compile 'com.github.kittinunf.fuel:fuel-android:1.12.+'
     implementation 'com.github.chrisbanes:PhotoView:2.0.0'
     implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
+    compile "com.google.android.gms:play-services-gcm:11.8.0"
 }
+
+apply plugin: 'com.google.gms.google-services'
