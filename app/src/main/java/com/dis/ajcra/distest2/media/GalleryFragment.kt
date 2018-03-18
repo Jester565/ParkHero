@@ -4,9 +4,9 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.ClipData
 import android.content.ClipDescription
+import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
-import android.graphics.Color
+import android.graphics.*
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
@@ -19,9 +19,11 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
 import com.dis.ajcra.distest2.CameraFragment
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.util.AnimationUtils
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.android.UI
 import java.io.File
@@ -71,6 +73,7 @@ class GridItemTouchHelperCallback: ItemTouchHelper.Callback {
 */
 
 class GalleryFragment : Fragment() {
+    private lateinit var cognitoManager: CognitoManager
     private lateinit var cfm: CloudFileManager
     private lateinit var pictures: ArrayList<String>
     lateinit var recyclerView: RecyclerView
@@ -81,9 +84,37 @@ class GalleryFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
+    override fun onResume() {
+        super.onResume()
+        async(UI) {
+            adapter.notifyItemRangeRemoved(0, pictures.size)
+            pictures.clear()
+
+            var observerPairs = cfm.getObservers(TransferType.UPLOAD)
+            for (observerPair in observerPairs) {
+                pictures.add(observerPair.key)
+                adapter.notifyItemInserted(pictures.size - 1)
+            }
+            var job = async {
+                Log.d("STATE", "Running job")
+                cfm.listObjects("media/" + cognitoManager.federatedID, true)
+            }
+            var objs = job.await()
+            Log.d("STATE", "Aquired objects")
+            if (objs != null) {
+                for (obj in objs) {
+                    if (!pictures.contains(obj.key)) {
+                        pictures.add(obj.key)
+                        adapter.notifyItemInserted(pictures.size - 1)
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        var cfm = CloudFileManager.GetInstance(cognitoManager.credentialsProvider, this.context.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cfm = CloudFileManager.GetInstance(cognitoManager, this.context.applicationContext)
 
         pictures = ArrayList<String>()
         adapter = GalleryFragmentAdapter(cfm, pictures)
@@ -173,23 +204,15 @@ class GalleryFragment : Fragment() {
                 return true
             }
         })
-
-        async(UI) {
-            Log.d("STATE", "Running ui")
-            var job = async {
-                Log.d("STATE", "Running job")
-                cfm.listObjects(cognitoManager.federatedID + "/pictures")
-            }
-            var objs = job.await()
-            Log.d("STATE", "Aquired objects")
-            if (objs != null) {
-                for (obj in objs) {
-                    pictures.add(obj.key)
-                    adapter.notifyItemInserted(pictures.size - 1)
-                }
-            }
-        }
         return rootView
+    }
+
+    fun galleryUpdated(objKey: String) {
+        Log.d("STATE", "Gallery updated")
+        async(UI) {
+            pictures.add(objKey)
+            adapter.notifyItemInserted(pictures.size - 1)
+        }
     }
 
     fun setDrag(mode: Boolean) {
@@ -227,42 +250,87 @@ class GalleryFragment : Fragment() {
                     return true
                 }
             })
-            async {
-                cfm.download(dataset[position], object: CloudFileListener() {
-                    override fun onError(id: Int, ex: Exception?) {
+            holder?.imgView?.setOnClickListener {
+                var intent = Intent(holder!!.ctx, ScrollGalleryActivity::class.java)
+                intent.putExtra("objkey", dataset[holder!!.adapterPosition])
+                holder!!.ctx.startActivity(intent)
+            }
 
+            async {
+                var objKey = dataset[position]
+                var observer: CloudFileObserver? = cfm.observers[objKey]
+                var file = cfm.upload(objKey, null, object : CloudFileListener() {
+                    override fun onError(id: Int, ex: Exception?) {
                     }
 
                     override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+                        Log.d("STATE", "Progress change called: " + bytesCurrent + "/" + bytesTotal)
                         async(UI) {
-
+                            holder!!.upArrow.visibility = View.VISIBLE
+                            var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.ctx, R.anim.pulse)
+                            holder!!.upArrow.startAnimation(pulseAnimation)
                         }
                     }
 
                     override fun onStateChanged(id: Int, state: TransferState?) {
-                        async(UI) {
-
-                        }
                     }
 
                     override fun onComplete(id: Int, file: File) {
-                        async {
-                            var options = BitmapFactory.Options()
-                            options.inJustDecodeBounds = true
-                            BitmapFactory.decodeFile(file.absolutePath, options)
-                            var imgScale = 1
-                            while (options.outWidth/imgScale > 400) {
-                                imgScale *= 2
-                            }
-                            options.inJustDecodeBounds = false
-                            options.inSampleSize = imgScale
-                            var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                            async(UI) {
-                                holder?.imgView?.setImageBitmap(bmap)
-                            }
+                        async(UI) {
+                            holder!!.upArrow.clearAnimation()
+                            holder!!.upArrow.visibility = View.GONE
                         }
                     }
                 })
+                if (file != null) {
+                    async(UI) {
+                        holder!!.upArrow.visibility = View.VISIBLE
+                        var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.upArrow.context, R.anim.pulse)
+                        holder!!.upArrow.startAnimation(pulseAnimation)
+                    }
+                    var options = BitmapFactory.Options()
+                    options.inJustDecodeBounds = true
+                    BitmapFactory.decodeFile(file.absolutePath, options)
+                    var imgScale = 1
+                    while (options.outWidth / imgScale > 400) {
+                        imgScale *= 2
+                    }
+                    options.inJustDecodeBounds = false
+                    options.inSampleSize = imgScale
+                    var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
+                    async(UI) {
+                        holder?.imgView?.setImageBitmap(bmap)
+                    }
+                } else {
+                    cfm.download(objKey, object : CloudFileListener() {
+                        override fun onError(id: Int, ex: Exception?) {
+                        }
+
+                        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+                        }
+
+                        override fun onStateChanged(id: Int, state: TransferState?) {
+                        }
+
+                        override fun onComplete(id: Int, file: File) {
+                            async {
+                                var options = BitmapFactory.Options()
+                                options.inJustDecodeBounds = true
+                                BitmapFactory.decodeFile(file.absolutePath, options)
+                                var imgScale = 1
+                                while (options.outWidth / imgScale > 400) {
+                                    imgScale *= 2
+                                }
+                                options.inJustDecodeBounds = false
+                                options.inSampleSize = imgScale
+                                var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
+                                async(UI) {
+                                    holder?.imgView?.setImageBitmap(bmap)
+                                }
+                            }
+                        }
+                    })
+                }
             }
         }
 
@@ -272,10 +340,15 @@ class GalleryFragment : Fragment() {
 
         class ViewHolder: RecyclerView.ViewHolder {
             var imgView: ImageView
+            var upArrow: ImageView
+            var ctx: Context
+
             constructor(itemView: View)
                 :super(itemView)
             {
+                ctx = itemView.context
                 imgView = itemView.findViewById(R.id.row_imgview)
+                upArrow = itemView.findViewById(R.id.row_uparrow)
             }
         }
     }

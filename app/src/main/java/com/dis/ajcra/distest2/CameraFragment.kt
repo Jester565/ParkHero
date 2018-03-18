@@ -45,10 +45,12 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         private var appCtx: Context
         private var cloudFileManager: CloudFileManager
         private var compressor: Compressor
-        constructor(cognitoManager: CognitoManager, appContext: Context) {
+        private var galleryFragment: GalleryFragment
+        constructor(cognitoManager: CognitoManager, galleryFragment: GalleryFragment, appContext: Context) {
             this.cognitoManager = cognitoManager
+            this.galleryFragment = galleryFragment
             this.appCtx = appContext
-            cloudFileManager = CloudFileManager.GetInstance(cognitoManager.credentialsProvider, appContext)
+            cloudFileManager = CloudFileManager.GetInstance(cognitoManager, appContext)
             compressor = Compressor(appContext)
             compressor.setCompressFormat(Bitmap.CompressFormat.JPEG)
             compressor.setQuality(PICTURE_QUALITY)
@@ -66,7 +68,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                     jpegFile.writeBytes(jpeg)
                 }
                 var compFile = compressor.compressToFile(jpegFile)
-                var objKey = cognitoManager.federatedID + "/pictures/" + compFile.name
+                var objKey = "media/" + cognitoManager.federatedID + "/" + compFile.name
                 Log.d("STATE", "File Name: " + jpegFile.name)
                 Log.d("STATE", "File Len: " + jpegFile.length())
                 Log.d("STATE", "ObjKey: " + objKey)
@@ -80,17 +82,14 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                 cloudFileManager.displayFileInfo()
                 Log.d("FI", "PRE UPLOAD:")
                 cloudFileManager.displayFileInfo()
+
                 cloudFileManager.upload(objKey, compFile.toURI(), object: CloudFileListener() {
                     override fun onError(id: Int, ex: Exception?) {
                         Log.d("STATE", "On error: " + ex)
                     }
 
                     override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-                        Log.d("STATE", "Progress changed " + bytesCurrent + "/" + bytesTotal)
-                        Log.d("FI", "On progress changed")
-                        async {
-                            cloudFileManager.displayFileInfo()
-                        }
+
                     }
 
                     override fun onStateChanged(id: Int, state: TransferState?) {
@@ -100,8 +99,9 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                     override fun onComplete(id: Int, file: File) {
                         Log.d("STATE", "On Complete")
                     }
-
                 })
+                Log.d("STATE", "Gallery Updated")
+                galleryFragment.galleryUpdated(objKey)
             }
         }
 
@@ -109,7 +109,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             if (file != null) {
                 Log.d("STATE", "Uploading video")
                 async {
-                    cloudFileManager.upload(cognitoManager.federatedID + "/pictures/" + file.name, file.toURI(), object : CloudFileListener() {
+                    var objKey = "media/" + cognitoManager.federatedID + "/" + file.name
+                    cloudFileManager.upload(objKey, file.toURI(), object : CloudFileListener() {
                         override fun onError(id: Int, ex: Exception?) {
 
                         }
@@ -126,6 +127,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                             Log.d("STATE", "VIDEO UPLOADED")
                         }
                     })
+                    galleryFragment.galleryUpdated(objKey)
                 }
             }
         }
@@ -149,14 +151,11 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater!!.inflate(R.layout.fragment_camera, container, false)
 
-        var cognitoManager = CognitoManager.GetInstance(activity.applicationContext)
-
         cameraView = rootView.findViewById(R.id.camera_camera)
         //Camera Options
-        cameraView.mapGesture(Gesture.PINCH, GestureAction.ZOOM)
+        cameraView.mapGesture(Gesture.SCROLL_VERTICAL, GestureAction.ZOOM)
         cameraView.mapGesture(Gesture.TAP, GestureAction.FOCUS_WITH_MARKER)
         cameraView.videoQuality = VIDEO_QUALITY
-        cameraView.addCameraListener(DlCameraListener(cognitoManager, activity.applicationContext))
 
         pictureBar = rootView.findViewById(R.id.camera_lowbar)
         recordBar = rootView.findViewById(R.id.camera_recordlowbar)
@@ -324,6 +323,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         galleryFragment = GalleryFragment()
         var transaction = childFragmentManager.beginTransaction()
         transaction.add(R.id.camera_gallerylayout, galleryFragment).commit()
+        var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cameraView.addCameraListener(DlCameraListener(cognitoManager, galleryFragment, activity.applicationContext))
     }
 
     //Called when the activity starts or redisplayed

@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory
+import android.support.v4.widget.NestedScrollView
+import android.support.v7.widget.CardView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,12 +18,16 @@ import android.widget.TextView
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.login.EntityListFragment
 import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import android.widget.RelativeLayout
+
+
 
 class HomeFragment : Fragment() {
     companion object {
@@ -37,6 +43,9 @@ class HomeFragment : Fragment() {
     lateinit var accountLayout: View
     lateinit var friendButton: ImageButton
     lateinit var myProfileButton: ImageButton
+    lateinit var scrollView: NestedScrollView
+    lateinit var profView: CardView
+    var profViewH: Int = 0
     var myProfile: MyProfile? = null
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -49,7 +58,26 @@ class HomeFragment : Fragment() {
         profileNameText = rootView.findViewById(R.id.home_name)
         accountLayout = rootView.findViewById(R.id.home_accountlayout)
         cognitoManager = CognitoManager.GetInstance(activity.applicationContext)
+        scrollView = rootView.findViewById(R.id.home_scrollview)
+        profView = rootView.findViewById(R.id.home_profilelayout)
         profileManager = ProfileManager(cognitoManager)
+
+        scrollView.setOnScrollChangeListener(object: NestedScrollView.OnScrollChangeListener {
+            override fun onScrollChange(v: NestedScrollView?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int) {
+                if (profViewH == 0) {
+                    profViewH = profView.height
+                }
+                val params = profView.getLayoutParams()
+                params.height += oldScrollY - scrollY
+                if (params.height < 100) {
+                    params.height = 100
+                } else if (params.height > profViewH) {
+                    params.height = profViewH
+                }
+                profView.setLayoutParams(params)
+            }
+        })
+
         s3Client =  AmazonS3Client(cognitoManager.credentialsProvider)
         async(UI) {
             myProfile = profileManager.genMyProfile().await()
@@ -84,6 +112,12 @@ class HomeFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         initProfilePic()
+        initFragments()
+    }
+
+    fun initFragments() {
+        var entityListFragment = EntityListFragment()
+        this.childFragmentManager.beginTransaction().replace(R.id.home_entitylistholder, entityListFragment).commit()
     }
 
     fun initProfilePic() {

@@ -14,11 +14,11 @@ import android.util.Log
 import android.view.*
 import android.widget.*
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
-import com.amazonaws.services.sns.AmazonSNSAsyncClient
-import com.amazonaws.services.sns.AmazonSNSClient
 import com.dis.ajcra.distest2.*
+import com.dis.ajcra.distest2.login.InviteListFragment.Companion.ID_PARAM
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
+import com.dis.ajcra.distest2.model.EntityInfo
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
@@ -31,44 +31,21 @@ import org.greenrobot.eventbus.ThreadMode
 import java.io.File
 import java.lang.Exception
 
-class InviteListFragment : Fragment() {
-    private lateinit var profile: MyProfile
+class EntityListFragment : Fragment() {
     private lateinit var cognitoManager: CognitoManager
     private lateinit var profileManager: ProfileManager
     private lateinit var cfm: CloudFileManager
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: InviteRecyclerAdapter
-    private lateinit var snsClient: AmazonSNSClient
-    private var dataset: ArrayList<Invite> = ArrayList<Invite>()
+    private lateinit var adapter: EntityRecyclerAdapter
+    private var dataset: ArrayList<Entity> = ArrayList<Entity>()
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSnsEvent(evt: SnsEvent) {
-        if (DisGcmListener.FRIEND_INVITE == evt.type) {
-            var userInfo = evt.payload
-            var invite = FriendInvite(profileManager.getProfile(userInfo), false)
-            dataset.add(invite)
+        if (DisGcmListener.ENTITY_SENT == evt.type) {
+            var entity = Entity(profileManager, evt.payload)
+            dataset.add(entity)
             adapter.notifyItemInserted(dataset.size - 1)
-        } else if (DisGcmListener.FRIEND_REMOVED == evt.type) {
-            var userId = evt.payload.getString("removerId")
-            var i = 0
-            while (i < dataset.size) {
-                if (dataset[i].target.id == userId) {
-                    dataset.removeAt(i)
-                    adapter.notifyItemRemoved(i)
-                    return
-                }
-            }
-        } else if (DisGcmListener.FRIEND_ADDED == evt.type) {
-            var userId = evt.payload.getString("id")
-            var i = 0
-            while (i < dataset.size) {
-                if (dataset[i].target.id == userId) {
-                    dataset.removeAt(i)
-                    adapter.notifyItemRemoved(i)
-                    return
-                }
-            }
         }
     }
 
@@ -82,10 +59,9 @@ class InviteListFragment : Fragment() {
         async(UI) {
             adapter.notifyItemRangeRemoved(0, dataset.size)
             dataset.clear()
-            profile = profileManager.getMyProfile().await() as MyProfile
-            var invites = profile.getInvites().await()
-            for (invite in invites) {
-                dataset.add(invite)
+            var entities = profileManager.getEntities().await()
+            entities.forEach { it ->
+                dataset.add(it)
                 adapter.notifyItemInserted(dataset.size - 1)
             }
         }
@@ -104,41 +80,19 @@ class InviteListFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        var rootView = inflater!!.inflate(R.layout.fragment_invite_list, container, false)
-        adapter = InviteRecyclerAdapter(cfm, dataset)
+        var rootView = inflater!!.inflate(R.layout.fragment_friend_list, container, false)
+        adapter = EntityRecyclerAdapter(cfm, dataset)
         return rootView
     }
 
     override fun onViewCreated(rootView: View?, savedInstanceState: Bundle?) {
         if (rootView != null) {
-            recyclerView = rootView.findViewById(R.id.invitelist_recycler)
+            recyclerView = rootView.findViewById(R.id.friendlist_recycler)
             recyclerView.layoutManager = LinearLayoutManager(this.context)
             recyclerView.adapter = adapter
             recyclerView.setItemViewCacheSize(50)
             recyclerView.isDrawingCacheEnabled = true
-            /*
-            async(UI) {
-                profile = profileManager.getMyProfile().await() as MyProfile
-                var invites = profile.getInvites().await()
-                for (invite in invites) {
-                    dataset.add(invite)
-                    adapter.notifyItemInserted(dataset.size - 1)
-                }
-            }
-            */
-        }
-    }
-
-    companion object {
-        var ID_PARAM = "id"
-        fun GetInstance(id: String? = null): FriendListFragment {
-            val fragment = FriendListFragment()
-            if (id != null) {
-                val args = Bundle()
-                args.putString(ID_PARAM, id)
-                fragment.arguments = args
-            }
-            return fragment
+            recyclerView.isNestedScrollingEnabled = false
         }
     }
 }

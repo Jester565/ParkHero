@@ -1,5 +1,8 @@
 package com.dis.ajcra.distest2
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ArgbEvaluator
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -19,18 +22,32 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
 import java.lang.Exception
+import android.animation.ValueAnimator
+import android.animation.ValueAnimator.AnimatorUpdateListener
+import android.widget.LinearLayout
+
 
 /**
  * Created by ajcra on 1/25/2018.
  */
+class ProfileItem {
+    var selected: Boolean
+    var profile: Profile
+    constructor(profile: Profile, selected: Boolean = false) {
+        this.profile = profile
+        this.selected = selected
+    }
+}
 //should contain click listeners, can have different ViewHolders
 class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHolder> {
     private var cfm: CloudFileManager
-    private var dataset: ArrayList<Profile>
+    private var dataset: ArrayList<ProfileItem>
+    private var selectable: Boolean
 
-    constructor(cfm: CloudFileManager, dataset: ArrayList<Profile>) {
+    constructor(cfm: CloudFileManager, dataset: ArrayList<ProfileItem>, selectable: Boolean = false) {
         this.cfm = cfm
         this.dataset = dataset
+        this.selectable = selectable
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
@@ -40,15 +57,23 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
     }
 
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
-        holder!!.rootView.setOnClickListener {
-            var profile = dataset[holder!!.adapterPosition]
-            var intent = Intent(holder!!.ctx, ProfileActivity::class.java)
-            intent.putExtra("id", profile.id)
-            holder!!.ctx.startActivity(intent)
+        if (selectable) {
+            holder!!.animateSelected(dataset[position].selected)
+            holder!!.rootView.setOnClickListener {
+                dataset[position].selected = !dataset[position].selected
+                holder!!.animateSelected(dataset[position].selected)
+            }
+        } else {
+            holder!!.rootView.setOnClickListener {
+                var profile = dataset[holder!!.adapterPosition].profile
+                var intent = Intent(holder!!.ctx, ProfileActivity::class.java)
+                intent.putExtra("id", profile.id)
+                holder!!.ctx.startActivity(intent)
+            }
         }
         async(UI) {
-            holder!!.profNameView.text = dataset[position].getName().await()
-            var inviteStatus = dataset[position].getInviteStatus().await()
+            holder!!.profNameView.text = dataset[position].profile.getName().await()
+            var inviteStatus = dataset[position].profile.getInviteStatus().await()
             if (inviteStatus == 1) {
                 holder!!.rootView.setBackgroundColor(Color.YELLOW)
             } else if (inviteStatus == 2) {
@@ -59,7 +84,7 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
             Log.d("STATE", "Name set: " + holder!!.profNameView.text)
         }
         async {
-            var profilePicUrl = dataset[position].getProfilePicUrl().await()
+            var profilePicUrl = dataset[position].profile.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
             }
@@ -108,6 +133,7 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
     class ViewHolder : RecyclerView.ViewHolder {
         var profNameView: TextView
         var profImgView: ImageView
+        var profLayout: LinearLayout
         var rootView: View
         var ctx: Context
 
@@ -117,6 +143,41 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
             rootView = itemView
             profNameView = itemView.findViewById(R.id.rowprof_profname)
             profImgView = itemView.findViewById(R.id.rowprof_profimg)
+            profLayout = itemView.findViewById(R.id.rowprof_layout)
+        }
+
+        fun animateSelected(selected: Boolean) {
+            if (!selected) {
+                val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), Color.GREEN, Color.RED)
+                colorAnimation.duration = 70 // milliseconds
+                colorAnimation.addUpdateListener { animator -> profLayout.setBackgroundColor(animator.animatedValue as Int) }
+                colorAnimation.start()
+                rootView.animate()
+                        .alpha(1f)
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(70)
+                        .setListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+
+                            }
+                        })
+            } else {
+                val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), Color.RED, Color.GREEN)
+                colorAnimation.duration = 70 // milliseconds
+                colorAnimation.addUpdateListener { animator -> profLayout.setBackgroundColor(animator.animatedValue as Int) }
+                colorAnimation.start()
+                rootView.animate()
+                        .alpha(.5f)
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(70)
+                        .setListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+
+                            }
+                        })
+            }
         }
     }
 }

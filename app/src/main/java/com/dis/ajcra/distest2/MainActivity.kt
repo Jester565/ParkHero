@@ -10,6 +10,7 @@ class DlPagerAdapter: FragmentPagerAdapter {
     {
         fragments.add(CameraFragment())
         fragments.add(HomeFragment())
+        fragments.add(RideTimesFragment())
     }
 
     override fun getItem(position: Int): Fragment {

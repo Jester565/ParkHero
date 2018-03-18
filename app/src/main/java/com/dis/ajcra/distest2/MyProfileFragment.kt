@@ -45,7 +45,7 @@ class MyProfileFragment : Fragment() {
         var rootView = inflater!!.inflate(R.layout.fragment_my_profile, container, false)
         cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
         profileManager = ProfileManager(cognitoManager)
-        cfm = CloudFileManager.GetInstance(cognitoManager.credentialsProvider, context.applicationContext)
+        cfm = CloudFileManager.GetInstance(cognitoManager, context.applicationContext)
         return rootView
     }
 

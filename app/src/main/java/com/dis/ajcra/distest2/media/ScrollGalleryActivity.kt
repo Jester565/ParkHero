@@ -10,7 +10,8 @@ class ScrollGalleryActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scroll_gallery)
-        scrollGalleryFragment = ScrollGalleryFragment()
+        var objKey = intent.extras.getString("objkey")
+        scrollGalleryFragment = ScrollGalleryFragment.GetInstance(objKey)
         var transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.scrollgalleryactivity_layout, scrollGalleryFragment).commit()
     }

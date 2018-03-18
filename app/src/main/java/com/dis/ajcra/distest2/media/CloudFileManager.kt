@@ -9,6 +9,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.*
+import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.async
 import java.io.File
 import java.net.URI
@@ -98,6 +99,7 @@ class AWSCloudFileObserver: CloudFileObserver {
 
     override fun onStateChanged(id: Int, state: TransferState?) {
         async {
+            Log.d("STATE", "TransferState: " + state)
             if (state == TransferState.COMPLETED) {
                 cfi.fileURI = file.toURI().toString()
                 cfi.lastAccessed = Date().time
@@ -122,6 +124,7 @@ class AWSCloudFileObserver: CloudFileObserver {
     }
 
     @Synchronized override fun addListener(listener: CloudFileListener): Boolean {
+        Log.d("STATE", "Add listener called")
         if (super.addListener(listener)) {
             if (utilID.get() >= 0) {
                 var transfer = cfm.transferUtility.getTransferById(utilID.get())
@@ -190,11 +193,11 @@ class HttpCloudFileObserver: CloudFileObserver {
 
 class CloudFileManager {
     companion object {
-        var BUCKET_NAME: String = "disneyapp"
+        var BUCKET_NAME: String = "disneyapp3"
         private var Instance: CloudFileManager? = null
-        fun GetInstance(credentialsProvider: AWSCredentialsProvider, appContext: Context): CloudFileManager {
+        fun GetInstance(cognitoManager: CognitoManager, appContext: Context): CloudFileManager {
             if (Instance == null) {
-                Instance = CloudFileManager(credentialsProvider, appContext)
+                Instance = CloudFileManager(cognitoManager, appContext)
             }
             return Instance as CloudFileManager
         }
@@ -204,11 +207,13 @@ class CloudFileManager {
     var httpUtility: HttpDownloadUtility
     private var s3Client: AmazonS3
     private var appContext: Context
+    private var cognitoManager: CognitoManager
     var cfiDb: CloudFileDatabase
 
-    constructor(credentialsProvider: AWSCredentialsProvider, appContext: Context) {
+    constructor(cognitoManager: CognitoManager, appContext: Context) {
+        this.cognitoManager = cognitoManager
         this.appContext = appContext
-        s3Client = AmazonS3Client(credentialsProvider)
+        s3Client = AmazonS3Client(cognitoManager.credentialsProvider)
         transferUtility = TransferUtility(s3Client, appContext)
         httpUtility = HttpDownloadUtility()
         cfiDb = Room.databaseBuilder(appContext, CloudFileDatabase::class.java, "cfi").build()
@@ -217,7 +222,7 @@ class CloudFileManager {
         }
     }
 
-    private suspend fun initTransfers() {
+    private fun initTransfers() {
         run {
             var transfers = transferUtility.getTransfersWithType(TransferType.UPLOAD)
             for (transfer in transfers) {
@@ -240,11 +245,17 @@ class CloudFileManager {
                 transfer.setTransferListener(cfo)
             }
         }
+        Log.d("STATE", "Init transfer done")
     }
 
-    suspend fun listObjects(prefix: String): List<S3ObjectSummary>? {
+    suspend fun listObjects(prefix: String, orderByDate: Boolean = false): List<S3ObjectSummary>? {
         try {
             var resp = s3Client.listObjectsV2(BUCKET_NAME, prefix)
+            if (orderByDate) {
+                resp.objectSummaries.sortByDescending { it ->
+                    it.lastModified
+                }
+            }
             return resp.objectSummaries
         } catch (ex: Exception) {
             Log.d("STATE", "List object exception " + ex.message)
@@ -252,7 +263,7 @@ class CloudFileManager {
         return null
     }
 
-    private suspend fun getCFI(key: String): CloudFileInfo {
+    private fun getCFI(key: String): CloudFileInfo {
         var cfi = cfiDb.cloudFileInfoDao().getCloudFileInfo(key)
         if (cfi != null) {
             return cfi
@@ -263,7 +274,7 @@ class CloudFileManager {
     }
 
     private fun isOwnedByUser(key: String): Boolean {
-        return true
+        return (key.contains(cognitoManager.federatedID) && key.contains("media"))
     }
 
     suspend fun genPresignedURI(key: String, expireMins: Int): URI {
@@ -337,7 +348,7 @@ class CloudFileManager {
         throw Error("Cannot upload to directory you do not own")
     }
 
-    @Synchronized suspend fun download(key: String, listener: CloudFileListener) {
+    @Synchronized suspend fun download(key: String, listener: CloudFileListener, givenPresignedURI: String? = null) {
         //Check if we are already downloading
         run {
             var cloudFileObserver = observers[key]
@@ -363,19 +374,25 @@ class CloudFileManager {
             return
         }
         Log.d("STATE", "Downloading file...")
-        var fileName = cfi.key + UUID.randomUUID().toString()
-        var downloadFile = File(appContext.cacheDir, fileName)
+        var downloadFile = File(appContext.cacheDir, UUID.randomUUID().toString())
+        downloadFile.createNewFile()
         if (isOwnedByUser(cfi.key)) {
             var awsObserver = transferUtility.download(BUCKET_NAME, cfi.key, downloadFile)
             var cloudFileObserver = AWSCloudFileObserver(this, cfi, TransferType.DOWNLOAD, downloadFile, true)
             cloudFileObserver.addListener(listener)
             awsObserver.setTransferListener(cloudFileObserver)
         } else {
-            var presignedURI = genPresignedURI(cfi.key, 60)
+            var presignedURI: URI
+            if (givenPresignedURI == null) {
+                presignedURI = genPresignedURI(cfi.key, 60)
+            } else {
+                presignedURI = URI(givenPresignedURI)
+            }
             var cloudFileObserver = HttpCloudFileObserver(this, cfi, TransferType.DOWNLOAD, downloadFile, true)
             cloudFileObserver.addListener(listener)
             httpUtility.download(presignedURI.toString(), downloadFile, cloudFileObserver)
         }
+
     }
 
     suspend fun clearCache(maxMB: Float = 0f) {

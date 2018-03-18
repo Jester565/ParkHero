@@ -9,10 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
@@ -44,7 +41,7 @@ class ProfileFragment : Fragment() {
         var rootView = inflater!!.inflate(R.layout.fragment_profile, container, false)
         cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
         profileManager = ProfileManager(cognitoManager)
-        cfm = CloudFileManager.GetInstance(cognitoManager.credentialsProvider, context.applicationContext)
+        cfm = CloudFileManager.GetInstance(cognitoManager, context.applicationContext)
         profile = profileManager.getProfile(arguments.getString(ID_PARAM))
         return rootView
     }
@@ -104,6 +101,7 @@ class ProfileFragment : Fragment() {
 
     fun initFriendStatus(status: Int) {
         acceptButton.isEnabled = true
+        declineButton.isEnabled = true
         acceptButton.visibility = View.GONE
         declineButton.visibility = View.GONE
 

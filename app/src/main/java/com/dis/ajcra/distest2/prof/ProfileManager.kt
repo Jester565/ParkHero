@@ -4,12 +4,15 @@ import android.content.Context
 import android.util.Log
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
+import com.dis.ajcra.distest2.Entity
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.model.CreateEndpointInput
 import com.dis.ajcra.distest2.model.CreateUserInput
+import com.dis.ajcra.distest2.model.SendEntityInput
 import com.dis.ajcra.distest2.model.UserInfo
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
+import org.json.JSONObject
 
 /**
  * Created by ajcra on 1/21/2018.
@@ -31,8 +34,11 @@ class ProfileManager {
 
     fun genMyProfile(): Deferred<MyProfile> = async {
         var profile = getMyProfile().await()
+        Log.d("STATE", "Profile")
         if (profile == null) {
+            Log.d("STATE", "Creating profile")
             profile = createMyProfile().await()
+            Log.d("STATE", "Ending profile")
         }
         profile as MyProfile
     }
@@ -48,12 +54,37 @@ class ProfileManager {
         myProfile
     }
 
-    fun getProfile(id: String): Profile {
-        return Profile(apiClient, id)
+    fun getProfile(id: String, name: String? = null, profilePicUrl: String? = null): Profile {
+        var profile = Profile(apiClient, id)
+        profile.name = name
+        profile.profilePicUrl = profilePicUrl
+        return profile
     }
 
     fun getProfile(info: UserInfo): Profile {
         return Profile(apiClient, info)
+    }
+
+    fun getProfile(uObj: JSONObject): Profile {
+        return Profile(apiClient, uObj)
+    }
+
+    fun sendEntity(objKey: String, sendToProfiles: ArrayList<Profile>): Deferred<Boolean> = async {
+        var success = false
+        try {
+            var input = SendEntityInput()
+            input.objKey = objKey
+            var sendIdArr = ArrayList<String>()
+            sendToProfiles.forEach {it ->
+                sendIdArr.add(it.id)
+            }
+            input.sendToIds = sendIdArr
+            apiClient.sendentityPost(input)
+            success = true
+        } catch (ex: Exception) {
+            Log.d("STATE", "SendEntity exception: " + ex.message)
+        }
+        success
     }
 
     fun createMyProfile(): Deferred<MyProfile> = async {
@@ -86,5 +117,19 @@ class ProfileManager {
         }
 
         profiles
+    }
+
+    //There may be a better place to put this
+    fun getEntities(): Deferred<ArrayList<Entity>> = async {
+        var entities = ArrayList<Entity>()
+        try {
+            var eInfos = apiClient.getentitiesGet("0")
+            eInfos.forEach { it ->
+                entities.add(Entity(this@ProfileManager, it))
+            }
+        } catch (ex: Exception) {
+            Log.d("STATE", "GetEntities ex: " + ex)
+        }
+        entities
     }
 }

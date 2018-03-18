@@ -1,5 +1,6 @@
 package com.dis.ajcra.distest2.media
 
+import android.util.Log
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.github.kittinunf.fuel.Fuel
@@ -16,30 +17,42 @@ class HttpDownloadRequest {
 
     fun start(remoteURI: String, downloadFile: File) {
         state = TransferState.IN_PROGRESS
-        listener.onStateChanged(id, state)
+        //listener.onStateChanged(id, state)
         //make download request for url
-        this.req = Fuel.Companion.download(remoteURI).destination {
-            response, url -> downloadFile
-        }.progress { readBytes, totalBytes ->
-            //update progress of listeners
-            this.bytesCurrent = readBytes
-            this.bytesTotal = totalBytes
-            listener.onProgressChanged(id, readBytes, totalBytes)
-        }.interrupt { request ->
-            //let listers know there was an error
-            this.state = TransferState.FAILED
-            listener.onStateChanged(id, state)
-            listener.onError(id, Exception("Http Request was Interrupted"))
-        }.response {request, response, result ->
-            if (response.statusCode in 200..299) {
-                state = TransferState.COMPLETED
-                listener.onStateChanged(id, state)
-            } else {
-                state = TransferState.FAILED
-                listener.onStateChanged(id, state)
-                listener.onError(id, Exception("Http response had status code " + response.statusCode))
-            }
+        Log.d("EntitySent", "Downloading " + remoteURI)
+        try {
+            this.req = Fuel.download(remoteURI).destination { response, url ->
+                downloadFile
+            }.progress { readBytes, totalBytes ->
+                        //update progress of listeners
+                        this.bytesCurrent = readBytes
+                        this.bytesTotal = totalBytes
+                        listener.onProgressChanged(id, readBytes, totalBytes)
+                        Log.d("EntitySent", "Progress changed")
+                    }.interrupt { request ->
+                        //let listers know there was an error
+                        Log.d("EntitySent", "Interrupt")
+                        this.state = TransferState.FAILED
+                        listener.onStateChanged(id, state)
+                        listener.onError(id, Exception("Http Request was Interrupted"))
+                    }.response { request, response, result ->
+                        if (response.statusCode in 200..299) {
+                            Log.d("EntitySent", "STATUS CODE 200")
+                            state = TransferState.COMPLETED
+                            listener.onStateChanged(id, state)
+                        } else {
+                            state = TransferState.FAILED
+                            listener.onStateChanged(id, state)
+                            Log.d("EntitySent", "skitly bob bog ")
+                            Log.d("EntitySent", "scraw " + result)
+                            Log.d("EntitySent", "Bob " + request)
+                            listener.onError(id, Exception("Http response gra status code " + response.statusCode))
+                        }
+                    }
+        } catch(ex: Exception) {
+            Log.d("STATE", "HttpEx: " + ex.message)
         }
+        Log.d("STATE", "Finished creating http req")
     }
 
     var id: Int

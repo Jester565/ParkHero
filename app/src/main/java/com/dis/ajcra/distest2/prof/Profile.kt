@@ -7,6 +7,7 @@ import com.dis.ajcra.distest2.model.RemoveFriendInput
 import com.dis.ajcra.distest2.model.UserInfo
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
+import org.json.JSONObject
 
 /**
  * Created by ajcra on 1/18/2018.
@@ -30,6 +31,14 @@ open class Profile {
         this.id = userInfo.id
         aquiredProfilePic = true
         this.profilePicUrl = userInfo.profilePicUrl
+    }
+
+    constructor(apiClient: DisneyAppClient, userObj: JSONObject) {
+        this.apiClient = apiClient;
+        this.name = userObj.getString("name")
+        this.id = userObj.getString("id")
+        aquiredProfilePic = true
+        this.profilePicUrl = userObj.getString("profilePicUrl")
     }
 
     fun getUser() = async {

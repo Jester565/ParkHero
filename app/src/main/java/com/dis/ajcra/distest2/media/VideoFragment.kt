@@ -52,7 +52,7 @@ class VideoFragment : Fragment() {
         this.videoView.player = ExoPlayerFactory.newSimpleInstance(this.context, trackSelector)
         this.player = videoView.player
         var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        cfm = CloudFileManager(cognitoManager.credentialsProvider, this.context.applicationContext)
+        cfm = CloudFileManager(cognitoManager, this.context.applicationContext)
         if (key != null) {
             download()
         }

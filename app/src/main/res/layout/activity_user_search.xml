@@ -31,6 +31,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:background="#DD0000"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Friends"
+                android:textSize="30dp"/>
             <LinearLayout
                 android:id="@+id/usersearchactivity_friendlayout"
                 android:layout_width="match_parent"

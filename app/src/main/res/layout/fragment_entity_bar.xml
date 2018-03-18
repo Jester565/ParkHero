@@ -1,0 +1,47 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <ImageButton
+        android:id="@+id/entitybar_delete"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:src="@drawable/ic_delete_black_24dp"
+        android:scaleType="fitXY"
+        android:background="#00000000"
+        android:adjustViewBounds="true"/>
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <ImageButton
+        android:id="@+id/entitybar_info"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:src="@drawable/ic_info_outline_black_24dp"
+        android:scaleType="fitXY"
+        android:background="#00000000"
+        android:adjustViewBounds="true"/>
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <ImageButton
+        android:id="@+id/entitybar_send"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:src="@drawable/ic_send_black_24dp"
+        android:scaleType="fitXY"
+        android:background="#00000000"
+        android:adjustViewBounds="true"/>
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

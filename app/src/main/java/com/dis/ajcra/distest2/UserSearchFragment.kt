@@ -32,7 +32,7 @@ class UserSearchFragment : Fragment() {
     private lateinit var searchField: EditText
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ProfileRecyclerAdapter
-    private var dataset: ArrayList<Profile> = ArrayList<Profile>()
+    private var dataset: ArrayList<ProfileItem> = ArrayList<ProfileItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +42,7 @@ class UserSearchFragment : Fragment() {
         var rootView = inflater!!.inflate(R.layout.fragment_user_search, container, false)
         cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
         profileManager = ProfileManager(cognitoManager)
-        cfm = CloudFileManager.GetInstance(cognitoManager.credentialsProvider, context.applicationContext)
+        cfm = CloudFileManager.GetInstance(cognitoManager, context.applicationContext)
         adapter = ProfileRecyclerAdapter(cfm, dataset)
         return rootView
     }
@@ -73,7 +73,7 @@ class UserSearchFragment : Fragment() {
                         var j = 0
                         while (j < profiles.size) {
                             while (i < dataset.size) {
-                                var n1 = dataset[i].getName().await()
+                                var n1 = dataset[i].profile.getName().await()
                                 var n2 = profiles[j].getName().await()
                                 if (n1.compareTo(n2, true) < 0) {
                                     dataset.removeAt(i)
@@ -82,8 +82,8 @@ class UserSearchFragment : Fragment() {
                                     break
                                 }
                             }
-                            if (i >= dataset.size || dataset[i].id != profiles[j].id) {
-                                dataset.add(i, profiles[j])
+                            if (i >= dataset.size || dataset[i].profile.id != profiles[j].id) {
+                                dataset.add(i, ProfileItem(profiles[j]))
                                 adapter.notifyItemInserted(i)
                             }
                             i++

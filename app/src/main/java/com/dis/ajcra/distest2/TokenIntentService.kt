@@ -5,14 +5,12 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import android.util.Log
+import com.amazonaws.Protocol
 
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.sns.AmazonSNSClient
-import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest
-import com.amazonaws.services.sns.model.GetEndpointAttributesRequest
-import com.amazonaws.services.sns.model.NotFoundException
-import com.amazonaws.services.sns.model.SetEndpointAttributesRequest
+import com.amazonaws.services.sns.model.*
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
@@ -51,7 +49,7 @@ class TokenIntentService : IntentService("RegIntentService") {
         val preferences = PreferenceManager.getDefaultSharedPreferences(this.applicationContext)
         var endpointArn = getEndpointArn(preferences)
         val token = token
-        var updatedRequired = false
+        var updateRequired = false
         if (endpointArn == null) {
             endpointArn = createEndpoint(token)
         }
@@ -60,7 +58,7 @@ class TokenIntentService : IntentService("RegIntentService") {
             val req = GetEndpointAttributesRequest()
                     .withEndpointArn(endpointArn)
             val result = client!!.getEndpointAttributes(req)
-            updatedRequired = result.attributes["Token"] != token || result.attributes["Enabled"].equals("true", ignoreCase = true)
+            updateRequired = result.attributes["Token"] != token || result.attributes["Enabled"].equals("false", ignoreCase = true)
         } catch (ex: NotFoundException) {
             Log.d("STATE", "GetEndpoint not found, recreating")
             endpointArn = createEndpoint(token)
@@ -69,7 +67,7 @@ class TokenIntentService : IntentService("RegIntentService") {
         }
 
         Log.d("STATE", "Starting intent3")
-        if (updatedRequired) {
+        if (updateRequired) {
             val attribs = HashMap<String?, String?>()
             attribs.put("Token", token)
             attribs.put("Enabled", "true")
@@ -77,21 +75,29 @@ class TokenIntentService : IntentService("RegIntentService") {
                     .withEndpointArn(endpointArn)
                     .withAttributes(attribs)
             client!!.setEndpointAttributes(req)
-            async {
-                Log.d("STATE", "Sending endpoint arn")
-                var myProfile = profileManager.getMyProfile().await() as MyProfile
-                myProfile.setEndpointArn(endpointArn as String)
-            }
         }
     }
 
     private fun createEndpoint(token: String?): String? {
+        var topicName = cognitoManager.federatedID.substring(cognitoManager.federatedID.indexOf(':') + 1)
+        var topicArn: String? = null
+        try {
+            var req = client!!.createTopic(topicName)
+            topicArn = req.topicArn
+        } catch (ex: Exception) {
+            Log.d("STATE", "Could not create topic: " + ex.message)
+        }
         try {
             val req = CreatePlatformEndpointRequest()
                     .withPlatformApplicationArn(PLATFORM_APP_ARN)
                     .withToken(token)
                     .withCustomUserData(cognitoManager!!.federatedID)
             val result = client!!.createPlatformEndpoint(req)
+            var subReq = SubscribeRequest()
+            subReq.endpoint = result.endpointArn
+            subReq.protocol = "application"
+            subReq.topicArn = topicArn
+            client!!.subscribe(subReq)
             return result.endpointArn
         } catch (ex: Exception) {
             Log.d("STATE", "CreatePlatformEndpoint err " + ex)

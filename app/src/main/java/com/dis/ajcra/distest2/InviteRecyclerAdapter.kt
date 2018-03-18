@@ -47,16 +47,22 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             holder!!.acceptButton.visibility = View.VISIBLE
             holder!!.declineButton.visibility = View.VISIBLE
             holder!!.acceptButton.setOnClickListener {v ->
-                v.isEnabled = false
-                dataset[holder!!.adapterPosition].accept()
-                dataset.removeAt(holder!!.adapterPosition)
-                notifyItemRemoved(holder!!.adapterPosition)
+                async(UI) {
+                    dataset[holder!!.adapterPosition].target.addFriend().await()
+                    v.isEnabled = false
+                    dataset[holder!!.adapterPosition].accept()
+                    dataset.removeAt(holder!!.adapterPosition)
+                    notifyItemRemoved(holder!!.adapterPosition)
+                }
             }
             holder!!.declineButton.setOnClickListener {v ->
-                v.isEnabled = false
-                dataset[holder!!.adapterPosition].decline()
-                dataset.removeAt(holder!!.adapterPosition)
-                notifyItemRemoved(holder!!.adapterPosition)
+                async(UI) {
+                    dataset[holder!!.adapterPosition].target.removeFriend().await()
+                    v.isEnabled = false
+                    dataset[holder!!.adapterPosition].decline()
+                    dataset.removeAt(holder!!.adapterPosition)
+                    notifyItemRemoved(holder!!.adapterPosition)
+                }
             }
         }
         holder!!.rootView.setOnClickListener {
