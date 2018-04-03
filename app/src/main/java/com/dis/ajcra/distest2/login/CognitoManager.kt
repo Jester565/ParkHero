@@ -7,16 +7,8 @@ import com.amazonaws.AmazonServiceException
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSSessionCredentials
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserCodeDeliveryDetails
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserDetails
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserSession
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.AuthenticationContinuation
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.AuthenticationDetails
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ForgotPasswordContinuation
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.MultiFactorAuthenticationContinuation
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.*
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.AuthenticationHandler
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.ForgotPasswordHandler
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
@@ -159,7 +151,7 @@ class CognitoManager private constructor(appContext: Context) {
 
     fun login(pwd: String, cb: LoginHandler) {
         val handler = object : AuthenticationHandler {
-            override fun onSuccess(userSession: CognitoUserSession) {
+            override fun onSuccess(userSession: CognitoUserSession, device: CognitoDevice) {
                 addLogin(COGNITO_USER_POOL_ARN, userSession.idToken.jwtToken)
                 cb.onSuccess()
             }
@@ -168,6 +160,10 @@ class CognitoManager private constructor(appContext: Context) {
                 val details = AuthenticationDetails(userId, pwd, null)
                 authenticationContinuation.setAuthenticationDetails(details)
                 authenticationContinuation.continueTask()
+            }
+
+            override fun authenticationChallenge(continuation: ChallengeContinuation?) {
+
             }
 
             override fun getMFACode(continuation: MultiFactorAuthenticationContinuation) {

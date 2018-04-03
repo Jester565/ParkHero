@@ -37,7 +37,7 @@ interface CloudFileInfoDao {
     @Query("SELECT * FROM CloudFileInfo ORDER BY lastAccessed DESC")
     fun getCloudFileInfosNewestToOldest(): List<CloudFileInfo>
 
-    @Query("SELECT * FROM CloudFileInfo WHERE key = :arg0")
+    @Query("SELECT * FROM CloudFileInfo WHERE 'key' = :key")
     fun getCloudFileInfo(key: String): CloudFileInfo?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

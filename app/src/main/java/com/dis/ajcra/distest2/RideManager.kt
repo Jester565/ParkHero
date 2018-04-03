@@ -11,7 +11,6 @@ import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.Profile
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
-import org.apache.http.impl.client.BasicCredentialsProvider
 import org.json.JSONObject
 
 

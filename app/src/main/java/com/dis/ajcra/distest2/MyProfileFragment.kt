@@ -1,17 +1,13 @@
 package com.dis.ajcra.distest2
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
@@ -19,9 +15,7 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.MyProfile
-import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
-import com.dis.ajcra.distest2.prof.ProfilePicSelection
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
@@ -95,8 +89,8 @@ class MyProfileFragment : Fragment() {
                     })
                 }
                 profImg.setOnClickListener {
-                    var intent = Intent(this@MyProfileFragment.context, ProfilePicSelection::class.java)
-                    startActivity(intent)
+                    //var intent = Intent(this@MyProfileFragment.context, ProfilePicSelection::class.java)
+                    //startActivity(intent)
                 }
 
                 nameText.setText(myProfile.getName().await())

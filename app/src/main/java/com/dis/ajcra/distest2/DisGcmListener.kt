@@ -14,7 +14,8 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.google.android.gms.gcm.GcmListenerService
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.experimental.EventLoop
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -33,7 +34,7 @@ class SnsEvent {
     }
 }
 
-class DisGcmListener : GcmListenerService() {
+class DisGcmListener : FirebaseMessagingService() {
     companion object {
         var FRIEND_INVITE = "FriendInvite"
         var FRIEND_ADDED = "FriendAdded"
@@ -41,11 +42,9 @@ class DisGcmListener : GcmListenerService() {
         var ENTITY_SENT = "EntitySent"
     }
 
-    override fun onMessageReceived(from: String?, data: Bundle?) {
-        for (elm in data!!.keySet()) {
-            Log.d("REE", elm)
-        }
-        var msg = JSONObject(data!!.getString("default"))
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        var data = remoteMessage.data
+        var msg = JSONObject(data!!.get("default"))
         var type = msg.getString("type")
         var payload = msg.getJSONObject("payload")
         EventBus.getDefault().post(SnsEvent(type, payload))

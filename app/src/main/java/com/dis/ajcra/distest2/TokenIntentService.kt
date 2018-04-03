@@ -15,8 +15,7 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
 
-import com.google.android.gms.gcm.GoogleCloudMessaging
-import com.google.android.gms.iid.InstanceID
+import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.coroutines.experimental.async
 
 import java.util.HashMap
@@ -25,9 +24,9 @@ class TokenIntentService : IntentService("RegIntentService") {
 
     private val token: String?
         get() {
-            val instanceID = InstanceID.getInstance(this)
+            val instanceID = FirebaseInstanceId.getInstance();
             try {
-                return instanceID.getToken(getString(R.string.gcm_defaultSenderId), GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
+                return instanceID.getToken()
             } catch (ex: Exception) {
                 Log.d("STATE", "Get token failed " + ex)
             }
