@@ -28,7 +28,6 @@ class HttpDownloadRequest {
                         this.bytesCurrent = readBytes
                         this.bytesTotal = totalBytes
                         listener.onProgressChanged(id, readBytes, totalBytes)
-                        Log.d("EntitySent", "Progress changed")
                     }.interrupt { request ->
                         //let listers know there was an error
                         Log.d("EntitySent", "Interrupt")

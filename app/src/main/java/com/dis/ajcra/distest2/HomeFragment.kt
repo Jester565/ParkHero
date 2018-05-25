@@ -15,6 +15,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.dis.ajcra.distest2.login.CognitoManager
@@ -23,10 +24,9 @@ import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
+import com.dis.ajcra.fastpass.RidesUpdatedSubscription
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
-import android.widget.RelativeLayout
-
 
 
 class HomeFragment : Fragment() {
@@ -45,6 +45,9 @@ class HomeFragment : Fragment() {
     lateinit var myProfileButton: ImageButton
     lateinit var scrollView: NestedScrollView
     lateinit var profView: CardView
+    var ridesUpdatedSubscription: AppSyncSubscriptionCall<RidesUpdatedSubscription.Data>? = null
+    //temp
+    var appSyncTest: AppSyncTest = AppSyncTest()
     var profViewH: Int = 0
     var myProfile: MyProfile? = null
 
@@ -81,8 +84,6 @@ class HomeFragment : Fragment() {
         s3Client =  AmazonS3Client(cognitoManager.credentialsProvider)
         async(UI) {
             myProfile = profileManager.genMyProfile().await()
-            val intent = Intent(this@HomeFragment.context, TokenIntentService::class.java)
-            this@HomeFragment.activity.startService(intent)
             profileNameText.text = myProfile!!.getName().await()
             if (!cognitoManager.isLoggedIn().await()) {
                 accountLayout.visibility = View.VISIBLE
@@ -138,6 +139,14 @@ class HomeFragment : Fragment() {
                 Log.d("STATE", "Exception occured")
                 Log.d("STATE", e.message)
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (ridesUpdatedSubscription != null) {
+            Log.d("STATE", "CANCELLING SUBSCRIPTION: " + ridesUpdatedSubscription?.isCanceled)
+            ridesUpdatedSubscription?.cancel()
         }
     }
 }

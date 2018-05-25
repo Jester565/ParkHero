@@ -86,7 +86,7 @@ class MyProfileFragment : Fragment() {
                                 }
                             }
                         }
-                    })
+                    }, null, true)
                 }
                 profImg.setOnClickListener {
                     //var intent = Intent(this@MyProfileFragment.context, ProfilePicSelection::class.java)

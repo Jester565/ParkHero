@@ -3,6 +3,7 @@ package com.dis.ajcra.distest2
 import android.os.Bundle
 import android.support.v4.app.*
 import android.support.v4.view.ViewPager
+import com.google.firebase.iid.FirebaseInstanceId
 
 class DlPagerAdapter: FragmentPagerAdapter {
     constructor(fm: FragmentManager)

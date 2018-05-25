@@ -23,6 +23,10 @@ import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.File
 import java.lang.Exception
+import android.app.NotificationChannel
+import android.os.Build
+
+
 
 class SnsEvent {
     var type: String
@@ -40,6 +44,24 @@ class DisGcmListener : FirebaseMessagingService() {
         var FRIEND_ADDED = "FriendAdded"
         var FRIEND_REMOVED = "FriendRemoved"
         var ENTITY_SENT = "EntitySent"
+        var INVITE_CHANNEL_ID = "DisInvites"
+        var MSG_CHANNEL_ID = "DisMsgs"
+    }
+
+    fun createNotificationChannel(id: String, desc: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create the NotificationChannel
+            val name = "Invites"
+            val description = "Receive notifications when people send invites"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val mChannel = NotificationChannel(id, name, importance)
+            mChannel.description = desc
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            val notificationManager = getSystemService(
+                    Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -82,7 +104,7 @@ class DisGcmListener : FirebaseMessagingService() {
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    Log.d("STATE", "on complete called")
+                    createNotificationChannel(MSG_CHANNEL_ID, "Messages")
                     var notificationID = (type + entityID).hashCode()
                     var options = BitmapFactory.Options()
                     options.inJustDecodeBounds = true
@@ -96,7 +118,7 @@ class DisGcmListener : FirebaseMessagingService() {
                     options.inSampleSize = imgScale
                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
                     //Create notification
-                    val notificationBuilder = NotificationCompat.Builder(this@DisGcmListener, "DISTEST4")
+                    val notificationBuilder = NotificationCompat.Builder(this@DisGcmListener, MSG_CHANNEL_ID)
                             .setContentTitle("Picture from " + ownerName)
                             .setSmallIcon(R.drawable.ic_image_black_24dp)
                             .setContentText("Tag info here?")
@@ -142,7 +164,7 @@ class DisGcmListener : FirebaseMessagingService() {
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    Log.d("STATE", "on complete called")
+                    createNotificationChannel(INVITE_CHANNEL_ID, "Invites")
                     var notificationID = (type + user.getString("id")).hashCode()
                     var options = BitmapFactory.Options()
                     options.inJustDecodeBounds = true
@@ -157,7 +179,7 @@ class DisGcmListener : FirebaseMessagingService() {
                     options.inSampleSize = imgScale
                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
                     //Create notification
-                    val notificationBuilder = NotificationCompat.Builder(this@DisGcmListener, "DISTEST4")
+                    val notificationBuilder = NotificationCompat.Builder(this@DisGcmListener, INVITE_CHANNEL_ID)
                             .setContentTitle("Friend Invite From " + user.getString("name"))
                             .setSmallIcon(R.drawable.ic_email_black_24dp)
                             .setContentText("Click to respond")

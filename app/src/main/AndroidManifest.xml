@@ -8,10 +8,17 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
+
+    <!-- Required for complications to receive complication data and open the provider chooser. -->
+    <uses-permission android:name="com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA" />
 
     <application
         android:allowBackup="true"
@@ -28,23 +35,57 @@
             </intent-filter>
         </activity>
 
-
         <service
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+        <service android:name=".DisGcmListener">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service android:name=".DisIDListener">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
 
-        <service
-            android:name=".DisGcmListener">
+        <activity android:name=".SearchActivity">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.gms.actions.SEARCH_ACTION" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.VOICE" />
             </intent-filter>
-        </service>
-        <service
-            android:name=".DisIDListener">
+        </activity>
+        <activity android:name=".PlayActivity">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </service>
+        </activity>
+        <activity android:name=".NoteActivity">
+            <intent-filter>
+                <action android:name="com.google.android.gms.actions.CREATE_NOTE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".OpenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <data
+                    android:host="www.touringplans.com"
+                    android:scheme="https" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity android:name=".media.ScrollGalleryActivity" />
         <activity android:name=".login.LoginActivity" />
         <activity android:name=".login.RegisterActivity" />
@@ -52,8 +93,9 @@
         <activity android:name=".login.ResetPwdActivity" />
         <activity android:name=".UserSearchActivity" />
         <activity android:name=".ProfileActivity" />
-        <activity android:name=".MyProfileActivity"></activity>
-        <service android:name=".TokenIntentService"></service>
+        <activity android:name=".MyProfileActivity" />
+        <activity android:name=".RideActivity" />
+        <activity android:name=".SensorActivity"></activity>
     </application>
 
 </manifest>

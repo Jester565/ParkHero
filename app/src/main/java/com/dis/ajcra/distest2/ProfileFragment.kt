@@ -89,7 +89,7 @@ class ProfileFragment : Fragment() {
                             }
                         }
                     }
-                })
+                }, null, true)
             }
             async(UI) {
                 nameText.setText(profile.getName().await())

@@ -1,18 +1,13 @@
 package com.dis.ajcra.distest2
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.media.Image
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.media.CloudFileListener
@@ -85,7 +80,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                         }
                     }
                 }
-            })
+            }, null, true)
 
             cfm.download(entity.id, object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {}

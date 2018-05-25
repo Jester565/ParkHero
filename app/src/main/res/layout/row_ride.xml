@@ -7,7 +7,7 @@
         android:id="@+id/rowride_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#DD0000">
+        android:background="#660000">
         <ImageView
             android:id="@+id/rowride_img"
             android:layout_width="70dp"
@@ -27,6 +27,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textSize="22dp"
+            android:textColor="#222222"
             android:text="Astro Orbiter"/>
         <!--
         <LinearLayout
@@ -70,11 +71,13 @@
                 android:layout_toLeftOf="@id/rowride_space"
                 android:gravity="center"
                 android:textSize="20dp"
+                android:textColor="#222222"
                 android:text="120 min" />
             <TextView
                 android:id="@+id/rowride_space"
                 android:layout_width="20dp"
                 android:layout_height="10dp"
+                android:textColor="#222222"
                 android:layout_centerHorizontal="true" />
             <TextView
                 android:id="@+id/rowride_fastpass"
@@ -82,6 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_toRightOf="@id/rowride_space"
                 android:gravity="center"
+                android:textColor="#222222"
                 android:textSize="20dp"
                 android:text="1:30 pm" />
         </RelativeLayout>

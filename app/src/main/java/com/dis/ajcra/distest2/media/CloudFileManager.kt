@@ -4,11 +4,15 @@ import android.arch.persistence.room.Room
 import android.content.Context
 import android.util.Log
 import com.amazonaws.HttpMethod
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.mobileconnectors.s3.transferutility.*
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.*
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
+import com.amazonaws.services.s3.model.GetObjectMetadataRequest
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.async
 import java.io.File
@@ -94,16 +98,16 @@ class AWSCloudFileObserver: CloudFileObserver {
     {
         this.cfm = cfm
         this.cfi = cfi
-        cfm.observers.put(cfi.key, this)
+        cfm.observers.put(cfi.objKey, this)
     }
 
     override fun onStateChanged(id: Int, state: TransferState?) {
         async {
-            Log.d("STATE", "TransferState: " + state)
+            Log.d("CFM", "TransferState: " + state)
             if (state == TransferState.COMPLETED) {
                 cfi.fileURI = file.toURI().toString()
                 cfi.lastAccessed = Date().time
-                cfi.lastUpdated = cfm.getLastChangedTime(cfi.key)
+                cfi.lastUpdated = cfm.getLastChangedTime(cfi.objKey)
                 cfm.cfiDb.cloudFileInfoDao().addCloudFileInfo(cfi)
                 cancel()
             }
@@ -115,7 +119,7 @@ class AWSCloudFileObserver: CloudFileObserver {
         synchronized(active) {
             if (active) {
                 active = false
-                cfm.observers.remove(cfi.key)
+                cfm.observers.remove(cfi.objKey)
             }
         }
         if (utilID.get() >= 0 && cfm.transferUtility.cancel(utilID.get())) {
@@ -124,7 +128,7 @@ class AWSCloudFileObserver: CloudFileObserver {
     }
 
     @Synchronized override fun addListener(listener: CloudFileListener): Boolean {
-        Log.d("STATE", "Add listener called")
+        Log.d("CFM", "Add listener called")
         if (super.addListener(listener)) {
             if (utilID.get() >= 0) {
                 var transfer = cfm.transferUtility.getTransferById(utilID.get())
@@ -148,7 +152,7 @@ class HttpCloudFileObserver: CloudFileObserver {
     {
         this.cfm = cfm
         this.cfi = cfi
-        cfm.observers.put(cfi.key, this)
+        cfm.observers.put(cfi.objKey, this)
     }
 
     override fun onStateChanged(id: Int, state: TransferState?) {
@@ -156,7 +160,7 @@ class HttpCloudFileObserver: CloudFileObserver {
             if (state == TransferState.COMPLETED) {
                 cfi.fileURI = file.toURI().toString()
                 cfi.lastAccessed = Date().time
-                cfi.lastUpdated = cfm.getLastChangedTime(cfi.key)
+                cfi.lastUpdated = cfm.getLastChangedTime(cfi.objKey)
                 cfm.cfiDb.cloudFileInfoDao().addCloudFileInfo(cfi)
                 cancel()
             }
@@ -168,7 +172,7 @@ class HttpCloudFileObserver: CloudFileObserver {
         synchronized(active) {
             if (active) {
                 active = false
-                cfm.observers.remove(cfi.key)
+                cfm.observers.remove(cfi.objKey)
             }
         }
         if (utilID.get() >= 0) {
@@ -245,7 +249,7 @@ class CloudFileManager {
                 transfer.setTransferListener(cfo)
             }
         }
-        Log.d("STATE", "Init transfer done")
+        Log.d("CFM", "Init transfer done")
     }
 
     suspend fun listObjects(prefix: String, orderByDate: Boolean = false): List<S3ObjectSummary>? {
@@ -258,23 +262,28 @@ class CloudFileManager {
             }
             return resp.objectSummaries
         } catch (ex: Exception) {
-            Log.d("STATE", "List object exception " + ex.message)
+            Log.d("CFM", "List object exception " + ex.message)
         }
         return null
     }
 
     private fun getCFI(key: String): CloudFileInfo {
-        var cfi = cfiDb.cloudFileInfoDao().getCloudFileInfo(key)
-        if (cfi != null) {
-            return cfi
+        try {
+            var cfi = cfiDb.cloudFileInfoDao().getCloudFileInfo(key)
+            if (cfi != null) {
+                Log.d("CFM", "GetCFI: " + key)
+                return cfi
+            }
+        } catch(ex: Exception) {
+            Log.d("CFM", "EX: " + ex.message)
         }
-        cfi = CloudFileInfo()
-        cfi.key = key
+        var cfi = CloudFileInfo()
+        cfi.objKey = key
         return cfi
     }
 
     private fun isOwnedByUser(key: String): Boolean {
-        return (key.contains(cognitoManager.federatedID) && key.contains("media"))
+        return ((key.contains(cognitoManager.federatedID) && key.contains("media")) || key == "accels")
     }
 
     suspend fun genPresignedURI(key: String, expireMins: Int): URI {
@@ -302,11 +311,14 @@ class CloudFileManager {
         return results
     }
 
-    suspend fun getCachedFile(cfi: CloudFileInfo): File? {
+    suspend fun getCachedFile(cfi: CloudFileInfo, checkUpdate: Boolean = false): File? {
+        Log.d("CFM", "Attempting to get cached file")
         if (cfi.fileURI != null) {
+            Log.d("CFM", "Cache hit for " + cfi.objKey)
             var file = File(URI(cfi.fileURI))
             if (file.exists()) {
-                if (getLastChangedTime(cfi.key) <= cfi.lastUpdated) {
+                Log.d("CFM", "file not hit")
+                if (!checkUpdate || getLastChangedTime(cfi.objKey) <= cfi.lastUpdated) {
                     return file
                 }
             }
@@ -341,21 +353,21 @@ class CloudFileManager {
             var file = File(uri)
             cloudFileObserver = AWSCloudFileObserver(this, cfi, TransferType.UPLOAD, file)
             cloudFileObserver.addListener(listener)
-            var awsObserver = transferUtility.upload(BUCKET_NAME, cfi.key, file)
+            var awsObserver = transferUtility.upload(BUCKET_NAME, cfi.objKey, file)
             awsObserver.setTransferListener(cloudFileObserver)
             return file
         }
         throw Error("Cannot upload to directory you do not own")
     }
 
-    @Synchronized suspend fun download(key: String, listener: CloudFileListener, givenPresignedURI: String? = null) {
+    @Synchronized suspend fun download(key: String, listener: CloudFileListener, givenPresignedURI: String? = null, checkUpdate: Boolean = false) {
         //Check if we are already downloading
         run {
             var cloudFileObserver = observers[key]
             if (cloudFileObserver != null) {
                 //If we listened successfully
                 if (cloudFileObserver.addListener(listener)) {
-                    Log.d("STATE", "Added listener to existing download")
+                    Log.d("CFM", "Added listener to existing download")
                     return
                 }
             }
@@ -363,33 +375,35 @@ class CloudFileManager {
 
         //Check if the file is cached
         var cfi = getCFI(key)
-        var file = getCachedFile(cfi)
+        var file = getCachedFile(cfi, checkUpdate)
         if (file != null) {
             //update the last read date
             cfi.lastAccessed = Date().time
             cfiDb.cloudFileInfoDao().addCloudFileInfo(cfi)
             //call the listener with the file
-            Log.d("STATE", "Got file from cache")
+            Log.d("CFM", "Got file from cache")
             listener.onComplete(0, file)
             return
         }
-        Log.d("STATE", "Downloading file...")
+        Log.d("CFM", "Downloading file: " + key)
         var downloadFile = File(appContext.cacheDir, UUID.randomUUID().toString())
         downloadFile.createNewFile()
-        if (isOwnedByUser(cfi.key)) {
-            var awsObserver = transferUtility.download(BUCKET_NAME, cfi.key, downloadFile)
+        if (isOwnedByUser(cfi.objKey)) {
+            Log.d("CFM", "Owned by user")
+            var awsObserver = transferUtility.download(BUCKET_NAME, cfi.objKey, downloadFile)
             var cloudFileObserver = AWSCloudFileObserver(this, cfi, TransferType.DOWNLOAD, downloadFile, true)
             cloudFileObserver.addListener(listener)
             awsObserver.setTransferListener(cloudFileObserver)
         } else {
             var presignedURI: URI
             if (givenPresignedURI == null) {
-                presignedURI = genPresignedURI(cfi.key, 60)
+                presignedURI = genPresignedURI(cfi.objKey, 60)
             } else {
                 presignedURI = URI(givenPresignedURI)
             }
             var cloudFileObserver = HttpCloudFileObserver(this, cfi, TransferType.DOWNLOAD, downloadFile, true)
             cloudFileObserver.addListener(listener)
+            Log.d("CFM", "HttpDownload")
             httpUtility.download(presignedURI.toString(), downloadFile, cloudFileObserver)
         }
 
@@ -425,37 +439,37 @@ class CloudFileManager {
             if (file.exists()) {
                 file.delete()
             }
-            s3Client.deleteObject(BUCKET_NAME, cfi.key)
+            s3Client.deleteObject(BUCKET_NAME, cfi.objKey)
         } else {
             throw Exception("Cannot deleted key " + key + " object is not owned by user")
         }
     }
 
     fun displayFileInfo() {
-        Log.d("FI", "Database...")
+        Log.d("CFM", "Database...")
         var cfis = cfiDb.cloudFileInfoDao().getCloudFileInfosOldestToNewest()
         for (cfi in cfis) {
-            Log.d("FI", "CFI: " + cfi)
+            Log.d("CFM", "CFI: " + cfi)
             if (cfi.fileURI != null) {
                 if (!File(URI(cfi.fileURI)).exists()) {
-                    Log.d("FI", "WARNING file does not exist")
+                    Log.d("CFM", "WARNING file does not exist")
                 }
             }
-            Log.d("FI", "\n")
+            Log.d("CFM", "\n")
         }
-        Log.d("FI", "AWS Transfers...")
+        Log.d("CFM", "AWS Transfers...")
         var awsTransfers = transferUtility.getTransfersWithType(TransferType.ANY)
         for (transfer in awsTransfers) {
             Log.d("FI", "AWSTransfer: " + transfer.state + " : " + transfer.key + "\n")
         }
-        Log.d("FI", "Http Transfers...")
+        Log.d("CFM", "Http Transfers...")
         var httpDownloads = httpUtility.getDownloads()
         for (httpDownload in httpDownloads) {
-            Log.d("FI", "HttpDownload: " + httpDownload.state + " : " + httpDownload.req.url + "\n")
+            Log.d("CFM", "HttpDownload: " + httpDownload.state + " : " + httpDownload.req.url + "\n")
         }
-        Log.d("FI", "Observers")
+        Log.d("CFM", "Observers")
         for (observer in observers) {
-            Log.d("FI", "Observer: " + observer.key)
+            Log.d("CFM", "Observer: " + observer.key)
         }
     }
 }

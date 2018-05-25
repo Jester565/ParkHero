@@ -1,38 +1,75 @@
 package com.dis.ajcra.distest2
 
-import android.util.Log
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
-import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.model.CreateUserInput
-import com.dis.ajcra.distest2.model.SendEntityInput
-import com.dis.ajcra.distest2.model.UserInfo
-import com.dis.ajcra.distest2.prof.MyProfile
-import com.dis.ajcra.distest2.prof.Profile
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
-import org.json.JSONObject
+import android.content.Context
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
+import com.dis.ajcra.fastpass.fragment.DisRide
+import com.dis.ajcra.fastpass.fragment.DisRideUpdate
+import kotlin.coroutines.experimental.suspendCoroutine
 
 
 class RideManager {
-    var apiClient: DisneyAppClient
+    companion object {
+        fun GetInstance(ctx: Context): RideManager {
+            if (rideManager == null) {
+                rideManager = RideManager(ctx)
+            }
+            return rideManager!!
+        }
 
-    constructor(credentialsProvider: AWSCredentialsProvider) {
-        val factory = ApiClientFactory()
-                .credentialsProvider(credentialsProvider)
-        apiClient = factory.build(DisneyAppClient::class.java)
+        private var rideManager: RideManager? = null
     }
 
-    fun getRides(): Deferred<List<Ride>> = async {
-        var arr = ArrayList<Ride>()
-        try {
-            var result = apiClient.getridesGet("", "", "")
-            for (rideInfo in result) {
-                arr.add(Ride(apiClient, rideInfo))
+    var appSync: AppSyncTest
+
+    constructor(ctx: Context) {
+        appSync = AppSyncTest.getInstance(ctx)
+    }
+
+    fun getRides(cb: AppSyncTest.GetRidesCallback) {
+        appSync.getRides(cb)
+    }
+
+    fun getRideUpdates(cb: AppSyncTest.UpdateRidesCallback) {
+        appSync.updateRides(cb)
+    }
+
+    suspend fun getRidesSuspend(): List<DisRide> = suspendCoroutine{ cont ->
+        var numUpdates = 0
+        appSync.getRides(object: AppSyncTest.GetRidesCallback {
+            override fun onResponse(response: List<DisRide>) {
+                if (numUpdates == 0) {
+                    cont.resume(response)
+                }
+                numUpdates++
             }
-        } catch (ex: Exception) {
-            Log.d("STATE", "getRidesEx: " + ex.message)
-        }
-        arr
+
+            override fun onError(ec: Int?, msg: String?) {
+
+            }
+        }, AppSyncResponseFetchers.NETWORK_FIRST)
+    }
+
+    suspend fun getRideUpdatesSuspend(): List<DisRideUpdate>? = suspendCoroutine{ cont ->
+        var numUpdates = 0
+        appSync.updateRides(object: AppSyncTest.UpdateRidesCallback {
+            override fun onResponse(response: List<DisRideUpdate>?) {
+                if (numUpdates == 0) {
+                    cont.resume(response)
+                }
+                numUpdates++
+            }
+
+            override fun onError(ec: Int?, msg: String?) {
+
+            }
+        })
+    }
+
+    fun subscribeToRideUpdates(cb: AppSyncTest.RideUpdateSubscribeCallback) {
+        appSync.subscribeToRideUpdates(cb)
+    }
+
+    fun getRideDPs(rideID: String, cb: AppSyncTest.GetRideDPsCallback) {
+        appSync.getRideDPs(rideID, cb)
     }
 }

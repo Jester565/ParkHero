@@ -9,14 +9,14 @@ import android.arch.persistence.room.*
 @Entity
 class CloudFileInfo {
     @PrimaryKey
-    var key: String = ""
+    var objKey: String = ""
     var fileURI: String? = null
     var lastAccessed: Long = 0
     var lastUpdated: Long = 0
 
     @Ignore
     override fun toString(): String {
-        var desc = "Key: " + key + "\n"
+        var desc = "Key: " + objKey + "\n"
         if (fileURI != null) {
             desc += "FileURI: " + fileURI + "\n"
         }
@@ -37,8 +37,8 @@ interface CloudFileInfoDao {
     @Query("SELECT * FROM CloudFileInfo ORDER BY lastAccessed DESC")
     fun getCloudFileInfosNewestToOldest(): List<CloudFileInfo>
 
-    @Query("SELECT * FROM CloudFileInfo WHERE 'key' = :key")
-    fun getCloudFileInfo(key: String): CloudFileInfo?
+    @Query("SELECT * FROM CloudFileInfo WHERE objKey = :objKey")
+    fun getCloudFileInfo(objKey: String): CloudFileInfo?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun addCloudFileInfo(cfi: CloudFileInfo)
@@ -50,7 +50,7 @@ interface CloudFileInfoDao {
     fun deleteAll()
 }
 
-@Database(entities = arrayOf(CloudFileInfo::class), version=2)
+@Database(entities = arrayOf(CloudFileInfo::class), version=3)
 abstract class CloudFileDatabase: RoomDatabase() {
     abstract fun cloudFileInfoDao(): CloudFileInfoDao
 }

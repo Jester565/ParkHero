@@ -29,13 +29,9 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import android.widget.RelativeLayout
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.dis.ajcra.fastpass.fragment.DisRide
-import com.dis.ajcra.fastpass.fragment.DisRideUpdate
-import java.util.*
-import kotlin.system.measureTimeMillis
 
-
-class RideTimesFragment : Fragment() {
+/*
+class FastPassManagerFragment : Fragment() {
     private lateinit var cognitoManager: CognitoManager
     private lateinit var cfm: CloudFileManager
     private lateinit var rideManager: RideManager
@@ -47,10 +43,6 @@ class RideTimesFragment : Fragment() {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context.applicationContext)
-        async {
-            cfm.displayFileInfo()
-        }
-        rideManager = RideManager(context.applicationContext)
         adapter = RideRecyclerAdapter(cfm, dataset)
     }
 
@@ -63,66 +55,23 @@ class RideTimesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         if (view != null) {
             recyclerView = view.findViewById(R.id.ridelist_recycler)
-            recyclerView.layoutManager = LinearLayoutManager(this@RideTimesFragment.context)
+            recyclerView.layoutManager = LinearLayoutManager(this@FastPassManagerFragment.context)
             recyclerView.adapter = adapter
-            recyclerView.setItemViewCacheSize(200)
+            recyclerView.setItemViewCacheSize(50)
             recyclerView.isDrawingCacheEnabled = true
-        }
-    }
-
-    fun onUpdateHandler(disRideUpdates: List<DisRideUpdate>?) {
-        if (disRideUpdates != null) {
-            for (disRideUpdate in disRideUpdates) {
-                adapter.updateRide(disRideUpdate)
-            }
         }
     }
 
     override fun onResume() {
         super.onResume()
         async(UI) {
-            rideManager.getRides(object: AppSyncTest.GetRidesCallback {
-                override fun onResponse(disRides: List<DisRide>) {
-                    async(UI) {
-                        dataset.clear()
-                        for (disRide in disRides!!) {
-                            dataset.add(Ride(disRide))
-                        }
-                        adapter.notifyDataSetChanged()
-                    }
-                }
-
-                override fun onError(ec: Int?, msg: String?) {
-
-                }
-            })
-            rideManager.getRideUpdates(object: AppSyncTest.UpdateRidesCallback {
-                override fun onResponse(disRideUpdates: List<DisRideUpdate>?) {
-                    async(UI) {
-                        onUpdateHandler(disRideUpdates)
-                    }
-                }
-
-                override fun onError(ec: Int?, msg: String?) {
-
-                }
-            })
-
-            rideManager.subscribeToRideUpdates(object: AppSyncTest.RideUpdateSubscribeCallback {
-                override fun onFailure(e: Exception) {
-                    Log.d("STATE", "On failure " + e.message)
-                }
-
-                override fun onUpdate(rideUpdates: List<DisRideUpdate>) {
-                    async(UI) {
-                        onUpdate(rideUpdates)
-                    }
-                }
-
-                override fun onCompleted() {
-                    Log.d("STATE", "RideTimesFragment completed")
-                }
-            })
+            var rides = rideManager.getRides().await()
+            dataset.clear()
+            for (ride in rides!!) {
+                dataset.add(ride)
+            }
+            adapter.notifyDataSetChanged()
         }
     }
 }
+*/
