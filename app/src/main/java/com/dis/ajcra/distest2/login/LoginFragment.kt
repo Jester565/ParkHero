@@ -6,14 +6,27 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.MultiFactorAuthenticationContinuation
-import com.dis.ajcra.distest2.*
+import com.dis.ajcra.distest2.MainActivity
+import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.util.AnimationUtils.Crossfade
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.SignInButton
+import com.google.android.gms.common.api.ApiException
 import java.lang.Exception
+
+
+
+
+
+
 
 class LoginFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
@@ -27,12 +40,20 @@ class LoginFragment : Fragment() {
     private lateinit var forgotPwdButton: Button
     private lateinit var registerButton: Button
     private lateinit var msgText: TextView
+    private lateinit var googleButton: SignInButton
+    private lateinit var gso: GoogleSignInOptions
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments.containsKey("pwd")) {
             pwd = arguments.getString(PWD_PARAM)
         }
+        gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestIdToken("484305592931-jk3fi0ton2brsatal9cb1mrnnc2ra04m.apps.googleusercontent.com")
+                .build()
+        mGoogleSignInClient = GoogleSignIn.getClient(activity, gso)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -53,6 +74,7 @@ class LoginFragment : Fragment() {
             forgotPwdButton = rootView.findViewById(R.id.login_resetPwdButton)
             msgText = rootView.findViewById(R.id.login_msgText)
             registerButton = rootView.findViewById(R.id.login_registerButton)
+            googleButton = rootView.findViewById(R.id.login_gbutton)
         }
 
         if (username != null) {
@@ -94,8 +116,38 @@ class LoginFragment : Fragment() {
             val intent = Intent(context, ResetPwdActivity::class.java)
             startActivity(intent)
         }
+
+        googleButton.setOnClickListener {
+            val signInIntent = mGoogleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
+
         if (username != null && pwd != null) {
             login()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val completedTask = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = completedTask.getResult(ApiException::class.java)
+                var idToken = account.idToken
+                if (idToken != null) {
+                    cognitoManager.addLogin("accounts.google.com", idToken)
+                    Log.d("STATE", "Login Complete")
+                    val intent = Intent(context, MainActivity::class.java)
+                    startActivity(intent)
+                }
+            } catch (e: ApiException) {
+                Log.w("STATE", "signInResult:failed code=" + e.statusCode + ":" + e.message)
+            }
+
         }
     }
 
@@ -130,6 +182,7 @@ class LoginFragment : Fragment() {
 
     companion object {
         private val PWD_PARAM = "pwd"
+        private val RC_SIGN_IN = 222
 
         fun newInstance(pwd: String? = null): LoginFragment {
             val fragment = LoginFragment()

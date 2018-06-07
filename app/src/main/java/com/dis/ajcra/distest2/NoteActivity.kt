@@ -1,25 +1,13 @@
 package com.dis.ajcra.distest2
 
 import android.app.Activity
-import android.app.SearchManager
 import android.os.Bundle
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.google.android.gms.actions.NoteIntents
-import com.google.android.gms.actions.SearchIntents
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import org.w3c.dom.Text
-import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
-import info.debatty.java.stringsimilarity.Damerau
-import android.R.attr.data
-import android.os.Looper
-import android.support.v4.app.NotificationCompat.getExtras
-import com.dis.ajcra.fastpass.fragment.DisRide
 import java.sql.Time
-import java.util.concurrent.locks.Lock
+import java.util.*
 
 
 class NoteActivity: Activity() {
@@ -78,54 +66,35 @@ class NoteActivity: Activity() {
         wtScore += removeResult.first
         query = removeResult.second
 
-        Log.d("STATE", "QUERY NAME: " + query)
-        async(UI) {
-            var getJob = async(UI) {
-                rideManager.getRidesSuspend()
-            }
-            var updateJob = async(UI) {
-                rideManager.getRideUpdatesSuspend()
-            }
-            var rides = getJob.await()
-            var closestRide: DisRide? = null
-            var maxNameScore: Double = -Double.MAX_VALUE
-            if (rides != null) {
+        Log.d("STATE", "QUERY: " + query)
+
+        rideManager.listRides(object: RideManager.ListRidesCB {
+            override fun init(rides: ArrayList<CRInfo>) {}
+            override fun onAdd(ride: CRInfo) {}
+            override fun onUpdate(ride: CRInfo) {}
+
+            override fun onAllUpdated(rides: ArrayList<CRInfo>) {
+                var closestRide: CRInfo? = null
+                var maxNameScore: Double = -Double.MAX_VALUE
                 for (ride in rides) {
-                    var rideName = ride.info()!!.name()!!
+                    var rideName = ride.name
                     var score = StringComp.compareStrings(query, rideName)
                     if (score > maxNameScore) {
                         closestRide = ride
                         maxNameScore = score
                     }
                 }
-                Log.d("STATE", "RUNNING")
                 if (closestRide != null) {
-                    Log.d("STATE", "closest ride found")
-                    var disRideTime = closestRide.time()!!.fragments().disRideTime()
-
-                    Log.d("STATE", "AWAITING UPDATE")
-                    var rideUpdates = updateJob.await()
-                    Log.d("STATE", "UPDATE COMPLETE")
-
-                    if (rideUpdates != null) {
-                        var rideUpdate = rideUpdates?.find { it ->
-                            it.id() == closestRide.id()
-                        }
-                        if (rideUpdate != null) {
-                            disRideTime = rideUpdate.time()!!.fragments().disRideTime()
-                        }
-                    }
-
                     if (wtScore <= 1 && fpScore <= 1 || wtScore == fpScore) {
                         Log.d("STATE", "p1")
-                        dialogue = closestRide.info()!!.name()!!
-                        var waitTime = disRideTime.waitTime()
+                        dialogue = closestRide.name
+                        var waitTime = closestRide.waitTime
                         var fpTime: Time? = null
-                        if (disRideTime.fastPassTime() != null) {
-                            fpTime = Time.valueOf(disRideTime.fastPassTime())
+                        if (closestRide.fpTime != null) {
+                            fpTime = Time.valueOf(closestRide.fpTime)
                         }
 
-                        var status = disRideTime.status()
+                        var status = closestRide.status
                         if (status == Ride.OPEN_STATUS && waitTime != null) {
                             dialogue += " has a wait time of " + waitTime.toString() + " minutes"
                             if (fpTime != null) {
@@ -141,24 +110,24 @@ class NoteActivity: Activity() {
                             dialogue += "fast passes are available for " + timeToStr(fpTime)
                         }
                     } else if (fpScore > wtScore) {
-                        var fpTime = Time.valueOf(disRideTime.fastPassTime())
+                        var fpTime = Time.valueOf(closestRide.fpTime)
                         if (fpTime != null) {
                             dialogue = timeToStr(fpTime)
                         } else {
-                            dialogue = "Fast passes for " + closestRide.info()!!.name()!! + " are no longer available"
+                            dialogue = "Fast passes for " + closestRide.name + " are no longer available"
                         }
                     } else {
-                        var waitTime = disRideTime.waitTime()!!
-                        if (disRideTime.status()!! == Ride.OPEN_STATUS && waitTime != null) {
+                        var waitTime = closestRide.waitTime
+                        if (closestRide.status == Ride.OPEN_STATUS && waitTime != null) {
                             dialogue = waitTime.toString()
                         } else {
-                            dialogue = closestRide.info()!!.name()!! + " is currently " + disRideTime.status()!!
+                            dialogue = closestRide.name + " is currently " + closestRide.status
                         }
                     }
                     speakDialogue()
                 }
             }
-        }
+        })
     }
 
     fun timeToStr(time: Time): String {

@@ -2,7 +2,6 @@ package com.dis.ajcra.distest2
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
 import android.support.v4.graphics.ColorUtils
@@ -17,21 +16,24 @@ import android.widget.TextView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.dis.ajcra.fastpass.fragment.DisRide
-import com.dis.ajcra.fastpass.fragment.DisRideTime
-import com.dis.ajcra.fastpass.fragment.DisRideUpdate
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 //should contain click listeners, can have different ViewHolders
 class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> {
     private var cfm: CloudFileManager
-    private var dataset: ArrayList<Ride>
+    private var rides: ArrayList<CRInfo>
+    private var pinnedRides: ArrayList<CRInfo>
+    private var fpParseFormat = SimpleDateFormat("HH:mm:ss")
+    private var dateDispFormat = SimpleDateFormat("h:mm a")
 
-    constructor(cfm: CloudFileManager, dataset: ArrayList<Ride>) {
+    constructor(cfm: CloudFileManager, rides: ArrayList<CRInfo>, pinnedRides: ArrayList<CRInfo>) {
         this.cfm = cfm
-        this.dataset = dataset
+        this.rides = rides
+        this.pinnedRides = pinnedRides
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
@@ -40,20 +42,13 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
         return viewHolder
     }
 
-    fun updateRide(update: DisRideUpdate): Boolean {
-        var rideIdx = dataset.indexOfFirst {
-            it.id == update.id()
-        }
-        if (rideIdx != null) {
-            dataset.get(rideIdx).time  = update.time()!!.fragments().disRideTime()
-            this.notifyItemChanged(rideIdx)
-            return true
-        }
-        return false
-    }
-
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
-        var ride = dataset.get(position)
+        lateinit var ride: CRInfo
+        if (position < pinnedRides.size) {
+            ride = pinnedRides.get(position)
+        } else {
+            ride = rides.get(position - pinnedRides.size)
+        }
         if (holder != null) {
             async(UI) {
                 holder!!.rootView.setOnClickListener {
@@ -62,20 +57,22 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
                     intent.putExtra("id", rideID)
                     holder!!.ctx.startActivity(intent)
                 }
-                holder.nameView.text = ride.info.name()!!
-                var waitTime = ride.time?.waitTime()
+                holder.nameView.text = ride.name
+                var waitTime = ride.waitTime
                 if (waitTime != null) {
                     holder.waitTimeView.text = waitTime.toString()
                 } else {
-                    holder.waitTimeView.text = ride.time?.status()
+                    holder.waitTimeView.text = ride.status
                 }
-                var fpTime = ride.time?.fastPassTime()
+                var fpTime = ride.fpTime
                 if (fpTime != null) {
-                    holder.fastPassTimeView.text = fpTime
+                    var date = fpParseFormat.parse(ride.fpTime)
+                    var dispStr1 = dateDispFormat.format(date)
+                    holder.fastPassTimeView.text = dispStr1
                 } else {
                     holder.fastPassTimeView.text = "--"
                 }
-                var waitRating = ride.time?.waitRating()?.toFloat()
+                var waitRating = ride.waitRating?.toFloat()
                 if (waitRating != null) {
                     if (waitRating < -10.0f) {
                         waitRating = -10.0f
@@ -84,9 +81,11 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
                     }
                     var hsl = floatArrayOf((waitRating + 10.0f)/20.0f * 120.0f, 1.0f, 0.5f)
                     holder.bgLayout.setBackgroundColor(ColorUtils.HSLToColor(hsl))
+                } else {
+                    holder.bgLayout.setBackgroundColor(Color.GRAY)
                 }
             }
-            var picUrl = ride.info.picUrl()
+            var picUrl = ride.picURL
             if (picUrl != null && holder.imgKey != picUrl)
             {
                 holder.imgKey = picUrl
@@ -114,12 +113,14 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
                         }
                     })
                 }
+            } else {
+                holder.imgView.setImageResource(R.drawable.ic_cancel_black_24dp)
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return dataset.size
+        return pinnedRides.size + rides.size
     }
 
     class ViewHolder : RecyclerView.ViewHolder {

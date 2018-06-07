@@ -2,9 +2,11 @@ package com.dis.ajcra.distest2
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
@@ -17,9 +19,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.GalleryFragment
 import com.dis.ajcra.distest2.media.GalleryFragmentListener
 import com.otaliastudios.cameraview.*
@@ -40,13 +42,15 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
 
     //Get picture taken and recorded events
     class DlCameraListener: CameraListener {
+
         private var cognitoManager: CognitoManager
         //private var transferUtil: TransferUtility
         private var appCtx: Context
         private var cloudFileManager: CloudFileManager
         private var compressor: Compressor
         private var galleryFragment: GalleryFragment
-        constructor(cognitoManager: CognitoManager, galleryFragment: GalleryFragment, appContext: Context) {
+        private var visionHandler: VisionHandler
+        constructor(cognitoManager: CognitoManager, galleryFragment: GalleryFragment, appContext: Context, activity: Activity) {
             this.cognitoManager = cognitoManager
             this.galleryFragment = galleryFragment
             this.appCtx = appContext
@@ -54,6 +58,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             compressor = Compressor(appContext)
             compressor.setCompressFormat(Bitmap.CompressFormat.JPEG)
             compressor.setQuality(PICTURE_QUALITY)
+            visionHandler = VisionHandler(activity)
         }
 
         override fun onCameraOpened(options: CameraOptions?) {
@@ -62,6 +67,12 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
 
         override fun onPictureTaken(jpeg: ByteArray?) {
             async {
+                /*
+                if (jpeg != null) {
+                    var bmp = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size)
+                    visionHandler.processBmp(bmp)
+                }
+                */
                 //Save jpeg byte array to file
                 var jpegFile = File(appCtx.filesDir, UUID.randomUUID().toString() + ".jpg")
                 if (jpeg != null) {
@@ -72,6 +83,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                 Log.d("STATE", "File Name: " + jpegFile.name)
                 Log.d("STATE", "File Len: " + jpegFile.length())
                 Log.d("STATE", "ObjKey: " + objKey)
+                visionHandler.processFile(appCtx, Uri.fromFile(compFile))
                 /*
                 var transferObserver = transferUtil.upload("disneyapp", objKey, jpegFile)
                 if (transferListener != null) {
@@ -100,7 +112,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                         Log.d("STATE", "On Complete")
                     }
                 })
-                Log.d("STATE", "Gallery Updated")
+                //Log.d("STATE", "Gallery Updated")
                 galleryFragment.galleryUpdated(objKey)
             }
         }
@@ -324,7 +336,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         var transaction = childFragmentManager.beginTransaction()
         transaction.add(R.id.camera_gallerylayout, galleryFragment).commit()
         var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        cameraView.addCameraListener(DlCameraListener(cognitoManager, galleryFragment, activity.applicationContext))
+        cameraView.addCameraListener(DlCameraListener(cognitoManager, galleryFragment, activity.applicationContext, activity))
     }
 
     //Called when the activity starts or redisplayed

@@ -12,7 +12,7 @@ import com.apollographql.apollo.exception.ApolloException
 import com.apollographql.apollo.fetcher.ResponseFetcher
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.*
-import com.dis.ajcra.fastpass.fragment.DisFastPass
+import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import com.dis.ajcra.fastpass.fragment.DisPass
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideDP
@@ -79,11 +79,11 @@ class AppSyncTest {
     }
 
     interface ListPassesCallback {
-        fun onResponse(response: List<DisPass>)
+        fun onResponse(response: List<ListPassesQuery.ListPass>)
         fun onError(ec: Int?, msg: String?)
     }
 
-    fun listPasses(passID: String, cb: ListPassesCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.CACHE_AND_NETWORK) {
+    fun listPasses(cb: ListPassesCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.CACHE_AND_NETWORK) {
         (client as AWSAppSyncClient).query(ListPassesQuery.builder().build())
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<ListPassesQuery.Data>() {
@@ -94,17 +94,8 @@ class AppSyncTest {
                     override fun onResponse(response: Response<ListPassesQuery.Data>) {
                         Log.d("STATE", "ON RESP")
                         if (!response.hasErrors()) {
-                            var disPasses = ArrayList<DisPass>()
                             var userPasses = response.data()!!.listPasses()!!
-                            for (userPass in userPasses) {
-                                var passes = userPass.passes()!!
-                                for (pass in passes) {
-                                    var disPass = pass.fragments().disPass()
-                                    disPasses.add(disPass)
-                                    Log.d("STATE", "PASS Name: " + disPass.name())
-                                }
-                            }
-                            cb.onResponse(disPasses)
+                            cb.onResponse(userPasses)
                         } else {
                             var errRes = parseRespErrs(response as Response<Any>)
                             cb.onError(errRes?.first, errRes?.second)
@@ -114,7 +105,7 @@ class AppSyncTest {
     }
 
     interface AddFastPassCallback {
-        fun onResponse(response: DisFastPass)
+        fun onResponse(response: DisFastPassTransaction)
         fun onError(ec: Int?, msg: String?)
     }
 
@@ -130,7 +121,7 @@ class AppSyncTest {
             override fun onResponse(response: Response<AddFastPassMutation.Data>) {
                 Log.d("STATE", "ON RESP")
                 if (!response.hasErrors()) {
-                    cb.onResponse(response.data()!!.addFastPass()!!.fragments().disFastPass())
+                    cb.onResponse(response.data()!!.addFastPass()!!.fragments().disFastPassTransaction())
                 } else {
                     var errRes = parseRespErrs(response as Response<Any>)
                     cb.onError(errRes?.first, errRes?.second)
@@ -140,7 +131,7 @@ class AppSyncTest {
     }
 
     interface ListFastPassesCallback {
-        fun onResponse(response: List<DisFastPass>)
+        fun onResponse(response: List<DisFastPassTransaction>)
         fun onError(ec: Int?, msg: String?)
     }
 
@@ -155,10 +146,10 @@ class AppSyncTest {
             override fun onResponse(response: Response<ListFastPassesQuery.Data>) {
                 Log.d("STATE", "ON RESP")
                 if (!response.hasErrors()) {
-                    var disFastPasses = ArrayList<DisFastPass>()
+                    var disFastPasses = ArrayList<DisFastPassTransaction>()
                     var fastPasses = response.data()!!.listFastPasses()!!
                     for (fastPass in fastPasses) {
-                        disFastPasses.add(fastPass.fragments().disFastPass())
+                        disFastPasses.add(fastPass.fragments().disFastPassTransaction())
                     }
                     cb.onResponse(disFastPasses)
                 } else {
@@ -208,33 +199,38 @@ class AppSyncTest {
 
     fun updateRides(cb: UpdateRidesCallback) {
         Log.d("STATE", "Running updating rides")
-        (client as AWSAppSyncClient).mutate(UpdateRidesMutation.builder().build())
-                .enqueue(object: GraphQLCall.Callback<UpdateRidesMutation.Data>() {
-                    override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
-                    }
-                    override fun onResponse(response: Response<UpdateRidesMutation.Data>) {
-                        Log.d("STATE", "ON RESP")
-                        if (!response.hasErrors()) {
-                            Log.d("STATE", "UpdateRidesMutations RESP: ")
-                            var disRideUpdates = ArrayList<DisRide>()
-                            var ridesUpdatedContainer = response.data()!!.updateRides()
-                            if (ridesUpdatedContainer != null) {
-                                for (rideUpdate in ridesUpdatedContainer.rides()!!) {
-                                    var disRideUpdate = rideUpdate.fragments().disRide()
-                                    Log.d("STATE", "RideID: " + disRideUpdate.id())
-                                    disRideUpdates.add(disRideUpdate)
-                                }
-                                cb.onResponse(disRideUpdates)
-                            } else {
-                                cb.onResponse(null)
-                            }
-                        } else {
-                            var errRes = parseRespErrs(response as Response<Any>)
-                            cb.onError(errRes?.first, errRes?.second)
+        try {
+            (client as AWSAppSyncClient).mutate(UpdateRidesMutation.builder().build())
+                    .enqueue(object : GraphQLCall.Callback<UpdateRidesMutation.Data>() {
+                        override fun onFailure(e: ApolloException) {
+                            Log.d("STATE", "ON FAILURE: " + e.message)
                         }
-                    }
-                })
+
+                        override fun onResponse(response: Response<UpdateRidesMutation.Data>) {
+                            Log.d("STATE", "ON RESP")
+                            if (!response.hasErrors()) {
+                                Log.d("STATE", "UpdateRidesMutations RESP: ")
+                                var disRideUpdates = ArrayList<DisRide>()
+                                var ridesUpdatedContainer = response.data()!!.updateRides()
+                                if (ridesUpdatedContainer != null && ridesUpdatedContainer.rides() != null) {
+                                    for (rideUpdate in ridesUpdatedContainer.rides()!!) {
+                                        var disRideUpdate = rideUpdate.fragments().disRide()
+                                        Log.d("STATE", "RideID: " + disRideUpdate.id())
+                                        disRideUpdates.add(disRideUpdate)
+                                    }
+                                    cb.onResponse(disRideUpdates)
+                                } else {
+                                    cb.onResponse(null)
+                                }
+                            } else {
+                                var errRes = parseRespErrs(response as Response<Any>)
+                                cb.onError(errRes?.first, errRes?.second)
+                            }
+                        }
+                    })
+        } catch (ex: Exception) {
+            Log.d("STATE","BRAKAKA " + ex.message)
+        }
     }
 
     interface RideUpdateSubscribeCallback {

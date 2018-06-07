@@ -2,6 +2,7 @@ package com.dis.ajcra.distest2
 
 import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -11,10 +12,11 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.fastpass.fragment.DisRideDP
-import com.dis.ajcra.fastpass.fragment.DisRideTime
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.MarkerView
@@ -26,6 +28,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import java.io.File
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,12 +50,13 @@ class RideFragment : Fragment() {
     private var ratingFormat = DecimalFormat("#.#")
     private var fpParseFormat = SimpleDateFormat("HH:mm:ss")
     private var dateDispFormat = SimpleDateFormat("h:mm a")
+    private var infoSet: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context.applicationContext)
-        rideManager = RideManager(context.applicationContext)
+        rideManager = RideManager.GetInstance(context.applicationContext)
 
         rideID = arguments.getString(RIDEID_PARAM)
     }
@@ -228,15 +232,44 @@ class RideFragment : Fragment() {
         return false
     }
 
-    fun updateTimes(time: DisRideTime) {
-        if (time.waitTime() != null) {
-            rideWaitText.text = time.waitTime().toString()
-        } else {
-            rideWaitText.text = time.status().toString()
+    fun updateRide(ride: CRInfo) {
+        if (!infoSet) {
+            var picUrl = ride.picURL
+            if (picUrl != null) {
+                async {
+                    picUrl = picUrl?.substring(0, picUrl?.length!! - 4) + "-2" + picUrl?.substring(picUrl?.length!! - 4)
+                    Log.d("STATE", "PICURL: " + picUrl)
+                    cfm.download(picUrl.toString(), object : CloudFileListener() {
+                        override fun onStateChanged(id: Int, state: TransferState?) {}
+
+                        override fun onError(id: Int, ex: Exception?) {}
+
+                        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
+
+                        override fun onComplete(id: Int, file: File) {
+                            Log.d("STATE", "Ride download complete")
+                            async(UI) {
+                                rideImg.setImageURI(Uri.fromFile(file))
+                            }
+                        }
+                    })
+                }
+            }
+            Log.d("STATE", "HERE HERE")
+            rideNameText.text = ride.name
+            infoSet = true
         }
-        var fpTimeStr = time.fastPassTime()
+        updateTimes(ride)
+    }
+
+    fun updateTimes(ride: CRInfo) {
+        if (ride.waitTime != null) {
+            rideWaitText.text =ride.waitTime.toString()
+        } else {
+            rideWaitText.text = ride.waitTime.toString()
+        }
+        var fpTimeStr = ride.fpTime
         if (fpTimeStr != null) {
-            Log.d("STATE", "FPSTR: " + fpTimeStr)
             var date = fpParseFormat.parse(fpTimeStr)
             var cal = GregorianCalendar.getInstance()
             cal.time = date
@@ -247,16 +280,17 @@ class RideFragment : Fragment() {
         } else {
             rideFPText.text = "Not Available"
         }
-        if (time.waitRating() != null) {
-            rideRatingText.text = ratingFormat.format(time.waitRating()!!.toDouble())
+        var wr = ride.waitRating
+        if (wr != null) {
+            rideRatingText.text = ratingFormat.format(wr)
         } else {
             rideRatingText.text = "No Rating"
         }
-        rideWaitText
     }
 
     override fun onResume() {
         super.onResume()
+
         async(UI) {
             rideManager.getRideDPs(rideID, object: AppSyncTest.GetRideDPsCallback {
                 override fun onResponse(rideDPs: AppSyncTest.DisRideDPs?) {
@@ -273,83 +307,16 @@ class RideFragment : Fragment() {
 
                 }
             })
-        }
-        /*
-        async(UI) {
-            rideManager.getRideUpdates(object: AppSyncTest.UpdateRidesCallback {
-                override fun onResponse(rideUpdates: List<DisRideUpdate>?) {
-                    async(UI) {
-                        if (rideUpdates != null) {
-                            var rideUpdate = rideUpdates.find { it ->
-                                it.id() == rideID
-                            }
-                            if (rideUpdate != null) {
-                                var rt = rideUpdate.time()?.fragments()?.disRideTime()
-                                if (rt != null) {
-                                    updateTimes(rt)
-                                }
-                            }
-                        }
-                    }
+            rideManager.getRide(rideID, object: RideManager.GetRideCB {
+                override fun onUpdate(ride: CRInfo) {
+                    updateRide(ride)
                 }
 
-                override fun onError(ec: Int?, msg: String?) {
-
-                }
-            })
-            rideManager.getRides(object: AppSyncTest.GetRidesCallback {
-                override fun onResponse(rides: List<DisRide>) {
-                    Log.d("STATE", "GET RIDES CALL")
-                    async(UI) {
-                        var ride = rides.find { it ->
-                            it.id() == rideID
-                        }
-                        if (ride != null) {
-                            Log.d("STATE", "RIDE NOT NULL")
-                            var picUrl = ride.info()?.picUrl()
-                            if (picUrl != null) {
-                                async {
-                                    picUrl = picUrl?.substring(0, picUrl?.length!! - 4) + "-2" + picUrl?.substring(picUrl?.length!! - 4)
-                                    Log.d("STATE", "PICURL: " + picUrl)
-                                    cfm.download(picUrl.toString(), object : CloudFileListener() {
-                                        override fun onError(id: Int, ex: Exception?) {
-                                            Log.d("STATE", "RidePicUrlErr: " + ex?.message)
-                                        }
-
-                                        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-                                            Log.d("STATE", "ProgressChanged")
-                                        }
-
-                                        override fun onStateChanged(id: Int, state: TransferState?) {
-                                            Log.d("STATE", " STATE CHANGE: " + state.toString())
-                                        }
-
-                                        override fun onComplete(id: Int, file: File) {
-                                            Log.d("STATE", "Ride download complete")
-                                            async(UI) {
-                                                rideImg.setImageURI(Uri.fromFile(file))
-                                            }
-                                        }
-                                    })
-                                }
-                            }
-                            Log.d("STATE", "HERE HERE")
-                            rideNameText.text = ride.info()!!.name()!!
-                            var rt = ride.time()?.fragments()?.disRideTime()
-                            if (rt != null) {
-                                updateTimes(rt)
-                            }
-
-                        }
-                    }
-                }
-
-                override fun onError(ec: Int?, msg: String?) {
-
+                override fun onFinalUpdate(ride: CRInfo) {
+                    //updateRide(ride)
                 }
             })
         }
-        */
     }
 
     companion object {

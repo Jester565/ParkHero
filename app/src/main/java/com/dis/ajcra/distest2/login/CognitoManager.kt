@@ -2,28 +2,21 @@ package com.dis.ajcra.distest2.login
 
 import android.content.Context
 import android.util.Log
-
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSSessionCredentials
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.*
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.AuthenticationHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.ForgotPasswordHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GetDetailsHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHandler
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.VerificationHandler
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.*
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cognitoidentityprovider.AmazonCognitoIdentityProviderClient
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
+import java.util.*
 
-import java.util.HashMap
-
-class CognitoManager private constructor(appContext: Context) {
+class CognitoManager {
 
     fun isLoggedIn(): Deferred<Boolean> = async{
         credentialsProvider.refresh()
@@ -45,7 +38,7 @@ class CognitoManager private constructor(appContext: Context) {
     private val userPool: CognitoUserPool
     val credentialsProvider: CognitoCachingCredentialsProvider
 
-    init {
+    constructor(appContext: Context) {
         credentialsProvider = CognitoCachingCredentialsProvider(
                 appContext, COGNITO_IDENTITY_POOL_ID, COGNITO_REGION
         )

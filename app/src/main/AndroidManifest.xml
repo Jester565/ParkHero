@@ -10,8 +10,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -49,6 +49,10 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+
+        <meta-data
+            android:name="com.google.firebase.ml.vision.DEPENDENCIES"
+            android:value="barcode,face,text" />
 
         <activity android:name=".SearchActivity">
             <intent-filter>
@@ -95,7 +99,8 @@
         <activity android:name=".ProfileActivity" />
         <activity android:name=".MyProfileActivity" />
         <activity android:name=".RideActivity" />
-        <activity android:name=".SensorActivity"></activity>
+        <activity android:name=".SensorActivity" />
+        <activity android:name=".PassActivity"></activity>
     </application>
 
 </manifest>

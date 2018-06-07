@@ -20,7 +20,7 @@ protobuf {
                 remove java
             }
             task.plugins {
-                lite { }
+                lite {}
             }
         }
     }
@@ -49,7 +49,7 @@ dependencies {
         exclude group: 'com.google.code.gson'
     }
     implementation 'com.amazonaws:aws-android-sdk-appsync-compiler:2.6.17'
-    implementation 'com.google.firebase:firebase-core:12.0.1'
+    implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
@@ -78,7 +78,7 @@ dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.0.0'
     implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
     implementation 'org.greenrobot:eventbus:3.1.1'
-    implementation 'com.google.firebase:firebase-messaging:12.0.1'
+    implementation 'com.google.firebase:firebase-messaging:17.0.0'
 
     // Room (use 1.1.0-beta1 for latest beta)
     implementation "android.arch.persistence.room:runtime:1.0.0"
@@ -88,8 +88,12 @@ dependencies {
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
-
+    implementation 'com.google.android.gms:play-services-auth:15.0.1'
     implementation 'com.google.protobuf:protobuf-lite:3.0.0'
+    implementation 'com.journeyapps:zxing-android-embedded:3.0.2@aar'
+    implementation 'com.google.zxing:core:3.2.0'
+    implementation 'com.google.firebase:firebase-ml-vision:16.0.0'
+    implementation 'de.hdodenhof:circleimageview:2.2.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

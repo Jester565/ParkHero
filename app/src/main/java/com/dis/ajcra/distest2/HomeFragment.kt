@@ -51,6 +51,11 @@ class HomeFragment : Fragment() {
     var profViewH: Int = 0
     var myProfile: MyProfile? = null
 
+    fun launchTestActivity() {
+        var intent = Intent(context, PassActivity::class.java)
+        startActivity(intent)
+    }
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rootView = inflater!!.inflate(R.layout.fragment_home, container, false)
         profilePicView = rootView.findViewById(R.id.home_profilepic)
@@ -114,6 +119,9 @@ class HomeFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         initProfilePic()
         initFragments()
+
+        //TEMP
+        launchTestActivity()
     }
 
     fun initFragments() {

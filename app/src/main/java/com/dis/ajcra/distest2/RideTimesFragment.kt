@@ -1,38 +1,17 @@
 package com.dis.ajcra.distest2
 
-import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory
-import android.support.v4.widget.NestedScrollView
-import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
-import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.GetObjectRequest
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.login.EntityListFragment
-import com.dis.ajcra.distest2.login.LoginActivity
-import com.dis.ajcra.distest2.login.RegisterActivity
-import com.dis.ajcra.distest2.prof.MyProfile
-import com.dis.ajcra.distest2.prof.ProfileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import android.widget.RelativeLayout
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.dis.ajcra.fastpass.fragment.DisRide
-import com.dis.ajcra.fastpass.fragment.DisRideUpdate
+import kotlinx.coroutines.experimental.async
 import java.util.*
-import kotlin.system.measureTimeMillis
 
 
 class RideTimesFragment : Fragment() {
@@ -41,7 +20,8 @@ class RideTimesFragment : Fragment() {
     private lateinit var rideManager: RideManager
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: RideRecyclerAdapter
-    private var dataset: ArrayList<Ride> = ArrayList<Ride>()
+    private var rides = ArrayList<CRInfo>()
+    private var pinnedRides = ArrayList<CRInfo>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +31,7 @@ class RideTimesFragment : Fragment() {
             cfm.displayFileInfo()
         }
         rideManager = RideManager(context.applicationContext)
-        adapter = RideRecyclerAdapter(cfm, dataset)
+        adapter = RideRecyclerAdapter(cfm, rides, pinnedRides)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -70,59 +50,71 @@ class RideTimesFragment : Fragment() {
         }
     }
 
-    fun onUpdateHandler(disRideUpdates: List<DisRideUpdate>?) {
-        if (disRideUpdates != null) {
-            for (disRideUpdate in disRideUpdates) {
-                adapter.updateRide(disRideUpdate)
+    fun getRides() {
+        rideManager.listRides(object: RideManager.ListRidesCB {
+            override fun onAllUpdated(rides: ArrayList<CRInfo>) {
+                //animateBackground()
             }
-        }
+
+            override fun init(rideUpdates: ArrayList<CRInfo>) {
+                if (rides.isEmpty() && pinnedRides.isEmpty()) {
+                    for (ride in rideUpdates) {
+                        if (ride.pinned) {
+                            pinnedRides.add(ride)
+                        } else {
+                            rides.add(ride)
+                        }
+                    }
+                    adapter.notifyDataSetChanged()
+                }
+            }
+
+            override fun onAdd(ride: CRInfo) {
+                if (ride.pinned) {
+                    var arrI = pinnedRides.binarySearch {
+                        it.name.compareTo(ride.name)
+                    }
+                    var insertI = -(arrI + 1)
+                    pinnedRides.add(insertI, ride)
+                    adapter.notifyItemInserted(insertI)
+                } else {
+                    var arrI = rides.binarySearch {
+                        it.name.compareTo(ride.name)
+                    }
+                    var insertI = -(arrI + 1)
+                    rides.add(insertI, ride)
+                    adapter.notifyItemInserted(insertI + pinnedRides.size)
+                }
+            }
+
+            override fun onUpdate(ride: CRInfo) {
+                if (ride.pinned) {
+                    var arrI = pinnedRides.binarySearch {
+                        it.name.compareTo(ride.name)
+                    }
+                    if (arrI < 0) {
+                        Log.e("ERRRRRR", "RideI was less than 0 on onUpdate")
+                        return
+                    }
+                    pinnedRides[arrI] = ride
+                    adapter.notifyItemChanged(arrI)
+                } else {
+                    var arrI = rides.binarySearch {
+                        it.name.compareTo(ride.name)
+                    }
+                    if (arrI < 0) {
+                        Log.e("ERRRRRR", "RideI was less than 0 on onUpdate")
+                        return
+                    }
+                    rides[arrI] = ride
+                    adapter.notifyItemChanged(arrI + pinnedRides.size)
+                }
+            }
+        })
     }
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
-            rideManager.getRides(object: AppSyncTest.GetRidesCallback {
-                override fun onResponse(disRides: List<DisRide>) {
-                    async(UI) {
-                        dataset.clear()
-                        for (disRide in disRides!!) {
-                            dataset.add(Ride(disRide))
-                        }
-                        adapter.notifyDataSetChanged()
-                    }
-                }
-
-                override fun onError(ec: Int?, msg: String?) {
-
-                }
-            })
-            rideManager.getRideUpdates(object: AppSyncTest.UpdateRidesCallback {
-                override fun onResponse(disRideUpdates: List<DisRideUpdate>?) {
-                    async(UI) {
-                        onUpdateHandler(disRideUpdates)
-                    }
-                }
-
-                override fun onError(ec: Int?, msg: String?) {
-
-                }
-            })
-
-            rideManager.subscribeToRideUpdates(object: AppSyncTest.RideUpdateSubscribeCallback {
-                override fun onFailure(e: Exception) {
-                    Log.d("STATE", "On failure " + e.message)
-                }
-
-                override fun onUpdate(rideUpdates: List<DisRideUpdate>) {
-                    async(UI) {
-                        onUpdate(rideUpdates)
-                    }
-                }
-
-                override fun onCompleted() {
-                    Log.d("STATE", "RideTimesFragment completed")
-                }
-            })
-        }
+        getRides()
     }
 }
