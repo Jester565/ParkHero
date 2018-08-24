@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
+import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,11 +14,9 @@ import android.view.ViewGroup
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.login.VerifyFragment
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
-import android.support.v4.view.PagerAdapter
 
 
 
@@ -81,7 +80,7 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
         targetKeyI
     }
 
-    override fun getItemPosition(`object`: Any?): Int {
+    override fun getItemPosition(`object`: Any): Int {
         // refresh all fragments when data set changed
         return PagerAdapter.POSITION_NONE
     }
@@ -104,15 +103,15 @@ class ScrollGalleryFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_scroll_gallery, container, false)
-        var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        var cfm = CloudFileManager(cognitoManager, this.context.applicationContext)
-        var pagerAdapter = ScrollGalleryPagerAdapter(activity, this.childFragmentManager, cfm, cognitoManager)
+        var cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
+        var cfm = CloudFileManager(cognitoManager, this.context!!.applicationContext)
+        var pagerAdapter = ScrollGalleryPagerAdapter(activity!!, this.childFragmentManager, cfm, cognitoManager)
         var viewPager: ViewPager = rootView.findViewById(R.id.scrollgallery_pager)
         viewPager.adapter = pagerAdapter
         async(UI) {
-            var pagerI = pagerAdapter.init(arguments.getString(OBJKEY_PARAM)).await()
+            var pagerI = pagerAdapter.init(arguments!!.getString(OBJKEY_PARAM)).await()
             viewPager.currentItem = pagerI
         }
         return rootView

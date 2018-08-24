@@ -317,6 +317,55 @@ class AppSyncTest {
                 })
     }
 
+    interface GetSchedulesCallback {
+        fun onResponse(response: List<GetSchedulesQuery.Schedule>)
+        fun onError(ec: Int?, msg: String?)
+    }
+
+    fun getSchedules(cb: GetSchedulesCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.NETWORK_ONLY) {
+        (client as AWSAppSyncClient).query(GetSchedulesQuery.builder().build())
+                .responseFetcher(fetcher)
+                .enqueue(object: GraphQLCall.Callback<GetSchedulesQuery.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        cb.onError(null, e.message)
+                    }
+
+                    override fun onResponse(response: Response<GetSchedulesQuery.Data>) {
+                        if (!response.hasErrors()) {
+                            cb.onResponse(response.data()!!.schedules?.schedules()!!)
+                        } else {
+                            var parsedErr = parseRespErrs(response as Response<Any>)
+                            cb.onError(parsedErr?.first, parsedErr?.second)
+                        }
+                    }
+                })
+    }
+
+    interface GetHourlyWeatherCallback {
+        fun onResponse(response: List<GetHourlyWeatherQuery.Weather>)
+        fun onError(ec: Int?, msg: String?)
+    }
+
+    fun getHourlyWeather(dateStr: String, cb: GetHourlyWeatherCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.NETWORK_ONLY) {
+        (client as AWSAppSyncClient).query(GetHourlyWeatherQuery.builder().date(dateStr).build())
+                .responseFetcher(fetcher)
+                .enqueue(object: GraphQLCall.Callback<GetHourlyWeatherQuery.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        cb.onError(null, e.message)
+                    }
+
+                    override fun onResponse(response: Response<GetHourlyWeatherQuery.Data>) {
+                        if (!response.hasErrors()) {
+                            cb.onResponse(response.data()!!.hourlyWeather!!.weather()!!)
+                        } else {
+                            var parsedErr = parseRespErrs(response as Response<Any>)
+                            cb.onError(parsedErr?.first, parsedErr?.second)
+                        }
+                    }
+                })
+    }
 
     fun getClient(ctx: Context) {
         var cognitoManager = CognitoManager.GetInstance(ctx)

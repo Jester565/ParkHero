@@ -49,16 +49,16 @@ dependencies {
         exclude group: 'com.google.code.gson'
     }
     implementation 'com.amazonaws:aws-android-sdk-appsync-compiler:2.6.17'
-    implementation 'com.google.firebase:firebase-core:16.0.0'
+    implementation 'com.google.firebase:firebase-core:16.0.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.24.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.android.support:cardview-v7:26.1.0'
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
-    implementation 'com.otaliastudios:cameraview:1.4.1'
+    implementation 'com.otaliastudios:cameraview:1.5.1'
     implementation 'com.theartofdev.edmodo:android-image-cropper:2.5.1'
     implementation('com.amazonaws:aws-android-sdk-core:2.6.17') {
         exclude group: 'com.google.code.gson'
@@ -78,22 +78,23 @@ dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.0.0'
     implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
     implementation 'org.greenrobot:eventbus:3.1.1'
-    implementation 'com.google.firebase:firebase-messaging:17.0.0'
+    implementation 'com.google.firebase:firebase-messaging:17.3.0'
 
     // Room (use 1.1.0-beta1 for latest beta)
-    implementation "android.arch.persistence.room:runtime:1.0.0"
+    implementation "android.arch.persistence.room:runtime:1.1.1"
     implementation 'com.android.support:support-v4:26.1.0'
-    kapt "android.arch.persistence.room:compiler:1.0.0"
+    kapt "android.arch.persistence.room:compiler:1.1.1"
     implementation group: 'info.debatty', name: 'java-string-similarity', version: '0.10'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
-    implementation 'com.google.android.gms:play-services-auth:15.0.1'
+    implementation 'com.google.android.gms:play-services-auth:16.0.0'
     implementation 'com.google.protobuf:protobuf-lite:3.0.0'
     implementation 'com.journeyapps:zxing-android-embedded:3.0.2@aar'
     implementation 'com.google.zxing:core:3.2.0'
     implementation 'com.google.firebase:firebase-ml-vision:16.0.0'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
+    implementation 'com.github.prolificinteractive:material-calendarview:1.6.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

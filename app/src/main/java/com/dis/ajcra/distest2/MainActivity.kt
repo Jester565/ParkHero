@@ -1,9 +1,13 @@
 package com.dis.ajcra.distest2
 
 import android.os.Bundle
-import android.support.v4.app.*
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
-import com.google.firebase.iid.FirebaseInstanceId
+import com.dis.ajcra.distest2.camera.CameraFragment
+import com.dis.ajcra.distest2.ride.RideTimesFragment
 
 class DlPagerAdapter: FragmentPagerAdapter {
     constructor(fm: FragmentManager)

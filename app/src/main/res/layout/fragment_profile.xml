@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dis.ajcra.distest2.ProfileFragment">
+    tools:context="com.dis.ajcra.distest2.prof.ProfileFragment">
 
     <ImageView
         android:id="@+id/profile_profimg"

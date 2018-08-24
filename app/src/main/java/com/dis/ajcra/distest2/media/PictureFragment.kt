@@ -1,21 +1,19 @@
 package com.dis.ajcra.distest2.media
 
-import android.os.Bundle
 import android.graphics.BitmapFactory
+import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
-import com.dis.ajcra.distest2.EntityBarFragment
-import com.dis.ajcra.distest2.EntityBarListener
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.entity.EntityBarFragment
+import com.dis.ajcra.distest2.entity.EntityBarListener
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.github.chrisbanes.photoview.PhotoView
-import com.github.kittinunf.fuel.Fuel.Companion.download
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
@@ -35,7 +33,7 @@ class PictureFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            key = arguments.getString(ARG_KEY)
+            key = arguments!!.getString(ARG_KEY)
         }
     }
 
@@ -43,15 +41,14 @@ class PictureFragment : Fragment() {
         this.listener = listener
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater!!.inflate(R.layout.fragment_picture, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.photoView = view!!.findViewById(R.id.picture_photoview)
         entityBar = EntityBarFragment()
-        Log.d("STATE", "Listener set")
         childFragmentManager.beginTransaction().replace(R.id.picture_entitybarholder, entityBar).commit()
         entityBar!!.setListener(object : EntityBarListener {
             override fun onDelete() {
@@ -64,8 +61,8 @@ class PictureFragment : Fragment() {
                 return objKeys
             }
         })
-        var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        cfm = CloudFileManager(cognitoManager, this.context.applicationContext)
+        var cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
+        cfm = CloudFileManager(cognitoManager, this.context!!.applicationContext)
         if (key != null) {
             if (!linkToUpload()) {
                 download()
@@ -85,21 +82,13 @@ class PictureFragment : Fragment() {
         var observer = cfm.getObservers(TransferType.UPLOAD)[key.toString()]
         if (observer != null) {
             if (observer.addListener(object: CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {
+                override fun onError(id: Int, ex: Exception?) {}
 
-                }
+                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
 
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+                override fun onStateChanged(id: Int, state: TransferState?) {}
 
-                }
-
-                override fun onStateChanged(id: Int, state: TransferState?) {
-
-                }
-
-                override fun onComplete(id: Int, file: File) {
-
-                }
+                override fun onComplete(id: Int, file: File) {}
             })) {
                 var bmp = BitmapFactory.decodeFile(observer.file.absolutePath)
                 photoView?.setImageBitmap(bmp)
@@ -112,15 +101,11 @@ class PictureFragment : Fragment() {
     fun download() {
         async {
             cfm.download(key.toString(), object : CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {
-                }
+                override fun onError(id: Int, ex: Exception?) {}
 
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
 
-                }
-
-                override fun onStateChanged(id: Int, state: TransferState?) {
-                }
+                override fun onStateChanged(id: Int, state: TransferState?) {}
 
                 override fun onComplete(id: Int, file: File) {
                     async {
@@ -145,4 +130,4 @@ class PictureFragment : Fragment() {
             return fragment
         }
     }
-}// Required empty public constructor
+}

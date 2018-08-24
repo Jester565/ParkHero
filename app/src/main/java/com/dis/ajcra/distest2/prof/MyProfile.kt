@@ -1,13 +1,11 @@
 package com.dis.ajcra.distest2.prof
 
 import android.util.Log
-import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
-import com.dis.ajcra.distest2.FriendInvite
-import com.dis.ajcra.distest2.Invite
-import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.model.*
-import com.dis.ajcra.distest2.prof.Profile
+import com.dis.ajcra.distest2.model.CreateEndpointInput
+import com.dis.ajcra.distest2.model.RemoveFriendInput
+import com.dis.ajcra.distest2.model.RenameUserInput
+import com.dis.ajcra.distest2.model.UserInfo
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 

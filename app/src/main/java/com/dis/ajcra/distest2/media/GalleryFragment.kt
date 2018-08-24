@@ -6,7 +6,8 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.content.Context
 import android.content.Intent
-import android.graphics.*
+import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
@@ -20,12 +21,11 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
-import com.dis.ajcra.distest2.CameraFragment
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.camera.CameraFragment
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.util.AnimationUtils
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import java.io.File
 
 interface GalleryFragmentListener {
@@ -112,9 +112,9 @@ class GalleryFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        cfm = CloudFileManager.GetInstance(cognitoManager, this.context.applicationContext)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
+        cfm = CloudFileManager.GetInstance(cognitoManager, this.context!!.applicationContext)
 
         pictures = ArrayList<String>()
         adapter = GalleryFragmentAdapter(cfm, pictures)

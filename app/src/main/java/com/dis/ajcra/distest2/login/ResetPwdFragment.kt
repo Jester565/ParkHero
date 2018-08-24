@@ -31,13 +31,13 @@ class ResetPwdFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_reset_pwd, container, false)
-        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         return rootView
     }
 
-    override fun onViewCreated(rootView: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         if (rootView != null) {
             progressBar = rootView.findViewById(R.id.reset_progressBar)
 

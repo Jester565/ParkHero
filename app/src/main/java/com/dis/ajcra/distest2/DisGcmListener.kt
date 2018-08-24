@@ -1,31 +1,26 @@
 package com.dis.ajcra.distest2
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.media.RingtoneManager
-import android.os.Bundle
+import android.os.Build
 import android.support.v4.app.NotificationCompat
-import android.util.DisplayMetrics
 import android.util.Log
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
+import com.dis.ajcra.distest2.prof.ProfileActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.coroutines.experimental.EventLoop
-import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.File
 import java.lang.Exception
-import android.app.NotificationChannel
-import android.os.Build
-
 
 
 class SnsEvent {

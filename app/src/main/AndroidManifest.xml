@@ -49,12 +49,15 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+        <service
+            android:name=".accel.AccelService"
+            android:enabled="true" />
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
             android:value="barcode,face,text" />
 
-        <activity android:name=".SearchActivity">
+        <activity android:name=".prof.SearchActivity">
             <intent-filter>
                 <action android:name="com.google.gms.actions.SEARCH_ACTION" />
 
@@ -69,7 +72,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".NoteActivity">
+        <activity android:name=".voice.NoteActivity">
             <intent-filter>
                 <action android:name="com.google.android.gms.actions.CREATE_NOTE" />
 
@@ -95,12 +98,19 @@
         <activity android:name=".login.RegisterActivity" />
         <activity android:name=".login.VerifyActivity" />
         <activity android:name=".login.ResetPwdActivity" />
-        <activity android:name=".UserSearchActivity" />
-        <activity android:name=".ProfileActivity" />
-        <activity android:name=".MyProfileActivity" />
-        <activity android:name=".RideActivity" />
-        <activity android:name=".SensorActivity" />
-        <activity android:name=".PassActivity"></activity>
+        <activity android:name=".prof.UserSearchActivity" />
+        <activity android:name=".prof.ProfileActivity" />
+        <activity android:name=".prof.MyProfileActivity" />
+        <activity android:name=".ride.RideActivity" />
+        <activity android:name=".accel.SensorActivity" />
+        <activity android:name=".pass.PassActivity" />
+
+        <service
+            android:name=".AccelService2"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".ParkScheduleActivity"></activity>
     </application>
 
 </manifest>

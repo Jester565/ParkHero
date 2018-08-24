@@ -12,9 +12,12 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.*
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cognitoidentityprovider.AmazonCognitoIdentityProviderClient
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import java.util.*
+
+
 
 class CognitoManager {
 
@@ -48,6 +51,17 @@ class CognitoManager {
 
         userPool = CognitoUserPool(appContext, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET, identityProviderClient)
         user = userPool.currentUser
+
+        //Check if signed in with google
+        var lastSignedIn = GoogleSignIn.getLastSignedInAccount(appContext)
+        if (lastSignedIn != null) {
+            if (!lastSignedIn.isExpired) {
+                var idToken = GoogleSignIn.getLastSignedInAccount(appContext)?.idToken
+                if (idToken != null) {
+                    addLogin("accounts.google.com", idToken)
+                }
+            }
+        }
     }
 
     interface RegisterUserHandler {

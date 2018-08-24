@@ -35,15 +35,15 @@ class VideoFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            key = arguments.getString(ARG_KEY)
+            key = arguments!!.getString(ARG_KEY)
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater!!.inflate(R.layout.fragment_video, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         var bandwidthMeter = DefaultBandwidthMeter()
         var trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
@@ -51,8 +51,8 @@ class VideoFragment : Fragment() {
         this.videoView = view!!.findViewById(R.id.video_vidview)
         this.videoView.player = ExoPlayerFactory.newSimpleInstance(this.context, trackSelector)
         this.player = videoView.player
-        var cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
-        cfm = CloudFileManager(cognitoManager, this.context.applicationContext)
+        var cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
+        cfm = CloudFileManager(cognitoManager, this.context!!.applicationContext)
         if (key != null) {
             download()
         }

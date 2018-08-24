@@ -1,12 +1,10 @@
 package com.dis.ajcra.distest2.prof
 
-import android.content.Context
 import android.util.Log
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
-import com.dis.ajcra.distest2.Entity
+import com.dis.ajcra.distest2.entity.Entity
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.model.CreateEndpointInput
 import com.dis.ajcra.distest2.model.CreateUserInput
 import com.dis.ajcra.distest2.model.SendEntityInput
 import com.dis.ajcra.distest2.model.UserInfo

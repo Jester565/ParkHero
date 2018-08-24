@@ -1,0 +1,250 @@
+package com.dis.ajcra.distest2
+
+import android.Manifest
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener2
+import android.hardware.SensorManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.opengl.Matrix
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.support.v4.app.ActivityCompat
+import android.util.Log
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.dis.ajcra.distest2.accel.AccelService
+import com.dis.ajcra.distest2.login.CognitoManager
+import com.dis.ajcra.distest2.media.CloudFileListener
+import com.dis.ajcra.distest2.media.CloudFileManager
+import kotlinx.coroutines.experimental.async
+import tutorial.Acceleration
+import java.io.File
+import java.util.*
+
+
+
+class AccelService2 : Service() {
+    companion object {
+        const val ACCEL_DELAY = 16L
+        const val ACCEL_MULT = 32726.0f/10.0f
+    }
+
+    //Data structures for calculations the netAcceleration
+    private var r = FloatArray(16, {0.0f})
+    private var rinv = FloatArray(16, {0.0f})
+    private var trueAcceleration = FloatArray(4, {0.0f})
+    private var gravity: FloatArray? = null
+    private var geoMagnetic: FloatArray? = null
+    private var linearAcceleration = FloatArray(4, {0.0f})
+    private var netAcceleration = FloatArray(3, {0.0f})
+    private var netAccelCount: Int = 0
+    private var startTime: Date? = null
+    private var recordCount: Int = 0
+    private var avgLongitude: Double = 0.0
+    private var avgLatitude: Double = 0.0
+    private var gpsRecordCount: Int = 0
+
+    private lateinit var sensorManager: SensorManager
+    private lateinit var gravitySensor: Sensor
+    private lateinit var geoMagneticSensor: Sensor
+    private lateinit var linearAccelerationSensor: Sensor
+    private lateinit var locationManager: LocationManager
+
+    //Protobuf message builder for sending acceleration data
+    private lateinit var accelDataBuilder: Acceleration.AccelerationData.Builder
+
+    private lateinit var cognitoManager: CognitoManager
+    private lateinit var cfm: CloudFileManager
+
+    private var accelDataTimerHandler: Handler = Handler()
+
+    private var running = false
+
+    private var ridename: String? = null
+
+    private fun accelToInt(accel: Float): Int {
+        return (accel * ACCEL_MULT).toInt()
+    }
+
+    private var sensorListener = object: SensorEventListener2 {
+        override fun onAccuracyChanged(p0: Sensor?, p1: Int) { }
+
+        override fun onFlushCompleted(p0: Sensor?) { }
+
+        override fun onSensorChanged(evt: SensorEvent?) {
+            if (evt != null) {
+                when (evt.sensor.type) {
+                    Sensor.TYPE_GRAVITY -> {
+                        gravity = evt.values
+                    }
+                    Sensor.TYPE_MAGNETIC_FIELD -> {
+                        geoMagnetic = evt.values
+                    }
+                    Sensor.TYPE_LINEAR_ACCELERATION -> {
+                        linearAcceleration[0] = evt.values[0]
+                        linearAcceleration[1] = evt.values[1]
+                        linearAcceleration[2] = evt.values[2]
+                        linearAcceleration[3] = 0f
+                    }
+                }
+                try {
+                    if (gravity != null && geoMagnetic != null && linearAcceleration != null) {
+                        SensorManager.getRotationMatrix(r, null, gravity, geoMagnetic);
+                        Matrix.invertM(rinv, 0, r, 0)
+                        Matrix.multiplyMV(trueAcceleration, 0, rinv, 0, linearAcceleration, 0)
+                        synchronized(netAcceleration) {
+                            netAccelCount++
+                            var i = 0
+                            while (i < 3) {
+                                netAcceleration[i] = netAcceleration[i] * (netAccelCount - 1) / (netAccelCount) + trueAcceleration[i] / netAccelCount
+                                i++
+                            }
+                        }
+                    }
+                } catch(ex: Exception) {
+                    Log.e("STATE", "EX: " + ex.message)
+                }
+            }
+        }
+    }
+
+    private var locationListener = object: LocationListener {
+        override fun onLocationChanged(location: Location?) {
+            if (location != null) {
+                gpsRecordCount++
+                avgLongitude = avgLongitude * (gpsRecordCount - 1).toDouble()/gpsRecordCount + location.longitude * 1.0/gpsRecordCount
+                avgLatitude = avgLatitude * (gpsRecordCount - 1).toDouble()/gpsRecordCount + location.latitude * 1.0/gpsRecordCount
+            }
+        }
+
+        override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+
+        override fun onProviderEnabled(p0: String?) {}
+
+        override fun onProviderDisabled(p0: String?) {}
+    }
+
+    private var accelDataRunner: Runnable = object: Runnable {
+        override fun run() {
+            if (running) {
+                var now = Date()
+                var targetTime = startTime!!.time + recordCount * AccelService.ACCEL_DELAY
+                var delay = targetTime - now.time + AccelService.ACCEL_DELAY
+                if (delay < 0) {
+                    delay = 0
+                }
+                recordCount++
+                accelDataTimerHandler.postDelayed(this, delay)
+                synchronized(netAcceleration) {
+                    netAccelCount = 0
+                    accelDataBuilder.addX(accelToInt(netAcceleration[0]))
+                    accelDataBuilder.addY(accelToInt(netAcceleration[1]))
+                    accelDataBuilder.addZ(accelToInt(netAcceleration[2]))
+                }
+            }
+        }
+    }
+
+    fun startCollection() {
+        Log.d("ACCEL", "Starting collection")
+        sensorManager.registerListener(sensorListener, gravitySensor, SensorManager.SENSOR_DELAY_FASTEST)
+        sensorManager.registerListener(sensorListener, geoMagneticSensor, SensorManager.SENSOR_DELAY_FASTEST)
+        sensorManager.registerListener(sensorListener, linearAccelerationSensor, SensorManager.SENSOR_DELAY_FASTEST)
+
+        running = true
+        startTime = Date()
+
+        recordCount = 0
+        gpsRecordCount = 0
+
+        accelDataTimerHandler.postDelayed(accelDataRunner, AccelService.ACCEL_DELAY)
+    }
+
+
+    fun stopCollection() {
+        Log.d("ACCEL", "Stopping collection")
+        running = false
+        sensorManager.unregisterListener(sensorListener)
+        locationManager.removeUpdates(locationListener)
+        if (ridename == null) {
+            async {
+                uploadAcceleration("accels/" + cognitoManager.federatedID + "/" + UUID.randomUUID().toString())
+                accelDataBuilder.clear()
+            }
+        } else {
+            async {
+                uploadAcceleration("rideAccels/" + ridename)
+                accelDataBuilder.clear()
+                ridename = null
+            }
+        }
+    }
+
+    fun uploadAcceleration(objKey: String) {
+        accelDataBuilder.setStartEpochMillis(startTime!!.time)
+        accelDataBuilder.setLongitude(avgLongitude)
+        accelDataBuilder.setLatitude(avgLatitude)
+        var accelDataMsg = accelDataBuilder.build()
+        var dataStr = accelDataMsg.toByteString()
+        var file = File(applicationContext.filesDir, "accels")
+        file.writeBytes(dataStr.toByteArray())
+        async {
+            cfm.upload(objKey, file.toURI(), object : CloudFileListener() {
+                override fun onError(id: Int, ex: Exception?) {
+                    Log.d("ACCEL", "Upload error: " + ex?.message)
+                }
+
+                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
+
+                override fun onStateChanged(id: Int, state: TransferState?) {}
+
+                override fun onComplete(id: Int, file: File) {
+                    Log.d("ACCEL", "Upload complete: " + objKey)
+                }
+            })
+        }
+    }
+
+    fun checkLocationPermission(context: Context): Boolean {
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        ridename = intent?.extras?.getString("ridename")
+        Log.d("ACCEL", "AccelService2 Started")
+
+        cognitoManager = CognitoManager.GetInstance(applicationContext)
+        cfm = CloudFileManager(cognitoManager, applicationContext)
+
+        accelDataBuilder = Acceleration.AccelerationData.newBuilder()
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        linearAccelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (checkLocationPermission(applicationContext)) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10f, locationListener)
+        }
+        startCollection()
+        return START_NOT_STICKY
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopCollection()
+    }
+}

@@ -15,8 +15,8 @@ abstract class CloudFileListener {
     fun getPriority(): Int {
         return priority
     }
-    abstract fun onError(id: Int, ex: Exception?)
-    abstract fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long)
-    abstract fun onStateChanged(id: Int, state: TransferState?)
-    abstract fun onComplete(id: Int, file: File)
+    open fun onError(id: Int, ex: Exception?) { }
+    open fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) { }
+    open fun onStateChanged(id: Int, state: TransferState?) { }
+    open fun onComplete(id: Int, file: File) { }
 }

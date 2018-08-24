@@ -29,17 +29,14 @@ class RegisterFragment : Fragment() {
     private lateinit var pwdField: EditText
     private lateinit var confirmPwdField: EditText
     private lateinit var msgText: TextView
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_register, container, false)
-        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         return rootView
     }
 
-    override fun onViewCreated(rootView: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         if (rootView != null) {
             registerProgressBar = rootView.findViewById(R.id.register_progressBar)
 
@@ -52,13 +49,9 @@ class RegisterFragment : Fragment() {
             msgText = rootView.findViewById(R.id.register_msgText)
 
             var textChangeListener = object: TextWatcher {
-                override fun afterTextChanged(p0: Editable?) {
+                override fun afterTextChanged(p0: Editable?) {}
 
-                }
-
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-                }
+                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                     registerButton.text = "CREATE ACCOUNT"
@@ -78,7 +71,7 @@ class RegisterFragment : Fragment() {
                     msgText.text = "Passwords don't match!"
                 } else {
                     v.isEnabled = false
-                    AnimationUtils.HideKeyboard(this.activity)
+                    AnimationUtils.HideKeyboard(this.activity!!)
                     msgText.text = ""
                     AnimationUtils.Crossfade(registerProgressBar, registerLayout)
                     cognitoManager.registerUser(usernameField.text.toString(), emailField.text.toString(), pwdField.text.toString(),

@@ -18,12 +18,14 @@ import android.widget.TextView
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GetObjectRequest
+import com.dis.ajcra.distest2.accel.SensorActivity
+import com.dis.ajcra.distest2.entity.EntityListFragment
 import com.dis.ajcra.distest2.login.CognitoManager
-import com.dis.ajcra.distest2.login.EntityListFragment
 import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
+import com.dis.ajcra.distest2.prof.UserSearchActivity
 import com.dis.ajcra.fastpass.RidesUpdatedSubscription
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -46,17 +48,15 @@ class HomeFragment : Fragment() {
     lateinit var scrollView: NestedScrollView
     lateinit var profView: CardView
     var ridesUpdatedSubscription: AppSyncSubscriptionCall<RidesUpdatedSubscription.Data>? = null
-    //temp
-    var appSyncTest: AppSyncTest = AppSyncTest()
     var profViewH: Int = 0
     var myProfile: MyProfile? = null
 
     fun launchTestActivity() {
-        var intent = Intent(context, PassActivity::class.java)
+        var intent = Intent(context, ParkScheduleActivity::class.java)
         startActivity(intent)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater!!.inflate(R.layout.fragment_home, container, false)
         profilePicView = rootView.findViewById(R.id.home_profilepic)
         signInButton = rootView.findViewById(R.id.home_signin)
@@ -65,7 +65,7 @@ class HomeFragment : Fragment() {
         myProfileButton = rootView.findViewById(R.id.home_myprofileButton)
         profileNameText = rootView.findViewById(R.id.home_name)
         accountLayout = rootView.findViewById(R.id.home_accountlayout)
-        cognitoManager = CognitoManager.GetInstance(activity.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(activity!!.applicationContext)
         scrollView = rootView.findViewById(R.id.home_scrollview)
         profView = rootView.findViewById(R.id.home_profilelayout)
         profileManager = ProfileManager(cognitoManager)
@@ -109,7 +109,7 @@ class HomeFragment : Fragment() {
         }
 
         myProfileButton.setOnClickListener {
-            var intent = Intent(this@HomeFragment.context, MyProfileActivity::class.java)
+            var intent = Intent(this@HomeFragment.context, SensorActivity::class.java)
             startActivity(intent)
         }
         return rootView
@@ -132,19 +132,16 @@ class HomeFragment : Fragment() {
     fun initProfilePic() {
         var objReq: GetObjectRequest = GetObjectRequest(BUCKET_NAME, "profileImgs/blank-profile-picture-973460_640.png")
         async {
-            Log.d("STATE", "Getting image")
             try {
                 var response = s3Client.getObject(objReq)
                 var bmp = BitmapFactory.decodeStream(response.objectContent);
-                Log.d("STATE", "Bmp Loaded")
-                activity.runOnUiThread {
+                activity!!.runOnUiThread {
                     var roundedBmp = RoundedBitmapDrawableFactory.create(resources, bmp)
                     roundedBmp.isCircular = true
                     profilePicView.setImageDrawable(roundedBmp)
                     Log.d("STATE", "Updated profile pic view")
                 }
             } catch (e: Exception) {
-                Log.d("STATE", "Exception occured")
                 Log.d("STATE", e.message)
             }
         }

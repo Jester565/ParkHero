@@ -23,11 +23,6 @@ import com.google.android.gms.common.api.ApiException
 import java.lang.Exception
 
 
-
-
-
-
-
 class LoginFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
 
@@ -46,23 +41,23 @@ class LoginFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (arguments.containsKey("pwd")) {
-            pwd = arguments.getString(PWD_PARAM)
+        if (arguments!!.containsKey("pwd")) {
+            pwd = arguments!!.getString(PWD_PARAM)
         }
         gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken("484305592931-jk3fi0ton2brsatal9cb1mrnnc2ra04m.apps.googleusercontent.com")
+                .requestIdToken("484305592931-pcg7s9kmq920p2csgmmc4ga0suo98vuh.apps.googleusercontent.com")
                 .build()
-        mGoogleSignInClient = GoogleSignIn.getClient(activity, gso)
+        mGoogleSignInClient = GoogleSignIn.getClient(activity!!.application, gso)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_login, container, false)
-        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         return rootView
     }
 
-    override fun onViewCreated(rootView: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         var username = cognitoManager.userID
         if (rootView != null) {
             progressBar = rootView.findViewById(R.id.login_progressBar)

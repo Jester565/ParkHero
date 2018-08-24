@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dis.ajcra.distest2.UserSearchActivity">
+    tools:context="com.dis.ajcra.distest2.prof.UserSearchActivity">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">

@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SensorActivity">
-    <TextView
-        android:id="@+id/sensor_coords"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    tools:context=".accel.SensorActivity">
 
     <Button
-        android:id="@+id/sensor_toggle"
+        android:id="@+id/sensor_recognizeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ACTIVATE"/>
-</android.support.constraint.ConstraintLayout>
+        android:text="Recognize"
+        android:layout_centerHorizontal="true"/>
+
+    <EditText
+        android:id="@+id/sensor_ridenameField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sensor_recognizeButton"
+        android:layout_centerHorizontal="true"/>
+
+    <Button
+        android:id="@+id/fingerprint_button"
+        android:text="FINGERPRINT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/sensor_ridenameField"/>
+</RelativeLayout>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rowride_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#11660000"
+    android:layout_marginBottom="5dp">
+    <de.hdodenhof.circleimageview.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/rowschedule_img"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_cancel_black_24dp"
+        app:civ_border_width="3dp"
+        app:civ_border_color="#FF000000"/>
+    <TextView
+        android:id="@+id/rowschedule_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/rowschedule_img"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="22dp"
+        android:text="Disneyland"/>
+    <TextView
+        android:id="@+id/rowschedule_hours"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/rowschedule_img"
+        android:layout_below="@id/rowschedule_name"
+        android:textSize="20dp"
+        android:text="9:00 AM to 11:00 PM"
+        android:layout_marginLeft="10dp"/>
+    <LinearLayout
+        android:id="@+id/rowschedule_magicHoursLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/rowschedule_img"
+        android:layout_below="@id/rowschedule_hours"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginLeft="10dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Magic Hours"/>
+        <TextView
+            android:id="@+id/rowschedule_magicHours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="8:00 AM to 9:00 AM"/>
+    </LinearLayout>
+</RelativeLayout>

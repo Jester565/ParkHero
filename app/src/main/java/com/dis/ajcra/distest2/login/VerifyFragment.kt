@@ -33,21 +33,21 @@ class VerifyFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (arguments.containsKey(PWD_PARAM))
-            pwd = arguments.getString(PWD_PARAM)
-        if (arguments.containsKey(DELVMETH_PARAM))
-            deliveryMethod = arguments.getString(DELVMETH_PARAM)
-        if (arguments.containsKey(DELVDEST_PARAM))
-            deliveryDest = arguments.getString(DELVDEST_PARAM)
+        if (arguments!!.containsKey(PWD_PARAM))
+            pwd = arguments!!.getString(PWD_PARAM)
+        if (arguments!!.containsKey(DELVMETH_PARAM))
+            deliveryMethod = arguments!!.getString(DELVMETH_PARAM)
+        if (arguments!!.containsKey(DELVDEST_PARAM))
+            deliveryDest = arguments!!.getString(DELVDEST_PARAM)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_verify, container, false)
-        cognitoManager = CognitoManager.GetInstance(this.context.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         return rootView
     }
 
-    override fun onViewCreated(rootView: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         if (rootView != null) {
             progressBar = rootView.findViewById(R.id.verify_progressBar)
             verifyLayout = rootView.findViewById(R.id.verify_linearLayout)

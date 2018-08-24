@@ -283,7 +283,7 @@ class CloudFileManager {
     }
 
     private fun isOwnedByUser(key: String): Boolean {
-        return ((key.contains(cognitoManager.federatedID) && key.contains("media")) || key == "accels")
+        return (key.contains(cognitoManager.federatedID) || key.contains("rideAccels/") || key.contains("parkIcons/"))
     }
 
     suspend fun genPresignedURI(key: String, expireMins: Int): URI {

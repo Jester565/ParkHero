@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ParkScheduleFragment">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Park Schedules"
+            android:textSize="32dp"
+            android:textStyle="bold"
+            android:gravity="center_horizontal"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pass Type:"
+            android:textSize="15dp"/>
+        <Spinner
+            android:id="@+id/parkschedule_passSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </Spinner>
+
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+            android:id="@+id/parkschedule_calendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </com.prolificinteractive.materialcalendarview.MaterialCalendarView>
+
+        <TextView
+            android:id="@+id/parkschedule_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Wednesday, August 22, 2018"
+            android:textSize="25dp"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/parkschedule_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </android.support.v7.widget.RecyclerView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="Weather"
+            android:textSize="20dp"/>
+
+        <LinearLayout
+            android:id="@+id/parkschedule_weatherLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
