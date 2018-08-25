@@ -18,7 +18,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
@@ -39,6 +38,14 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         val VIDEO_QUALITY = VideoQuality.MAX_720P
         val BAR_TRANSITION_MILLIS = 400L
         val SLIDER_ALPHA = 0.7f
+
+        fun GetInstance(video: Boolean = true, gallery: Boolean = true): CameraFragment {
+            var fragment = CameraFragment()
+            fragment.arguments = Bundle()
+            fragment.arguments!!.putBoolean("videoEnabled", video)
+            fragment.arguments!!.putBoolean("galleryEnabled", gallery)
+            return fragment
+        }
     }
 
     //Get picture taken and recorded events
@@ -62,18 +69,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             visionHandler = VisionHandler(activity)
         }
 
-        override fun onCameraOpened(options: CameraOptions?) {
-            super.onCameraOpened(options)
-        }
-
         override fun onPictureTaken(jpeg: ByteArray?) {
             async {
-                /*
-                if (jpeg != null) {
-                    var bmp = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size)
-                    visionHandler.processBmp(bmp)
-                }
-                */
                 //Save jpeg byte array to file
                 var jpegFile = File(appCtx.filesDir, UUID.randomUUID().toString() + ".jpg")
                 if (jpeg != null) {
@@ -85,35 +82,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                 Log.d("STATE", "File Len: " + jpegFile.length())
                 Log.d("STATE", "ObjKey: " + objKey)
                 visionHandler.processFile(appCtx, Uri.fromFile(compFile))
-                /*
-                var transferObserver = transferUtil.upload("disneyapp", objKey, jpegFile)
-                if (transferListener != null) {
-                    transferObserver.setTransferListener(transferListener)
-                }
-                */
-                Log.d("FI", "PRE GEN CFI:")
-                cloudFileManager.displayFileInfo()
-                Log.d("FI", "PRE UPLOAD:")
-                cloudFileManager.displayFileInfo()
 
-                cloudFileManager.upload(objKey, compFile.toURI(), object: CloudFileListener() {
-                    override fun onError(id: Int, ex: Exception?) {
-                        Log.d("STATE", "On error: " + ex)
-                    }
-
-                    override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-
-                    }
-
-                    override fun onStateChanged(id: Int, state: TransferState?) {
-                        Log.d("STATE", "State changed " + state)
-                    }
-
-                    override fun onComplete(id: Int, file: File) {
-                        Log.d("STATE", "On Complete")
-                    }
-                })
-                //Log.d("STATE", "Gallery Updated")
+                cloudFileManager.upload(objKey, compFile.toURI(), object: CloudFileListener() {})
                 galleryFragment.galleryUpdated(objKey)
             }
         }
@@ -124,18 +94,6 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                 async {
                     var objKey = "media/" + cognitoManager.federatedID + "/" + file.name
                     cloudFileManager.upload(objKey, file.toURI(), object : CloudFileListener() {
-                        override fun onError(id: Int, ex: Exception?) {
-
-                        }
-
-                        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-
-                        }
-
-                        override fun onStateChanged(id: Int, state: TransferState?) {
-
-                        }
-
                         override fun onComplete(id: Int, file: File) {
                             Log.d("STATE", "VIDEO UPLOADED")
                         }
@@ -319,6 +277,17 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                 }
             }
         })
+
+        //Disable features by removing buttons that could access them
+        var videoEnabled = arguments!!.getBoolean("videoEnabled")
+        var galleryEnabled = arguments!!.getBoolean("galleryEnabled")
+        if (!videoEnabled) {
+            recordButton.visibility = View.GONE
+        }
+        if (!galleryEnabled) {
+            galleryButton.visibility = View.GONE
+            gallerySlider.isEnabled = false
+        }
         return rootView
     }
 
@@ -326,9 +295,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         gallerySlider.setScrollableView(recyclerView)
     }
 
-    override fun onDragChange(dragging: Boolean) {
-
-    }
+    override fun onDragChange(dragging: Boolean) { }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)

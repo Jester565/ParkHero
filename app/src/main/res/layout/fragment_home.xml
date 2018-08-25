@@ -25,8 +25,9 @@
                 android:layout_width="80dp"
                 android:layout_height="72dp"
                 android:background="@drawable/home_sidebutton_bg"
-                android:scaleType="fitXY"
-                app:srcCompat="@drawable/camera_outline2" />
+                android:src="@drawable/ic_party"
+                android:alpha="1"
+                android:scaleType="fitXY" />
 
             <RelativeLayout
                 android:layout_width="wrap_content"
@@ -43,18 +44,22 @@
                     android:layout_height="wrap_content"
                     android:text="username"
                     android:layout_below="@+id/home_profilepic"
-                    android:layout_marginTop="-25dp"
+                    android:layout_marginTop="-29dp"
                     android:textSize="20dp"
-                    android:background="@drawable/home_sidebutton_bg"
+                    android:background="#CCFF0000"
                     android:layout_centerHorizontal="true"
-                    android:textAlignment="center"/>
+                    android:textAlignment="center"
+                    android:paddingHorizontal="2dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"/>
             </RelativeLayout>
 
             <ImageButton
                 android:id="@+id/home_friendbutton"
-                android:layout_width="79dp"
-                android:layout_height="71dp"
+                android:layout_width="80dp"
+                android:layout_height="72dp"
                 android:background="@drawable/home_sidebutton_bg"
+                android:src="@drawable/ic_people_outline_black_24dp"
                 android:scaleType="fitXY"
                 app:srcCompat="@drawable/edit_icon" />
 

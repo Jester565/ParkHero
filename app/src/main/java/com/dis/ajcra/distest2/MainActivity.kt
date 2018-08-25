@@ -13,7 +13,7 @@ class DlPagerAdapter: FragmentPagerAdapter {
     constructor(fm: FragmentManager)
             :super(fm)
     {
-        fragments.add(CameraFragment())
+        fragments.add(CameraFragment.GetInstance())
         fragments.add(HomeFragment())
         fragments.add(RideTimesFragment())
     }

@@ -7,7 +7,6 @@ class FastPassManagerFragment : Fragment() {
     private lateinit var rideManager: RideManager
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: RideRecyclerAdapter
-    private var dataset: ArrayList<Ride> = ArrayList<Ride>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#F0550000">
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/addpass_topText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pass ID (on back of pass):" />
+    <EditText
+        android:id="@+id/addpass_passEdit"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/addpass_topText"
+        android:hint="801150017504820660"
+        android:inputType="text"
+        android:imeOptions="actionDone"/>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/addpass_passaddButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/addpass_passEdit"
+        android:src="@drawable/ic_add_circle_black_24dp"
+        app:elevation="4dp"
+        app:fabSize="normal" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/addpass_cameraButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/addpass_passEdit"
+        android:layout_marginTop="5dp"
+        android:background="#66BB0000"
+        android:src="@drawable/ic_camera_black_24dp"
+        app:elevation="4dp"
+        app:fabSize="mini" />
+
+    <ProgressBar
+        android:id="@+id/addpass_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/addpass_passEdit"
+        android:visibility="gone" />
+</RelativeLayout>

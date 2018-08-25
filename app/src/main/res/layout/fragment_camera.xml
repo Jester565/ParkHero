@@ -109,10 +109,10 @@
             android:layout_toLeftOf="@+id/camera_stopbutton"/>
     </RelativeLayout>
     <RelativeLayout
+        android:id="@+id/camera_lowbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:id="@+id/camera_lowbar"
         android:layout_marginBottom="10dp">
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/camera_picturebutton"
@@ -126,6 +126,7 @@
             app:rippleColor="@color/colorPrimaryDark"/>
 
         <android.support.design.widget.FloatingActionButton
+            android:id="@+id/camera_recordbutton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/record_white"
@@ -134,17 +135,16 @@
             android:layout_toLeftOf="@+id/camera_picturebutton"
             android:layout_centerVertical="true"
             app:fabSize="mini"
-            android:scaleType="center"
-            android:id="@+id/camera_recordbutton"/>
+            android:scaleType="center" />
 
         <android.support.design.widget.FloatingActionButton
+            android:id="@+id/camera_gallerybutton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/gallery_white"
             app:elevation="4dp"
             android:layout_marginLeft="30dp"
             android:layout_toRightOf="@+id/camera_picturebutton"
-            android:id="@+id/camera_gallerybutton"
             android:layout_centerVertical="true"
             app:fabSize="mini"
             android:scaleType="center"/>

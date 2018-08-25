@@ -9,53 +9,85 @@
     <ProgressBar
         android:id="@+id/pass_progressbar"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true" />
-
-    <android.support.v7.widget.RecyclerView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#FFCCCC"
-        android:id="@+id/pass_recyclerview" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/pass_recyclerview"
-        android:layout_alignBottom="@id/pass_profimg"
-        android:background="#FF0000"/>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/pass_addButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_add_circle_black_24dp"
-        android:layout_below="@id/pass_recyclerview"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="5dp"
-        android:layout_marginTop="-10dp"
-        app:elevation="4dp"
-        app:fabSize="mini"/>
-
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/pass_profimg"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@color/cardview_dark_background"
+        android:layout_height="100dp"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/pass_recyclerview"
-        android:layout_marginTop="-20dp"
-        app:civ_border_color="#FF0000"
-        app:civ_border_width="2dp" />
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/pass_deleteButton"
-        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"/>
+
+    <RelativeLayout
+        android:id="@+id/pass_recyclerLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_delete_black_24dp"
-        android:layout_below="@id/pass_recyclerview"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="-10dp"
-        app:fabSize="mini"/>
+        android:visibility="gone">
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#FFCCCC"
+            android:id="@+id/pass_recyclerview" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pass_recyclerview"
+            android:layout_alignBottom="@id/pass_profimg"
+            android:background="#FF0000"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/pass_addButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_add_circle_black_24dp"
+            android:layout_below="@id/pass_recyclerview"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="-10dp"
+            app:elevation="4dp"
+            app:fabSize="mini"/>
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/pass_profimg"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@color/cardview_dark_background"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/pass_recyclerview"
+            android:layout_marginTop="-20dp"
+            app:civ_border_color="#FF0000"
+            app:civ_border_width="2dp" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/pass_deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_delete_black_24dp"
+            android:layout_below="@id/pass_recyclerview"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="-10dp"
+            app:fabSize="mini"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/pass_emptyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/pass_emptyText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No Passes..."
+            android:textSize="25dp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/pass_addButton2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/pass_emptyText"
+            android:src="@drawable/ic_add_circle_black_24dp"
+            app:elevation="4dp"
+            app:fabSize="normal"/>
+    </RelativeLayout>
 </RelativeLayout>

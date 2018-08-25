@@ -52,8 +52,10 @@ class HomeFragment : Fragment() {
     var myProfile: MyProfile? = null
 
     fun launchTestActivity() {
+        /*
         var intent = Intent(context, ParkScheduleActivity::class.java)
         startActivity(intent)
+        */
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -77,8 +79,8 @@ class HomeFragment : Fragment() {
                 }
                 val params = profView.getLayoutParams()
                 params.height += oldScrollY - scrollY
-                if (params.height < 100) {
-                    params.height = 100
+                if (params.height < 200) {
+                    params.height = 200
                 } else if (params.height > profViewH) {
                     params.height = profViewH
                 }

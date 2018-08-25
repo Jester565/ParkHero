@@ -15,7 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
 import android.widget.ProgressBar
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import android.widget.RelativeLayout
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
@@ -27,7 +27,6 @@ import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
-import java.lang.Exception
 
 class PassFragment : Fragment() {
     companion object {
@@ -46,15 +45,24 @@ class PassFragment : Fragment() {
     private var position = 0
     private var scrollLevel = 0
 
+    private lateinit var recyclerLayout: RelativeLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var addButton: FloatingActionButton
     private lateinit var deleteButton: FloatingActionButton
     private lateinit var profileImg: CircleImageView
 
+    private lateinit var emptyLayout: RelativeLayout
+    private lateinit var addButton2: FloatingActionButton
+
     private lateinit var adapter: PassRecyclerAdapter
     private var passProfiles = ArrayList<Profile>()
     private var dataset = ArrayList<DisPass>()
+
+    private var onLoadCB: ((ArrayList<DisPass>) -> Boolean)? = null
+    private var onAddCB: (() -> Unit)? = null
+    private var onRemoveCB: ((DisPass) -> Unit)? = null
+    private var passChangeCB: ((DisPass) -> Unit)? = null
 
     private var listPassCB = object: PassManager.ListPassesCB {
         override fun passUpdated(userID: String, passes: List<DisPass>) {
@@ -92,15 +100,33 @@ class PassFragment : Fragment() {
             }
         }
 
+        override fun passRemoved(passID: String) {
+            var i = dataset.indexOfFirst {
+                it.id() == passID
+            }
+            if (i != null) {
+                dataset.removeAt(i)
+                adapter.notifyItemRemoved(i)
+            }
+        }
+
         override fun updateCompleted() {
             async(UI) {
-                addButton.visibility = View.VISIBLE
-                deleteButton.visibility = View.VISIBLE
-                recyclerView.visibility = View.VISIBLE
-                progressBar.visibility = View.GONE
+                var updated = onLoadCB?.invoke(dataset)
+                if (updated != null && updated) {
+                    adapter.notifyDataSetChanged()
+                }
 
-                if (passProfiles.size > 0) {
-                    setProfile()
+                progressBar.visibility = View.GONE
+                if (dataset.size > 0) {
+                    recyclerLayout.visibility = View.VISIBLE
+                    emptyLayout.visibility = View.GONE
+                    if (passProfiles.size > 0) {
+                        setProfile()
+                    }
+                } else {
+                    recyclerLayout.visibility = View.GONE
+                    emptyLayout.visibility = View.VISIBLE
                 }
             }
         }
@@ -116,61 +142,25 @@ class PassFragment : Fragment() {
         passManager.unsubscribeFromPasses(listPassCB)
     }
 
-    fun setProfile() {
-        recyclerView.setBackgroundColor(colorArr.get(position % colorArr.size))
-        var profile = passProfiles.get(position)
-        async(UI) {
-            if (profile != null) {
-                Log.d("STATE", "PROFILE IS NULL")
-            }
-            var profPicUrl = profile.getProfilePicUrl().await()
-            if (profPicUrl == null) {
-                profPicUrl = "profileImgs/blank-profile-picture-973460_640.png"
-            }
-            cfm.download(profPicUrl, object : CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {}
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
-
-                override fun onStateChanged(id: Int, state: TransferState?) {}
-
-                override fun onComplete(id: Int, file: File) {
-                    async {
-                        var options = BitmapFactory.Options()
-                        options.inJustDecodeBounds = true
-                        BitmapFactory.decodeFile(file.absolutePath, options)
-                        var imgScale = 1
-                        while (options.outWidth / imgScale > 400) {
-                            imgScale *= 2
-                        }
-                        options.inJustDecodeBounds = false
-                        options.inSampleSize = imgScale
-                        var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
-                            profileImg.setImageBitmap(bmap)
-                        }
-                    }
-                }
-            })
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         profileManager = ProfileManager(cognitoManager)
         passManager = PassManager.GetInstance(context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
-        passManager.subscribeToPasses(listPassCB)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_pass, container, false)
+        recyclerLayout = rootView.findViewById(R.id.pass_recyclerLayout)
         recyclerView = rootView.findViewById(R.id.pass_recyclerview)
         progressBar = rootView.findViewById(R.id.pass_progressbar)
         addButton = rootView.findViewById(R.id.pass_addButton)
         deleteButton = rootView.findViewById(R.id.pass_deleteButton)
         profileImg = rootView.findViewById(R.id.pass_profimg)
+
+        emptyLayout = rootView.findViewById(R.id.pass_emptyLayout)
+        addButton2 = rootView.findViewById(R.id.pass_addButton2)
 
         recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         adapter = PassRecyclerAdapter(dataset)
@@ -208,9 +198,73 @@ class PassFragment : Fragment() {
                 scrollLevel += dx
                 Log.d("STATE", "SCROLL LEVEL: " + scrollLevel)
                 recyclerView?.setBackgroundColor(ArgbEvaluator().evaluate(Math.abs(scrollLevel.toFloat() / recyclerView?.width), c1, c2) as Int)
-                //Log.d("STATE", "MOVING: " + dx + " w: " + recyclerView?.width)
             }
         })
+
+        addButton.setOnClickListener {
+            onAddCB?.invoke()
+        }
+        addButton2.setOnClickListener {
+            onAddCB?.invoke()
+        }
+        deleteButton.setOnClickListener {
+            onRemoveCB?.invoke(dataset[position])
+        }
         return rootView
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        passManager.subscribeToPasses(listPassCB)
+    }
+
+    fun setOnLoadCallback(cb: ((ArrayList<DisPass>) -> Boolean)?) {
+        this.onLoadCB = cb
+    }
+
+    fun setOnAddCallback(cb: (() -> Unit)?) {
+        this.onAddCB = cb
+    }
+
+    fun setOnRemoveCallback(cb: ((DisPass) -> Unit)?) {
+        this.onRemoveCB = cb
+    }
+
+    fun setPassChangeCallback(cb: ((DisPass) -> Unit)?) {
+        this.passChangeCB = cb
+    }
+
+    private fun setProfile() {
+        recyclerView.setBackgroundColor(colorArr.get(position % colorArr.size))
+        var profile = passProfiles.get(position)
+        passChangeCB?.invoke(dataset[position])
+        async(UI) {
+            if (profile != null) {
+                Log.d("STATE", "PROFILE IS NULL")
+            }
+            var profPicUrl = profile.getProfilePicUrl().await()
+            if (profPicUrl == null) {
+                profPicUrl = "profileImgs/blank-profile-picture-973460_640.png"
+            }
+            cfm.download(profPicUrl, object : CloudFileListener() {
+                override fun onComplete(id: Int, file: File) {
+                    async {
+                        var options = BitmapFactory.Options()
+                        options.inJustDecodeBounds = true
+                        BitmapFactory.decodeFile(file.absolutePath, options)
+                        var imgScale = 1
+                        while (options.outWidth / imgScale > 400) {
+                            imgScale *= 2
+                        }
+                        options.inJustDecodeBounds = false
+                        options.inSampleSize = imgScale
+                        var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
+                        async(UI) {
+                            profileImg.setImageBitmap(bmap)
+                        }
+                    }
+                }
+            })
+        }
     }
 }

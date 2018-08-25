@@ -13,9 +13,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
 import android.widget.TextView
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
@@ -106,7 +103,6 @@ class ParkScheduleFragment : Fragment() {
         var PassTypes: ArrayList<String> = arrayListOf("Southern California Select", "Southern California", "Deluxe", "Signature", "Signature Plus")
     }
 
-    private lateinit var passSpinner: Spinner
     private lateinit var calendar: MaterialCalendarView
     private lateinit var dateView: TextView
     private lateinit var recyclerView: RecyclerView
@@ -136,26 +132,6 @@ class ParkScheduleFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         var rootView = inflater!!.inflate(R.layout.fragment_park_schedule, container, false)
-        passSpinner = rootView.findViewById(R.id.parkschedule_passSpinner)
-        var passAdapter = ArrayAdapter<String>(context, android.R.layout.simple_spinner_dropdown_item, PassTypes)
-        passAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        passSpinner.adapter = passAdapter
-        passSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                var blockLevel = position
-                if (blockLevel != null) {
-                    maxBlockLevel = blockLevel
-                    scheduleAdapter.setMaxBlockLevel(blockLevel)
-                    if (schedules.size > 0) {
-                        displaySchedules()
-                    }
-                }
-            }
-        }
 
         calendar = rootView.findViewById(R.id.parkschedule_calendar)
         calendar.arrowColor = Color.WHITE
@@ -209,6 +185,14 @@ class ParkScheduleFragment : Fragment() {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         })
+    }
+
+    fun setMaxBlockLevel(blockLevel: Int) {
+        maxBlockLevel = blockLevel
+        scheduleAdapter.setMaxBlockLevel(blockLevel)
+        if (schedules.size > 0) {
+            displaySchedules()
+        }
     }
 
     private fun displaySchedules() {

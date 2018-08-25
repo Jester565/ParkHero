@@ -34,6 +34,7 @@ class PassManager {
 
     interface ListPassesCB {
         fun passUpdated(userID: String, passes: List<DisPass>)
+        fun passRemoved(passID: String)
         fun updateCompleted()
     }
 
@@ -75,6 +76,25 @@ class PassManager {
                     var dpList = arrayListOf(response)
                     for (subscriber in subscribers) {
                         subscriber.passUpdated(myProfile.id, dpList)
+                        subscriber.updateCompleted()
+                    }
+                    cont.resume(response)
+                }
+            }
+
+            override fun onError(ec: Int?, msg: String?) {
+                cont.resumeWithException(Exception(msg))
+            }
+        })
+    }
+
+    suspend fun removePass(passID: String) = suspendCoroutine<Boolean> { cont ->
+        appSync.removePass(passID, object: AppSyncTest.RemovePassCallback {
+            override fun onResponse(response: Boolean) {
+                async(UI) {
+                    for (subscriber in subscribers) {
+                        subscriber.passRemoved(passID)
+                        subscriber.updateCompleted()
                     }
                     cont.resume(response)
                 }

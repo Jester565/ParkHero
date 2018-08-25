@@ -110,7 +110,8 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".ParkScheduleActivity"></activity>
+        <activity android:name=".ParkScheduleActivity" />
+        <activity android:name=".camera.CameraActivity"></activity>
     </application>
 
 </manifest>

@@ -9,25 +9,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Park Schedules"
-            android:textSize="32dp"
-            android:textStyle="bold"
-            android:gravity="center_horizontal"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Pass Type:"
-            android:textSize="15dp"/>
-        <Spinner
-            android:id="@+id/parkschedule_passSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-        </Spinner>
-
         <com.prolificinteractive.materialcalendarview.MaterialCalendarView
             android:id="@+id/parkschedule_calendar"
             android:layout_width="match_parent"

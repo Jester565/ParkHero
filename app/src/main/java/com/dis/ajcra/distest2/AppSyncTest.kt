@@ -78,6 +78,30 @@ class AppSyncTest {
                 })
     }
 
+    interface RemovePassCallback {
+        fun onResponse(response: Boolean)
+        fun onError(ec: Int?, msg: String?)
+    }
+
+    fun removePass(passID: String, cb: RemovePassCallback) {
+        (client as AWSAppSyncClient).mutate(RemovePassMutation.builder().passID(passID).build())
+                .enqueue(object: GraphQLCall.Callback<RemovePassMutation.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.d("STATE", "ON FAILURE: " + e.message)
+                    }
+
+                    override fun onResponse(response: Response<RemovePassMutation.Data>) {
+                        Log.d("STATE", "ON RESP")
+                        if (!response.hasErrors()) {
+                            cb.onResponse(true)
+                        } else {
+                            var errRes = parseRespErrs(response as Response<Any>)
+                            cb.onError(errRes?.first, errRes?.second)
+                        }
+                    }
+                })
+    }
+
     interface ListPassesCallback {
         fun onResponse(response: List<ListPassesQuery.ListPass>)
         fun onError(ec: Int?, msg: String?)
