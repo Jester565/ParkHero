@@ -1,0 +1,168 @@
+﻿fragment DisPass on Pass {
+    id
+    name
+    type
+    expirationDT
+}
+
+fragment DisFastPass on FastPass {
+    redeemable
+    official
+    startDT
+    pass {
+        ...DisPass
+    }
+}
+
+fragment DisUserFastPasses on UserFastPasses {
+    user
+    passes {
+        ...DisFastPass
+    }
+}
+
+fragment DisFastPassTransaction on FastPassTransaction {
+    id
+    rideID
+    fpDT
+    creationDT
+    authorID
+    userPasses {
+        ...DisUserFastPasses
+    }
+}
+
+fragment DisRideTime on RideTime {
+    status
+    waitRating
+    changedTime
+    changedRange
+    waitTime
+    fastPassTime
+    dateTime
+}
+
+fragment DisRide on Ride {
+    id
+    time {
+        ...DisRideTime
+    }
+    info {
+        name
+        picUrl
+        land
+        height
+        ages
+        thrills
+        photos {
+            url
+            maxSize
+            numSizes
+        }
+    }
+}
+
+fragment DisRideDP on RideDP {
+    waitTime
+    fastPassTime
+    dateTime
+}
+
+mutation AddPass($passID:String) {
+    addPass(passID:$passID) {
+        ...DisPass
+    }
+}
+
+mutation RemovePass($passID: String) {
+    removePass(passID:$passID)
+}
+
+mutation AddFastPass($rideID:String, $targetPasses:[String]) {
+    addFastPass(rideID:$rideID, targetPasses:$targetPasses) {
+        ...DisFastPassTransaction
+    }
+}
+
+query ListFastPasses {
+    listFastPasses {
+        ...DisFastPassTransaction
+    }
+}
+
+query ListPasses {
+    listPasses {
+        user
+        passes {
+            ...DisPass
+        }
+    }
+}
+
+query GetRides {
+    getRides {
+        ...DisRide
+    }
+}
+
+mutation UpdateRides {
+   updateRides {
+        rides {
+            ...DisRide
+        }
+   }
+}
+
+mutation UpdateFastPasses {
+    updateFastPasses {
+        fps {
+            ...DisFastPassTransaction
+        }
+    }
+}
+
+subscription RidesUpdated {
+   ridesUpdated {
+       rides {
+           ...DisRide
+       }
+   }
+}
+
+query GetRideDPs($rideID:String) {
+    getRideDPs(rideID:$rideID) {
+        rideTimes {
+            ...DisRideDP
+        }
+        predictTimes {
+            ...DisRideDP
+        }
+    }
+}
+
+query GetSchedules {
+    getSchedules {
+        schedules {
+            parkName
+            parkIconUrl
+            openTime
+            closeTime
+            magicStartTime
+            magicEndTime
+            crowdLevel
+            resortName
+            blockLevel
+            date
+        }
+    }
+}
+
+query GetHourlyWeather($date:String) {
+    getHourlyWeather(date:$date) {
+        weather {
+            dateTime
+            feelsLikeF
+            rainStatus
+        }
+    }
+}
