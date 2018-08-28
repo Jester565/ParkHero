@@ -150,7 +150,7 @@ class CognitoManager {
     }
 
     fun login(username: String, pwd: String, cb: LoginHandler) {
-        if (user!!.userId !== username) {
+        if (user == null || user!!.userId !== username) {
             user = userPool.getUser(username)
         }
         login(pwd, cb)
@@ -158,26 +158,26 @@ class CognitoManager {
 
     fun login(pwd: String, cb: LoginHandler) {
         val handler = object : AuthenticationHandler {
-            override fun onSuccess(userSession: CognitoUserSession, device: CognitoDevice) {
-                addLogin(COGNITO_USER_POOL_ARN, userSession.idToken.jwtToken)
+            override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
+                addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken)
                 cb.onSuccess()
             }
 
-            override fun getAuthenticationDetails(authenticationContinuation: AuthenticationContinuation, userId: String) {
+            override fun getAuthenticationDetails(authenticationContinuation: AuthenticationContinuation?, userId: String?) {
                 val details = AuthenticationDetails(userId, pwd, null)
-                authenticationContinuation.setAuthenticationDetails(details)
-                authenticationContinuation.continueTask()
+                authenticationContinuation!!.setAuthenticationDetails(details)
+                authenticationContinuation!!.continueTask()
             }
 
             override fun authenticationChallenge(continuation: ChallengeContinuation?) {
-
+                Log.d("STATE", "Auth challenge")
             }
 
-            override fun getMFACode(continuation: MultiFactorAuthenticationContinuation) {
-                cb.onMFA(continuation)
+            override fun getMFACode(continuation: MultiFactorAuthenticationContinuation?) {
+                cb.onMFA(continuation!!)
             }
 
-            override fun onFailure(exception: Exception) {
+            override fun onFailure(exception: Exception?) {
                 if (exception is AmazonServiceException) {
                     val errCode = exception.errorCode
                     when (errCode) {
@@ -192,7 +192,7 @@ class CognitoManager {
                     }
                 }
                 Log.d("STATE", "Login exception " + exception)
-                cb.onFailure(exception)
+                cb.onFailure(exception!!)
             }
         }
         if (user != null) {
@@ -229,7 +229,7 @@ class CognitoManager {
     }
 
     fun resetPwd(username: String, cb: ResetPwdHandler) {
-        if (user!!.userId !== username) {
+        if (user == null || user!!.userId !== username) {
             user = userPool.getUser(username)
         }
         resetPwd(cb)
