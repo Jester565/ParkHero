@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import com.dis.ajcra.distest2.ParkScheduleActivity
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.accel.SensorActivity
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.pass.PassActivity
@@ -69,6 +70,11 @@ class RideTimesFragment : Fragment() {
 
             passButton.setOnClickListener {
                 var intent = Intent(context, PassActivity::class.java)
+                startActivity(intent)
+            }
+
+            planButton.setOnClickListener {
+                var intent = Intent(context, SensorActivity::class.java)
                 startActivity(intent)
             }
         }

@@ -18,7 +18,7 @@ import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
-class FastPassManagerFragment : Fragment() {
+class RideFastPassFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyText: TextView
 
@@ -51,7 +51,7 @@ class FastPassManagerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (view != null) {
-            var layoutManager = LinearLayoutManager(this@FastPassManagerFragment.context)
+            var layoutManager = LinearLayoutManager(this@RideFastPassFragment.context)
             layoutManager.orientation = LinearLayout.HORIZONTAL
             recyclerView.layoutManager = layoutManager
             recyclerView.adapter = adapter

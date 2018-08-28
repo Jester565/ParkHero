@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="wrap_content"
+    android:layout_margin="2dp">
+    <RelativeLayout
+        android:id="@+id/rowfastpasstrans_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#BB440000">
+        <ImageView
+            android:id="@+id/rowfastpasstrans_rideImage"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_below="@id/rowfastpasstrans_rideName"
+            android:adjustViewBounds="true"
+            android:layout_gravity="center_vertical"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_cancel_black_24dp"/>
+        <TextView
+            android:id="@+id/rowfastpasstrans_rideName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textSize="22dp"
+            android:maxHeight="30dp"
+            android:textColor="#FFFFFF"
+            android:background="#BB440000"
+            android:text="Astro Orbiter"/>
+        <TextView
+            android:id="@+id/rowfastpasstrans_startTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rowfastpasstrans_rideImage"
+            android:gravity="center"
+            android:textSize="20dp"
+            android:textColor="#FFFFFF"
+            android:background="#BB440000"
+            android:text="12:30 am" />
+        <TextView
+            android:id="@+id/rowfastpasstrans_timeTill"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rowfastpasstrans_startTime"
+            android:gravity="center"
+            android:textSize="12dp"
+            android:textColor="#FFFFFF"
+            android:text="30 mins till" />
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rowfastpasstrans_timeTill">
+        </android.support.v7.widget.RecyclerView>
+    </RelativeLayout>
+</android.support.v7.widget.CardView>

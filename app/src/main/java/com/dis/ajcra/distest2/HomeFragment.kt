@@ -18,7 +18,6 @@ import android.widget.TextView
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GetObjectRequest
-import com.dis.ajcra.distest2.accel.SensorActivity
 import com.dis.ajcra.distest2.entity.EntityListFragment
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.login.LoginActivity
@@ -44,7 +43,7 @@ class HomeFragment : Fragment() {
     lateinit var signUpButton: Button
     lateinit var accountLayout: View
     lateinit var friendButton: ImageButton
-    lateinit var myProfileButton: ImageButton
+    lateinit var partyButton: ImageButton
     lateinit var scrollView: NestedScrollView
     lateinit var profView: CardView
     var ridesUpdatedSubscription: AppSyncSubscriptionCall<RidesUpdatedSubscription.Data>? = null
@@ -64,7 +63,7 @@ class HomeFragment : Fragment() {
         signInButton = rootView.findViewById(R.id.home_signin)
         signUpButton = rootView.findViewById(R.id.home_signup)
         friendButton = rootView.findViewById(R.id.home_friendbutton)
-        myProfileButton = rootView.findViewById(R.id.home_myprofileButton)
+        partyButton = rootView.findViewById(R.id.home_myprofileButton)
         profileNameText = rootView.findViewById(R.id.home_name)
         accountLayout = rootView.findViewById(R.id.home_accountlayout)
         cognitoManager = CognitoManager.GetInstance(activity!!.applicationContext)
@@ -110,8 +109,8 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
 
-        myProfileButton.setOnClickListener {
-            var intent = Intent(this@HomeFragment.context, SensorActivity::class.java)
+        partyButton.setOnClickListener {
+            var intent = Intent(this@HomeFragment.context, PartyActivity::class.java)
             startActivity(intent)
         }
         return rootView

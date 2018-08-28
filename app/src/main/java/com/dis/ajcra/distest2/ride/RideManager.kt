@@ -150,16 +150,19 @@ class RideManager {
 
     fun listRides(cb: ListRidesCB) {
         var now = Date()
+        reqCount = 0
+        lastListTime = Date()
+        _listRides(cb)
+        /*
         if (lastListTime == null || now.time - lastListTime!!.time > LIST_TIME_DIF) {
-            reqCount = 0
-            lastListTime = Date()
-            _listRides(cb)
+
         } else {
             cb.init(rides)
             if (reqCount >= 2) {
                 cb.onAllUpdated(rides)
             }
         }
+        */
     }
 
     fun _listRides(cb: ListRidesCB) = async {

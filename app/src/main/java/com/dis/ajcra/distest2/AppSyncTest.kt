@@ -184,6 +184,37 @@ class AppSyncTest {
         })
     }
 
+    interface UpdateFastPassesCallback {
+        fun onResponse(response: List<DisFastPassTransaction>)
+        fun onError(ec: Int?, msg: String?)
+    }
+
+    fun updateFastPasses(cb: UpdateFastPassesCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.CACHE_AND_NETWORK) {
+        (client as AWSAppSyncClient).mutate(UpdateFastPassesMutation.builder().build())
+                .enqueue(object: GraphQLCall.Callback<UpdateFastPassesMutation.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.d("STATE", "ON FAILURE: " + e.message)
+                    }
+
+                    override fun onResponse(response: Response<UpdateFastPassesMutation.Data>) {
+                        Log.d("STATE", "ON RESP")
+                        if (!response.hasErrors()) {
+                            var disFastPasses = ArrayList<DisFastPassTransaction>()
+                            if (response.data()?.updateFastPasses()?.fps() != null) {
+                                var fastPasses = response.data()!!.updateFastPasses()!!.fps()!!
+                                for (fastPass in fastPasses) {
+                                    disFastPasses.add(fastPass.fragments().disFastPassTransaction())
+                                }
+                            }
+                            cb.onResponse(disFastPasses)
+                        } else {
+                            var errRes = parseRespErrs(response as Response<Any>)
+                            cb.onError(errRes?.first, errRes?.second)
+                        }
+                    }
+                })
+    }
+
     interface GetRidesCallback {
         fun onResponse(response: List<DisRide>)
         fun onError(ec: Int?, msg: String?)

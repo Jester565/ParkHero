@@ -111,7 +111,8 @@
             android:exported="true" />
 
         <activity android:name=".ParkScheduleActivity" />
-        <activity android:name=".camera.CameraActivity"></activity>
+        <activity android:name=".camera.CameraActivity" />
+        <activity android:name=".PartyActivity"></activity>
     </application>
 
 </manifest>
