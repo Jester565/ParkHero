@@ -14,6 +14,7 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.camera.CameraActivity
+import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
@@ -34,7 +35,7 @@ class AddPassFragment : DialogFragment() {
     private lateinit var passManager: PassManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        passManager = PassManager.GetInstance(context!!.applicationContext)
+        passManager = PassManager.GetInstance(CognitoManager.GetInstance(context!!.applicationContext), context!!.applicationContext)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

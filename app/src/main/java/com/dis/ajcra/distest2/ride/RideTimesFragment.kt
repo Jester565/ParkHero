@@ -39,7 +39,7 @@ class RideTimesFragment : Fragment() {
         async {
             cfm.displayFileInfo()
         }
-        rideManager = RideManager(context!!.applicationContext)
+        rideManager = RideManager(cognitoManager, context!!.applicationContext)
         adapter = RideRecyclerAdapter(cfm, rides, pinnedRides)
     }
 

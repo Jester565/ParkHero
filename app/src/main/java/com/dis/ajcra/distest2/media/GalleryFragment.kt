@@ -80,36 +80,41 @@ class GalleryFragment : Fragment() {
     private lateinit var adapter: GalleryFragmentAdapter
     private lateinit var sendButton: ImageButton
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private lateinit var subLoginToken: String
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
-            adapter.notifyItemRangeRemoved(0, pictures.size)
-            pictures.clear()
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            async(UI) {
+                adapter.notifyItemRangeRemoved(0, pictures.size)
+                pictures.clear()
 
-            var observerPairs = cfm.getObservers(TransferType.UPLOAD)
-            for (observerPair in observerPairs) {
-                pictures.add(observerPair.key)
-                adapter.notifyItemInserted(pictures.size - 1)
-            }
-            var job = async {
-                Log.d("STATE", "Running job")
-                cfm.listObjects("media/" + cognitoManager.federatedID, true)
-            }
-            var objs = job.await()
-            Log.d("STATE", "Aquired objects")
-            if (objs != null) {
-                for (obj in objs) {
-                    if (!pictures.contains(obj.key)) {
-                        pictures.add(obj.key)
-                        adapter.notifyItemInserted(pictures.size - 1)
+                var observerPairs = cfm.getObservers(TransferType.UPLOAD)
+                for (observerPair in observerPairs) {
+                    pictures.add(observerPair.key)
+                    adapter.notifyItemInserted(pictures.size - 1)
+                }
+                var job = async {
+                    Log.d("STATE", "Running job")
+                    cfm.listObjects("media/" + cognitoManager.federatedID, true)
+                }
+                var objs = job.await()
+                Log.d("STATE", "Aquired objects")
+                if (objs != null) {
+                    for (obj in objs) {
+                        if (!pictures.contains(obj.key)) {
+                            pictures.add(obj.key)
+                            adapter.notifyItemInserted(pictures.size - 1)
+                        }
                     }
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

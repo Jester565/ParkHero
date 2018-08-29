@@ -1,5 +1,6 @@
 package com.dis.ajcra.distest2.prof
 
+import android.content.Context
 import android.util.Log
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory
 import com.dis.ajcra.distest2.DisneyAppClient
@@ -23,7 +24,7 @@ class ProfileManager {
         var PROF_SETTINGS_NAME = "prof_prefs"
     }
 
-    constructor(cognitoManager: CognitoManager) {
+    constructor(cognitoManager: CognitoManager, ctx: Context) {
         this.cognitoManager = cognitoManager
         val factory = ApiClientFactory()
                 .credentialsProvider(cognitoManager.credentialsProvider)

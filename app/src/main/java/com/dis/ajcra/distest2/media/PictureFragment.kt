@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.entity.EntityBarFragment
@@ -81,15 +80,7 @@ class PictureFragment : Fragment() {
     fun linkToUpload(): Boolean {
         var observer = cfm.getObservers(TransferType.UPLOAD)[key.toString()]
         if (observer != null) {
-            if (observer.addListener(object: CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {}
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
-
-                override fun onStateChanged(id: Int, state: TransferState?) {}
-
-                override fun onComplete(id: Int, file: File) {}
-            })) {
+            if (observer.addListener(object: CloudFileListener() {})) {
                 var bmp = BitmapFactory.decodeFile(observer.file.absolutePath)
                 photoView?.setImageBitmap(bmp)
                 return true
@@ -101,12 +92,6 @@ class PictureFragment : Fragment() {
     fun download() {
         async {
             cfm.download(key.toString(), object : CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {}
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
-
-                override fun onStateChanged(id: Int, state: TransferState?) {}
-
                 override fun onComplete(id: Int, file: File) {
                     async {
                         var bmp = BitmapFactory.decodeFile(file.absolutePath)

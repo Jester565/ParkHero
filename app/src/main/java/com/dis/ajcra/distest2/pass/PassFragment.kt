@@ -64,6 +64,8 @@ class PassFragment : Fragment() {
     private var onRemoveCB: ((DisPass) -> Unit)? = null
     private var passChangeCB: ((DisPass) -> Unit)? = null
 
+    private lateinit var subLoginToken: String
+
     private var listPassCB = object: PassManager.ListPassesCB {
         override fun passUpdated(userID: String, passes: List<DisPass>) {
             async(UI) {
@@ -134,7 +136,19 @@ class PassFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        passManager.listPasses()
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                passManager.subscribeToPasses(listPassCB)
+                passManager.listPasses()
+            }
+        }
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        passManager.unsubscribeFromPasses(listPassCB)
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     override fun onStop() {
@@ -144,9 +158,9 @@ class PassFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
-        passManager = PassManager.GetInstance(context!!.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(context!!.applicationContext)
+        profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
+        passManager = PassManager.GetInstance(cognitoManager, context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
     }
 
@@ -211,11 +225,6 @@ class PassFragment : Fragment() {
             onRemoveCB?.invoke(dataset[position])
         }
         return rootView
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        passManager.subscribeToPasses(listPassCB)
     }
 
     fun setOnLoadCallback(cb: ((ArrayList<DisPass>) -> Boolean)?) {

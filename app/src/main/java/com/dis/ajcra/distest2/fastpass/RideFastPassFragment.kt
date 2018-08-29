@@ -35,8 +35,8 @@ class RideFastPassFragment : Fragment() {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
-        appSync = AppSyncTest.getInstance(context!!.applicationContext)
-        rideManager = RideManager.GetInstance(context!!.applicationContext)
+        appSync = AppSyncTest.GetInstance(cognitoManager, context!!.applicationContext)
+        rideManager = RideManager.GetInstance(cognitoManager, context!!.applicationContext)
         adapter = FastPassRecyclerAdapter(dataset, rideManager, cfm)
     }
 

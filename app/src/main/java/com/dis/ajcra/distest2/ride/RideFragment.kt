@@ -58,7 +58,7 @@ class RideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
-        rideManager = RideManager.GetInstance(context!!.applicationContext)
+        rideManager = RideManager.GetInstance(cognitoManager, context!!.applicationContext)
 
         rideID = arguments!!.getString(RIDEID_PARAM)
     }

@@ -30,13 +30,14 @@ class FastPassManagerFragment : Fragment() {
     private lateinit var adapter: FastPassRecyclerAdapter
     private var dataset = ArrayList<DisFastPassTransaction>()
 
+    private lateinit var subLoginToken: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
-        appSync = AppSyncTest.getInstance(context!!.applicationContext)
-        rideManager = RideManager.GetInstance(context!!.applicationContext)
+        appSync = AppSyncTest.GetInstance(cognitoManager, context!!.applicationContext)
+        rideManager = RideManager.GetInstance(cognitoManager, context!!.applicationContext)
         adapter = FastPassRecyclerAdapter(dataset, rideManager, cfm)
     }
 
@@ -62,23 +63,30 @@ class FastPassManagerFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        appSync.updateFastPasses(object: AppSyncTest.UpdateFastPassesCallback {
-            override fun onResponse(response: List<DisFastPassTransaction>) {
-                async(UI) {
-                    dataset.clear()
-                    if (response.size > 0) {
-                        dataset.addAll(response)
-                        recyclerView.visibility = View.VISIBLE
-                        emptyText.visibility = View.GONE
-                    } else {
-                        recyclerView.visibility = View.GONE
-                        emptyText.visibility = View.VISIBLE
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            appSync.updateFastPasses(object: AppSyncTest.UpdateFastPassesCallback {
+                override fun onResponse(response: List<DisFastPassTransaction>) {
+                    async(UI) {
+                        dataset.clear()
+                        if (response.size > 0) {
+                            dataset.addAll(response)
+                            recyclerView.visibility = View.VISIBLE
+                            emptyText.visibility = View.GONE
+                        } else {
+                            recyclerView.visibility = View.GONE
+                            emptyText.visibility = View.VISIBLE
+                        }
+                        adapter.notifyDataSetChanged()
                     }
-                    adapter.notifyDataSetChanged()
                 }
-            }
 
-            override fun onError(ec: Int?, msg: String?) { }
-        })
+                override fun onError(ec: Int?, msg: String?) { }
+            })
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.dis.ajcra.distest2.AppSyncTest
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideTime
 import kotlinx.coroutines.experimental.Deferred
@@ -16,9 +17,9 @@ import java.util.*
 
 class RideManager {
     companion object {
-        fun GetInstance(ctx: Context): RideManager {
+        fun GetInstance(cognitoManager: CognitoManager, ctx: Context): RideManager {
             if (rideManager == null) {
-                rideManager = RideManager(ctx)
+                rideManager = RideManager(cognitoManager, ctx)
             }
             return rideManager!!
         }
@@ -35,8 +36,8 @@ class RideManager {
     private var lastListTime: Date? = null
     private var reqCount: Int = 0
 
-    constructor(ctx: Context) {
-        appSync = AppSyncTest.getInstance(ctx)
+    constructor(cognitoManager: CognitoManager, ctx: Context) {
+        appSync = AppSyncTest.GetInstance(cognitoManager, ctx)
         crDb = Room.databaseBuilder(ctx, RideCacheDatabase::class.java, "rides4").build()
     }
 

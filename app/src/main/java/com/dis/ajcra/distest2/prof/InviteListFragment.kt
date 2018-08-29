@@ -20,6 +20,19 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 class InviteListFragment : Fragment() {
+    companion object {
+        var ID_PARAM = "id"
+        fun GetInstance(id: String? = null): FriendListFragment {
+            val fragment = FriendListFragment()
+            if (id != null) {
+                val args = Bundle()
+                args.putString(ID_PARAM, id)
+                fragment.arguments = args
+            }
+            return fragment
+        }
+    }
+
     private lateinit var profile: MyProfile
     private lateinit var cognitoManager: CognitoManager
     private lateinit var profileManager: ProfileManager
@@ -29,6 +42,8 @@ class InviteListFragment : Fragment() {
     private lateinit var adapter: InviteRecyclerAdapter
     private lateinit var snsClient: AmazonSNSClient
     private var dataset: ArrayList<Invite> = ArrayList<Invite>()
+
+    private lateinit var subLoginToken: String
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSnsEvent(evt: SnsEvent) {
@@ -67,14 +82,18 @@ class InviteListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
-            adapter.notifyItemRangeRemoved(0, dataset.size)
-            dataset.clear()
-            profile = profileManager.getMyProfile().await() as MyProfile
-            var invites = profile.getInvites().await()
-            for (invite in invites) {
-                dataset.add(invite)
-                adapter.notifyItemInserted(dataset.size - 1)
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex != null) {
+                async(UI) {
+                    adapter.notifyItemRangeRemoved(0, dataset.size)
+                    dataset.clear()
+                    profile = profileManager.getMyProfile().await() as MyProfile
+                    var invites = profile.getInvites().await()
+                    for (invite in invites) {
+                        dataset.add(invite)
+                        adapter.notifyItemInserted(dataset.size - 1)
+                    }
+                }
             }
         }
     }
@@ -86,8 +105,8 @@ class InviteListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        cognitoManager = CognitoManager.GetInstance(context!!.applicationContext)
+        profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
     }
 
@@ -104,29 +123,6 @@ class InviteListFragment : Fragment() {
             recyclerView.adapter = adapter
             recyclerView.setItemViewCacheSize(50)
             recyclerView.isDrawingCacheEnabled = true
-            /*
-            async(UI) {
-                profile = profileManager.getMyProfile().await() as MyProfile
-                var invites = profile.getInvites().await()
-                for (invite in invites) {
-                    dataset.add(invite)
-                    adapter.notifyItemInserted(dataset.size - 1)
-                }
-            }
-            */
-        }
-    }
-
-    companion object {
-        var ID_PARAM = "id"
-        fun GetInstance(id: String? = null): FriendListFragment {
-            val fragment = FriendListFragment()
-            if (id != null) {
-                val args = Bundle()
-                args.putString(ID_PARAM, id)
-                fragment.arguments = args
-            }
-            return fragment
         }
     }
 }

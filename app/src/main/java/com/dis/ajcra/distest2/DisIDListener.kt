@@ -1,6 +1,5 @@
 package com.dis.ajcra.distest2
 
-import android.content.Intent
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import android.util.Log
@@ -10,9 +9,9 @@ import com.amazonaws.services.sns.AmazonSNSClient
 import com.amazonaws.services.sns.model.*
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.prof.ProfileManager
-import com.google.firebase.iid.FirebaseInstanceIdService
 import com.google.firebase.iid.FirebaseInstanceId
-import java.util.HashMap
+import com.google.firebase.iid.FirebaseInstanceIdService
+import java.util.*
 
 
 /**
@@ -34,8 +33,8 @@ class DisIDListener : FirebaseInstanceIdService() {
     }
 
     fun sendRegistrationToSns(token: String) {
-        cognitoManager = CognitoManager.GetInstance(this.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        cognitoManager = CognitoManager.GetInstance(applicationContext)
+        profileManager = ProfileManager(cognitoManager, applicationContext)
         client = AmazonSNSClient(cognitoManager!!.credentialsProvider)
         client!!.setRegion(Region.getRegion(Regions.US_WEST_2))
 

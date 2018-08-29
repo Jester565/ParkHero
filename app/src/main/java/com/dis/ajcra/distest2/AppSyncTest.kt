@@ -22,10 +22,10 @@ import java.util.*
 class AppSyncTest {
     companion object {
         private var instance: AppSyncTest? = null
-        fun getInstance(ctx: Context): AppSyncTest {
+        fun GetInstance(cognitoManager: CognitoManager, ctx: Context): AppSyncTest {
             if (instance == null) {
                 instance = AppSyncTest()
-                instance!!.getClient(ctx)
+                instance!!.getClient(cognitoManager, ctx)
             }
             return instance as AppSyncTest
         }
@@ -422,18 +422,17 @@ class AppSyncTest {
                 })
     }
 
-    fun getClient(ctx: Context) {
-        var cognitoManager = CognitoManager.GetInstance(ctx)
+    fun getClient(cognitoManager: CognitoManager, ctx: Context) {
         if (client == null) {
             var appSyncConfigIn = ctx.resources.openRawResource(R.raw.appsync)
             var appSyncConfigStr = appSyncConfigIn.bufferedReader().readText()
             var appSyncConfig = JSONObject(appSyncConfigStr)
             client = AWSAppSyncClient.builder()
-                    .context(ctx)
-                    .credentialsProvider(cognitoManager.credentialsProvider)
-                    .region(Regions.fromName(appSyncConfig.getString("region")))
-                    .serverUrl(appSyncConfig.getString("graphqlEndpoint"))
-                    .build()
+                .context(ctx)
+                .credentialsProvider(cognitoManager.credentialsProvider)
+                .region(Regions.fromName(appSyncConfig.getString("region")))
+                .serverUrl(appSyncConfig.getString("graphqlEndpoint"))
+                .build()
         }
     }
 }

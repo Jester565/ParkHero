@@ -24,7 +24,7 @@ class EntitySendFragment: DialogFragment() {
 
         objKeys = arguments!!.getStringArrayList(OBJKEYS_PARAM)
         var cognitoManager = CognitoManager.GetInstance(context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

@@ -26,7 +26,9 @@ class EntityListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: EntityRecyclerAdapter
-    private var dataset: ArrayList<Entity> = ArrayList<Entity>()
+    private var dataset = ArrayList<Entity>()
+
+    private lateinit var subLoginToken: String
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSnsEvent(evt: SnsEvent) {
@@ -44,15 +46,24 @@ class EntityListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
-            adapter.notifyItemRangeRemoved(0, dataset.size)
-            dataset.clear()
-            var entities = profileManager.getEntities().await()
-            entities.forEach { it ->
-                dataset.add(it)
-                adapter.notifyItemInserted(dataset.size - 1)
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                async(UI) {
+                    adapter.notifyItemRangeRemoved(0, dataset.size)
+                    dataset.clear()
+                    var entities = profileManager.getEntities().await()
+                    entities.forEach { it ->
+                        dataset.add(it)
+                        adapter.notifyItemInserted(dataset.size - 1)
+                    }
+                }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     override fun onStop() {
@@ -62,8 +73,8 @@ class EntityListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        cognitoManager = CognitoManager.GetInstance(context!!.applicationContext)
+        profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
     }
 

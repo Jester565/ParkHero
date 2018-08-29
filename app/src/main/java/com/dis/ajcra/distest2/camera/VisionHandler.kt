@@ -17,6 +17,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.pass.PassManager
 import com.dis.ajcra.distest2.util.AnimationUtils
 import com.google.firebase.ml.vision.FirebaseVision
@@ -103,7 +104,7 @@ class VisionHandler {
                 var button: Button = layout.findViewById(R.id.toastvis_button)
                 button.setOnClickListener {
                     async(UI) {
-                        var passManager = PassManager.GetInstance(activity.applicationContext)
+                        var passManager = PassManager.GetInstance(CognitoManager.GetInstance(activity.applicationContext), activity.applicationContext)
                         var rawValue = barcode.rawValue
                         if (rawValue != null) {
                             AnimationUtils.Crossfade(progressBar, extraView, 200)

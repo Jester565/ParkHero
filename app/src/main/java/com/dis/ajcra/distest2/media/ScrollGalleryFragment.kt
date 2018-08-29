@@ -18,9 +18,6 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
-
-
-
 class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
     private var activity: Activity
     private var cognitoManager: CognitoManager
@@ -99,22 +96,42 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
 
 
 class ScrollGalleryFragment : Fragment() {
+    private lateinit var cognitoManager: CognitoManager
+
+    private lateinit var pagerAdapter: ScrollGalleryPagerAdapter
+    private lateinit var viewPager: ViewPager
+
+    private lateinit var subLoginToken: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        cognitoManager = CognitoManager(context!!.applicationContext)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_scroll_gallery, container, false)
-        var cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         var cfm = CloudFileManager(cognitoManager, this.context!!.applicationContext)
-        var pagerAdapter = ScrollGalleryPagerAdapter(activity!!, this.childFragmentManager, cfm, cognitoManager)
-        var viewPager: ViewPager = rootView.findViewById(R.id.scrollgallery_pager)
+        pagerAdapter = ScrollGalleryPagerAdapter(activity!!, this.childFragmentManager, cfm, cognitoManager)
+        viewPager = rootView.findViewById(R.id.scrollgallery_pager)
         viewPager.adapter = pagerAdapter
-        async(UI) {
-            var pagerI = pagerAdapter.init(arguments!!.getString(OBJKEY_PARAM)).await()
-            viewPager.currentItem = pagerI
-        }
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                async(UI) {
+                    var pagerI = pagerAdapter.init(arguments!!.getString(OBJKEY_PARAM)).await()
+                    viewPager.currentItem = pagerI
+                }
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     companion object {

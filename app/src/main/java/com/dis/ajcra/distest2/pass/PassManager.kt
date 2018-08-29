@@ -12,9 +12,9 @@ import kotlin.coroutines.experimental.suspendCoroutine
 
 class PassManager {
     companion object {
-        fun GetInstance(ctx: Context): PassManager {
+        fun GetInstance(cognitoManager: CognitoManager, ctx: Context): PassManager {
             if (passManager == null) {
-                passManager = PassManager(ctx)
+                passManager = PassManager(cognitoManager, ctx)
             }
             return passManager!!
         }
@@ -26,10 +26,9 @@ class PassManager {
     private var appSync: AppSyncTest
     private var subscribers = HashSet<ListPassesCB>()
 
-    constructor(ctx: Context) {
-        appSync = AppSyncTest.getInstance(ctx)
-        var cognitoManager = CognitoManager.GetInstance(ctx)
-        profileManager = ProfileManager(cognitoManager)
+    constructor(cognitoManager: CognitoManager, ctx: Context) {
+        appSync = AppSyncTest.GetInstance(cognitoManager, ctx)
+        profileManager = ProfileManager(cognitoManager, ctx)
     }
 
     interface ListPassesCB {

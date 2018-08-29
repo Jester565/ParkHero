@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.GetHourlyWeatherQuery
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
@@ -47,7 +48,7 @@ class HourlyWeatherFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        appSync = AppSyncTest.getInstance(activity!!.applicationContext)
+        appSync = AppSyncTest.GetInstance(CognitoManager.GetInstance(activity!!.applicationContext), activity!!.applicationContext)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

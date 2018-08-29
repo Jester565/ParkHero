@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import com.dis.ajcra.distest2.ParkScheduleFragment
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
@@ -24,7 +25,7 @@ class PassActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pass)
-        passManager = PassManager.GetInstance(applicationContext)
+        passManager = PassManager.GetInstance(CognitoManager.GetInstance(applicationContext), applicationContext)
 
         scheduleLayout = findViewById(R.id.pass_scheduleLayout)
 

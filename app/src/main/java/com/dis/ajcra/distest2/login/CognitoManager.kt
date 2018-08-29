@@ -1,31 +1,27 @@
 package com.dis.ajcra.distest2.login
 
 import android.content.Context
+import android.os.Handler
 import android.util.Log
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.ClientConfiguration
-import com.amazonaws.auth.AWSSessionCredentials
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.*
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.*
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException
 import com.amazonaws.services.cognitoidentityprovider.AmazonCognitoIdentityProviderClient
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.util.*
 
 
 
 class CognitoManager {
-
-    fun isLoggedIn(): Deferred<Boolean> = async{
-        credentialsProvider.refresh()
-        (credentialsProvider.logins != null && credentialsProvider.logins.size > 0)
-    }
-
     val userID: String?
         get() = if (user != null) {
             user!!.userId
@@ -34,34 +30,108 @@ class CognitoManager {
     val federatedID: String
         get() = credentialsProvider.identityId
 
-    internal val credentials: AWSSessionCredentials
-        get() = credentialsProvider.credentials
-
     private var user: CognitoUser? = null
     private val userPool: CognitoUserPool
     val credentialsProvider: CognitoCachingCredentialsProvider
+
+    private var refreshHandler: Handler? = null
+    private var refreshCB: Runnable? = null
+
+    private var loginHandlers = HashMap<String, (Exception?) -> Unit>()
+
+    fun hasCredentials(): Deferred<Boolean> = async {
+        var hasCreds = false
+        try {
+            credentialsProvider.refresh()
+        } catch (ex: Exception) {
+            Log.d("REFRESHEX", ex.message)
+        }
+        try {
+            hasCreds = (credentialsProvider.logins != null && credentialsProvider.logins.size > 0)
+        } catch (ex: Exception) {
+            Log.d("REFRESHEX", ex.message)
+        }
+        hasCreds
+    }
 
     constructor(appContext: Context) {
         credentialsProvider = CognitoCachingCredentialsProvider(
                 appContext, COGNITO_IDENTITY_POOL_ID, COGNITO_REGION
         )
-        val clientConf = ClientConfiguration()
+
         val identityProviderClient = AmazonCognitoIdentityProviderClient(credentialsProvider, ClientConfiguration())
         identityProviderClient.setRegion(Region.getRegion(Regions.US_WEST_2))
 
         userPool = CognitoUserPool(appContext, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET, identityProviderClient)
         user = userPool.currentUser
 
-        //Check if signed in with google
-        var lastSignedIn = GoogleSignIn.getLastSignedInAccount(appContext)
-        if (lastSignedIn != null) {
-            if (!lastSignedIn.isExpired) {
-                var idToken = GoogleSignIn.getLastSignedInAccount(appContext)?.idToken
-                if (idToken != null) {
-                    addLogin("accounts.google.com", idToken)
+        refreshLogin()
+    }
+
+    fun refreshLogin() {
+        refreshHandler?.removeCallbacks(refreshCB)
+        refreshHandler = null
+        refreshCB = null
+        val handler = object : AuthenticationHandler {
+            override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
+                async(UI) {
+                    addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken).await()
+                    for (entry in loginHandlers) {
+                        entry.value.invoke(null)
+                    }
+
+                    refreshCB = Runnable {
+                        refreshLogin()
+                    }
+                    refreshHandler = Handler()
+                    refreshHandler?.postDelayed(refreshCB, credentialsProvider.sessionCredentitalsExpiration.time - Date().time - 1000 * 30)
+                }
+            }
+
+            override fun getAuthenticationDetails(authenticationContinuation: AuthenticationContinuation?, userId: String?) {
+                for (entry in loginHandlers) {
+                    entry.value.invoke(NotAuthorizedException("Session Expired"))
+                }
+            }
+
+            override fun authenticationChallenge(continuation: ChallengeContinuation?) {
+                for (entry in loginHandlers) {
+                    entry.value.invoke(NotAuthorizedException("Not authenticated"))
+                }
+            }
+
+            override fun getMFACode(continuation: MultiFactorAuthenticationContinuation?) {
+                for (entry in loginHandlers) {
+                    entry.value.invoke(MFAMethodNotFoundException("MFA Required"))
+                }
+            }
+
+            override fun onFailure(exception: Exception?) {
+                for (entry in loginHandlers) {
+                    entry.value.invoke(exception!!)
                 }
             }
         }
+        user!!.getSessionInBackground(handler)
+    }
+
+    fun subscribeToLogin(cb: (Exception?) -> Unit): String {
+        var token = UUID.randomUUID().toString()
+        loginHandlers[token] = cb
+        async(UI) {
+            try {
+                if (credentialsProvider.sessionCredentitalsExpiration > Date()) {
+                    cb(null)
+                }
+            } catch (ex: Exception) {  //sessionCredentialsExpiration is null, so the user is not logged in (happens on firsttime boot)
+                cb(null)
+            }
+        }
+        return token
+    }
+
+    fun unsubscribeFromLogin(token: String) {
+        loginHandlers.remove(token)
     }
 
     interface RegisterUserHandler {
@@ -72,7 +142,7 @@ class CognitoManager {
         fun onFailure(ex: Exception)
     }
 
-    fun registerUser(userName: String, email: String, pwd: String, cb: RegisterUserHandler) {
+    fun registerUser(userName: String, email: String, pwd: String, cb: CognitoManager.RegisterUserHandler) {
         val userAttributes = CognitoUserAttributes()
         userAttributes.addAttribute("email", email)
         val signUpHandler = object : SignUpHandler {
@@ -80,8 +150,8 @@ class CognitoManager {
                 user = registeredUser
                 if (!signUpConfirmationState) {
                     cb.onVerifyRequired(
-                            cognitoUserCodeDeliveryDetails.deliveryMedium,
-                            cognitoUserCodeDeliveryDetails.destination)
+                        cognitoUserCodeDeliveryDetails.deliveryMedium,
+                        cognitoUserCodeDeliveryDetails.destination)
                 } else {
                     cb.onSuccess()
                 }
@@ -159,8 +229,11 @@ class CognitoManager {
     fun login(pwd: String, cb: LoginHandler) {
         val handler = object : AuthenticationHandler {
             override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
-                addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken)
-                cb.onSuccess()
+                async(UI) {
+                    addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken)
+                    refreshLogin()
+                    cb.onSuccess()
+                }
             }
 
             override fun getAuthenticationDetails(authenticationContinuation: AuthenticationContinuation?, userId: String?) {
@@ -202,7 +275,7 @@ class CognitoManager {
         }
     }
 
-    fun addLogin(provider: String, token: String) {
+    fun addLogin(provider: String, token: String) = async {
         val logins = HashMap<String, String>()
         logins.put(provider, token)
         for ((key) in credentialsProvider.logins) {
@@ -213,13 +286,11 @@ class CognitoManager {
             Log.d("STATE", "Login: " + key)
         }
         credentialsProvider.logins = logins
-        async {
-            credentialsProvider.refresh()
-            Log.d("STATE", "IdentityID: " + credentialsProvider.identityId)
-            Log.d("STATE", "Aws AccessID: " + credentialsProvider.credentials.awsAccessKeyId)
-            Log.d("STATE", "Aws Secret: " + credentialsProvider.credentials.awsSecretKey)
-            Log.d("STATE", "Token: " + credentialsProvider.credentials.sessionToken)
-        }
+        credentialsProvider.refresh()
+        Log.d("STATE", "IdentityID: " + credentialsProvider.identityId)
+        Log.d("STATE", "Aws AccessID: " + credentialsProvider.credentials.awsAccessKeyId)
+        Log.d("STATE", "Aws Secret: " + credentialsProvider.credentials.awsSecretKey)
+        Log.d("STATE", "Token: " + credentialsProvider.credentials.sessionToken)
     }
 
     interface ResetPwdHandler {

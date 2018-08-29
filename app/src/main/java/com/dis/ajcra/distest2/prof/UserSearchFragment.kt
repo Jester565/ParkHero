@@ -28,10 +28,12 @@ class UserSearchFragment : Fragment() {
     private lateinit var adapter: ProfileRecyclerAdapter
     private var dataset: ArrayList<ProfileItem> = ArrayList<ProfileItem>()
 
+    private lateinit var subLoginToken: String
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_user_search, container, false)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        profileManager = ProfileManager(cognitoManager, this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
         adapter = ProfileRecyclerAdapter(cfm, dataset)
         return rootView
@@ -45,43 +47,55 @@ class UserSearchFragment : Fragment() {
             recyclerView.adapter = adapter
             recyclerView.setItemViewCacheSize(50)
             recyclerView.isDrawingCacheEnabled = true
-
-            searchField.addTextChangedListener(object: TextWatcher {
-                override fun afterTextChanged(p0: Editable?) {}
-
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-                override fun onTextChanged(inStr: CharSequence?, start: Int, before: Int, count: Int) {
-                    async(UI) {
-                        var profiles = profileManager.getUsers(inStr.toString()).await()
-                        var i = 0
-                        var j = 0
-                        while (j < profiles.size) {
-                            while (i < dataset.size) {
-                                var n1 = dataset[i].profile.getName().await()
-                                var n2 = profiles[j].getName().await()
-                                if (n1.compareTo(n2, true) < 0) {
-                                    dataset.removeAt(i)
-                                    adapter.notifyItemRemoved(i)
-                                } else {
-                                    break
-                                }
-                            }
-                            if (i >= dataset.size || dataset[i].profile.id != profiles[j].id) {
-                                dataset.add(i, ProfileItem(profiles[j]))
-                                adapter.notifyItemInserted(i)
-                            }
-                            i++
-                            j++
-                        }
-                        while (i < dataset.size) {
-                            dataset.removeAt(i)
-                            adapter.notifyItemRemoved(i)
-                        }
-                    }
-                }
-            })
             //populate with friends
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        subLoginToken = cognitoManager.subscribeToLogin { ex->
+            if (ex == null) {
+                searchField.addTextChangedListener(object: TextWatcher {
+                    override fun afterTextChanged(p0: Editable?) {}
+
+                    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+                    override fun onTextChanged(inStr: CharSequence?, start: Int, before: Int, count: Int) {
+                        async(UI) {
+                            var profiles = profileManager.getUsers(inStr.toString()).await()
+                            var i = 0
+                            var j = 0
+                            while (j < profiles.size) {
+                                while (i < dataset.size) {
+                                    var n1 = dataset[i].profile.getName().await()
+                                    var n2 = profiles[j].getName().await()
+                                    if (n1.compareTo(n2, true) < 0) {
+                                        dataset.removeAt(i)
+                                        adapter.notifyItemRemoved(i)
+                                    } else {
+                                        break
+                                    }
+                                }
+                                if (i >= dataset.size || dataset[i].profile.id != profiles[j].id) {
+                                    dataset.add(i, ProfileItem(profiles[j]))
+                                    adapter.notifyItemInserted(i)
+                                }
+                                i++
+                                j++
+                            }
+                            while (i < dataset.size) {
+                                dataset.removeAt(i)
+                                adapter.notifyItemRemoved(i)
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 }

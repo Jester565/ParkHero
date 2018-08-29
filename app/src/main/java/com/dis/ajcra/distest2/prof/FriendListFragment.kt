@@ -22,6 +22,21 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 class FriendListFragment : Fragment() {
+    companion object {
+        var ID_PARAM = "id"
+        var SELECTABLE_PARAM = "selectable"
+        fun GetInstance(selectable: Boolean = false, id: String? = null): FriendListFragment {
+            val fragment = FriendListFragment()
+            val args = Bundle()
+            if (id != null) {
+                args.putString(ID_PARAM, id)
+            }
+            args.putBoolean(SELECTABLE_PARAM, selectable)
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
     private var selectable: Boolean = false
     private lateinit var profile: Profile
     private lateinit var cognitoManager: CognitoManager
@@ -31,6 +46,8 @@ class FriendListFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ProfileRecyclerAdapter
     private var dataset: ArrayList<ProfileItem> = ArrayList<ProfileItem>()
+
+    private lateinit var subLoginToken: String
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSnsEvent(evt: SnsEvent) {
@@ -59,15 +76,25 @@ class FriendListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
-            adapter.notifyItemRangeRemoved(0, dataset.size)
-            dataset.clear()
-            var friends = profile.getFriends().await()
-            for (friend in friends) {
-                dataset.add(ProfileItem(friend))
-                adapter.notifyItemInserted(dataset.size - 1)
+
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                async(UI) {
+                    adapter.notifyItemRangeRemoved(0, dataset.size)
+                    dataset.clear()
+                    var friends = profile.getFriends().await()
+                    for (friend in friends) {
+                        dataset.add(ProfileItem(friend))
+                        adapter.notifyItemInserted(dataset.size - 1)
+                    }
+                }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     override fun onStop() {
@@ -78,16 +105,8 @@ class FriendListFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        profileManager = ProfileManager(cognitoManager, this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
-        if (arguments != null && arguments!!.getString(ID_PARAM) != null) {
-            profile = profileManager.getProfile(arguments!!.getString(ID_PARAM))
-        } else {
-            profile = profileManager.getProfile(cognitoManager.federatedID)
-        }
-        if (arguments != null && arguments!!.getBoolean(SELECTABLE_PARAM) != null) {
-            selectable = arguments!!.getBoolean(SELECTABLE_PARAM)
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -114,20 +133,5 @@ class FriendListFragment : Fragment() {
             }
         }
         return selectedProfiles
-    }
-
-    companion object {
-        var ID_PARAM = "id"
-        var SELECTABLE_PARAM = "selectable"
-        fun GetInstance(selectable: Boolean = false, id: String? = null): FriendListFragment {
-            val fragment = FriendListFragment()
-            val args = Bundle()
-            if (id != null) {
-                args.putString(ID_PARAM, id)
-            }
-            args.putBoolean(SELECTABLE_PARAM, selectable)
-            fragment.arguments = args
-            return fragment
-        }
     }
 }

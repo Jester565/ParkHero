@@ -22,6 +22,7 @@ import com.dis.ajcra.distest2.entity.EntityListFragment
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
+import com.dis.ajcra.distest2.media.CloudFileManager.Companion.BUCKET_NAME
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.UserSearchActivity
@@ -31,9 +32,6 @@ import kotlinx.coroutines.experimental.async
 
 
 class HomeFragment : Fragment() {
-    companion object {
-        var BUCKET_NAME = "disneyapp"
-    }
     lateinit var cognitoManager: CognitoManager
     lateinit var profileManager: ProfileManager
     lateinit var s3Client: AmazonS3Client
@@ -50,12 +48,7 @@ class HomeFragment : Fragment() {
     var profViewH: Int = 0
     var myProfile: MyProfile? = null
 
-    fun launchTestActivity() {
-        /*
-        var intent = Intent(context, ParkScheduleActivity::class.java)
-        startActivity(intent)
-        */
-    }
+    private lateinit var subLoginToken: String
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater!!.inflate(R.layout.fragment_home, container, false)
@@ -66,10 +59,10 @@ class HomeFragment : Fragment() {
         partyButton = rootView.findViewById(R.id.home_myprofileButton)
         profileNameText = rootView.findViewById(R.id.home_name)
         accountLayout = rootView.findViewById(R.id.home_accountlayout)
-        cognitoManager = CognitoManager.GetInstance(activity!!.applicationContext)
+        cognitoManager = CognitoManager.GetInstance(context!!.applicationContext)
         scrollView = rootView.findViewById(R.id.home_scrollview)
         profView = rootView.findViewById(R.id.home_profilelayout)
-        profileManager = ProfileManager(cognitoManager)
+        profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
 
         scrollView.setOnScrollChangeListener(object: NestedScrollView.OnScrollChangeListener {
             override fun onScrollChange(v: NestedScrollView?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int) {
@@ -88,21 +81,6 @@ class HomeFragment : Fragment() {
         })
 
         s3Client =  AmazonS3Client(cognitoManager.credentialsProvider)
-        async(UI) {
-            myProfile = profileManager.genMyProfile().await()
-            profileNameText.text = myProfile!!.getName().await()
-            if (!cognitoManager.isLoggedIn().await()) {
-                accountLayout.visibility = View.VISIBLE
-                signInButton.setOnClickListener {
-                    var intent = Intent(this@HomeFragment.context, LoginActivity::class.java)
-                    startActivity(intent)
-                }
-                signUpButton.setOnClickListener {
-                    var intent = Intent(this@HomeFragment.context, RegisterActivity::class.java)
-                    startActivity(intent)
-                }
-            }
-        }
 
         friendButton.setOnClickListener {
             var intent = Intent(this@HomeFragment.context, UserSearchActivity::class.java)
@@ -113,24 +91,50 @@ class HomeFragment : Fragment() {
             var intent = Intent(this@HomeFragment.context, PartyActivity::class.java)
             startActivity(intent)
         }
+
         return rootView
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        initProfilePic()
         initFragments()
-
-        //TEMP
-        launchTestActivity()
     }
 
-    fun initFragments() {
+    override fun onResume() {
+        super.onResume()
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                async(UI) {
+                    myProfile = profileManager.genMyProfile().await()
+                    profileNameText.text = myProfile!!.getName().await()
+                    if (!cognitoManager.hasCredentials().await()) {
+                        accountLayout.visibility = View.VISIBLE
+                        signInButton.setOnClickListener {
+                            var intent = Intent(this@HomeFragment.context, LoginActivity::class.java)
+                            startActivity(intent)
+                        }
+                        signUpButton.setOnClickListener {
+                            var intent = Intent(this@HomeFragment.context, RegisterActivity::class.java)
+                            startActivity(intent)
+                        }
+                    }
+                    initProfilePic()
+                }
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
+    }
+
+    private fun initFragments() {
         var entityListFragment = EntityListFragment()
         this.childFragmentManager.beginTransaction().replace(R.id.home_entitylistholder, entityListFragment).commit()
     }
 
-    fun initProfilePic() {
+    private fun initProfilePic() {
         var objReq: GetObjectRequest = GetObjectRequest(BUCKET_NAME, "profileImgs/blank-profile-picture-973460_640.png")
         async {
             try {

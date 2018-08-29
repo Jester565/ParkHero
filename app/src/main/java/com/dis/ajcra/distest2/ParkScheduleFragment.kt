@@ -125,7 +125,7 @@ class ParkScheduleFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cfm = CloudFileManager(CognitoManager.GetInstance(activity!!.applicationContext), activity!!.applicationContext)
-        appSync = AppSyncTest.getInstance(activity!!.applicationContext)
+        appSync = AppSyncTest.GetInstance(CognitoManager.GetInstance(activity!!.applicationContext), activity!!.applicationContext)
         scheduleAdapter = ScheduleRecyclerAdapter(adapterData, maxBlockLevel, cfm)
     }
 

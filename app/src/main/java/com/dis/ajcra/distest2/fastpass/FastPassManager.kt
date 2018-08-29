@@ -2,6 +2,7 @@ package com.dis.ajcra.distest2.fastpass
 
 import android.content.Context
 import com.dis.ajcra.distest2.AppSyncTest
+import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -9,9 +10,9 @@ import kotlin.coroutines.experimental.suspendCoroutine
 
 class FastPassManager {
     companion object {
-        fun GetInstance(ctx: Context): FastPassManager {
+        fun GetInstance(cognitoManager: CognitoManager, ctx: Context): FastPassManager {
             if (fastPassManager == null) {
-                fastPassManager = FastPassManager(ctx)
+                fastPassManager = FastPassManager(cognitoManager, ctx)
             }
             return fastPassManager!!
         }
@@ -23,8 +24,8 @@ class FastPassManager {
     private var subscribers = HashSet<ListPassesCB>()
     private var fastPassTransactions = HashSet<DisFastPassTransaction>()
 
-    constructor(ctx: Context) {
-        appSync = AppSyncTest.getInstance(ctx)
+    constructor(cognitoManager: CognitoManager, ctx: Context) {
+        appSync = AppSyncTest.GetInstance(cognitoManager, ctx)
     }
 
     interface ListPassesCB {

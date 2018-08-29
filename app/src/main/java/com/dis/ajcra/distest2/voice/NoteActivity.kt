@@ -23,7 +23,7 @@ class NoteActivity: Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this@NoteActivity.applicationContext)
-        rideManager = RideManager(this.applicationContext)
+        rideManager = RideManager(cognitoManager, applicationContext)
         initTTS()
 
         var intent = getIntent()

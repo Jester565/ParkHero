@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
@@ -18,10 +17,20 @@ import com.dis.ajcra.distest2.media.CloudFileManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
-import java.lang.Exception
-
 
 class ProfileFragment : Fragment() {
+    companion object {
+        private val ID_PARAM = "id"
+
+        fun newInstance(id: String): ProfileFragment {
+            val fragment = ProfileFragment()
+            val args = Bundle()
+            args.putString(ID_PARAM, id)
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
     private lateinit var cognitoManager: CognitoManager
     private lateinit var profileManager: ProfileManager
     private lateinit var cfm: CloudFileManager
@@ -32,10 +41,12 @@ class ProfileFragment : Fragment() {
     private lateinit var acceptButton: Button
     private lateinit var declineButton: Button
 
+    private lateinit var subLoginToken: String
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_profile, container, false)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        profileManager = ProfileManager(cognitoManager)
+        profileManager = ProfileManager(cognitoManager, this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
         profile = profileManager.getProfile(arguments!!.getString(ID_PARAM))
         return rootView
@@ -47,51 +58,54 @@ class ProfileFragment : Fragment() {
             nameText = rootView.findViewById(R.id.profile_name)
             acceptButton = rootView.findViewById(R.id.profile_acceptButton)
             declineButton = rootView.findViewById(R.id.profile_declineButton)
+        }
+    }
 
-            async {
-                var profilePicUrl = profile.getProfilePicUrl().await()
-                if (profilePicUrl == null) {
-                    profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
-                }
-                cfm.download(profilePicUrl, object : CloudFileListener() {
-                    override fun onError(id: Int, ex: Exception?) {
+    override fun onResume() {
+        super.onResume()
+        subLoginToken = cognitoManager.subscribeToLogin { ex ->
+            if (ex == null) {
+                async {
+                    var profilePicUrl = profile.getProfilePicUrl().await()
+                    if (profilePicUrl == null) {
+                        profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
                     }
+                    cfm.download(profilePicUrl, object : CloudFileListener() {
+                        override fun onComplete(id: Int, file: File) {
+                            async {
+                                var options = BitmapFactory.Options()
+                                options.inJustDecodeBounds = true
+                                BitmapFactory.decodeFile(file.absolutePath, options)
+                                var dispMetrics = DisplayMetrics()
+                                this@ProfileFragment.activity!!.windowManager.defaultDisplay.getMetrics(dispMetrics)
 
-                    override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-                    }
+                                var imgScale = 1
 
-                    override fun onStateChanged(id: Int, state: TransferState?) {
-                    }
-
-                    override fun onComplete(id: Int, file: File) {
-                        async {
-                            var options = BitmapFactory.Options()
-                            options.inJustDecodeBounds = true
-                            BitmapFactory.decodeFile(file.absolutePath, options)
-                            var dispMetrics = DisplayMetrics()
-                            this@ProfileFragment.activity!!.windowManager.defaultDisplay.getMetrics(dispMetrics)
-
-                            var imgScale = 1
-
-                            while (options.outWidth / imgScale > dispMetrics.widthPixels) {
-                                imgScale *= 2
-                            }
-                            options.inJustDecodeBounds = false
-                            options.inSampleSize = imgScale
-                            var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                            async(UI) {
-                                profImg.setImageBitmap(bmap)
+                                while (options.outWidth / imgScale > dispMetrics.widthPixels) {
+                                    imgScale *= 2
+                                }
+                                options.inJustDecodeBounds = false
+                                options.inSampleSize = imgScale
+                                var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
+                                async(UI) {
+                                    profImg.setImageBitmap(bmap)
+                                }
                             }
                         }
-                    }
-                }, null, true)
-            }
-            async(UI) {
-                nameText.setText(profile.getName().await())
-                var status = profile.getInviteStatus().await()
-                initFriendStatus(status)
+                    }, null, true)
+                }
+                async(UI) {
+                    nameText.setText(profile.getName().await())
+                    var status = profile.getInviteStatus().await()
+                    initFriendStatus(status)
+                }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        cognitoManager.unsubscribeFromLogin(subLoginToken)
     }
 
     fun initFriendStatus(status: Int) {
@@ -152,18 +166,6 @@ class ProfileFragment : Fragment() {
             }
         } else {
 
-        }
-    }
-
-    companion object {
-        private val ID_PARAM = "id"
-
-        fun newInstance(id: String): ProfileFragment {
-            val fragment = ProfileFragment()
-            val args = Bundle()
-            args.putString(ID_PARAM, id)
-            fragment.arguments = args
-            return fragment
         }
     }
 }
