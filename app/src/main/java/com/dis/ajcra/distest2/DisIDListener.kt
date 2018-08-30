@@ -23,10 +23,7 @@ class DisIDListener : FirebaseInstanceIdService() {
     private lateinit var profileManager: ProfileManager
 
     override fun onTokenRefresh() {
-        Log.d("STATE", "HELLO DOGS")
         val refreshedToken = FirebaseInstanceId.getInstance().token
-        //Log.d(TAG, "Refreshed token: " + refreshedToken!!)
-        Log.d("STATE", "TOKEN REFRESHED: " + refreshedToken)
         if (refreshedToken != null) {
             sendRegistrationToSns(refreshedToken)
         }
@@ -44,7 +41,6 @@ class DisIDListener : FirebaseInstanceIdService() {
         if (endpointArn == null) {
             endpointArn = createEndpoint(token)
         }
-        Log.d("STATE", "Starting intent2")
         try {
             val req = GetEndpointAttributesRequest()
                     .withEndpointArn(endpointArn)
@@ -57,7 +53,6 @@ class DisIDListener : FirebaseInstanceIdService() {
             Log.d("STATE", "GetEndpointAttributes ex: " + ex)
         }
 
-        Log.d("STATE", "Starting intent3")
         if (updateRequired) {
             val attribs = HashMap<String?, String?>()
             attribs.put("Token", token)
