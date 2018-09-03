@@ -43,11 +43,9 @@ class DisGcmListener : FirebaseMessagingService() {
         var MSG_CHANNEL_ID = "DisMsgs"
     }
 
-    fun createNotificationChannel(id: String, desc: String) {
+    fun createNotificationChannel(id: String, name: String, desc: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create the NotificationChannel
-            val name = "Invites"
-            val description = "Receive notifications when people send invites"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val mChannel = NotificationChannel(id, name, importance)
             mChannel.description = desc
@@ -99,7 +97,7 @@ class DisGcmListener : FirebaseMessagingService() {
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    createNotificationChannel(MSG_CHANNEL_ID, "Messages")
+                    createNotificationChannel(MSG_CHANNEL_ID, "Messages", "Messages")
                     var notificationID = (type + entityID).hashCode()
                     var options = BitmapFactory.Options()
                     options.inJustDecodeBounds = true
@@ -159,7 +157,7 @@ class DisGcmListener : FirebaseMessagingService() {
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    createNotificationChannel(INVITE_CHANNEL_ID, "Invites")
+                    createNotificationChannel(INVITE_CHANNEL_ID, "Invites", "Contains inviations")
                     var notificationID = (type + user.getString("id")).hashCode()
                     var options = BitmapFactory.Options()
                     options.inJustDecodeBounds = true

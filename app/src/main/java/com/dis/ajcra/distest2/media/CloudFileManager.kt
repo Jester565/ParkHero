@@ -223,6 +223,7 @@ class CloudFileManager {
         cfiDb = Room.databaseBuilder(appContext, CloudFileDatabase::class.java, "cfi").build()
         async {
             initTransfers()
+            displayFileInfo()
         }
     }
 
@@ -236,6 +237,7 @@ class CloudFileManager {
                 cfo.onProgressChanged(transfer.id, transfer.bytesTransferred, transfer.bytesTotal)
                 cfo.onStateChanged(transfer.id, transfer.state)
                 transfer.setTransferListener(cfo)
+                transferUtility.resume(transfer.id)
             }
         }
         run {
@@ -283,7 +285,7 @@ class CloudFileManager {
     }
 
     private fun isOwnedByUser(key: String): Boolean {
-        return (key.contains(cognitoManager.federatedID) || key.contains("rideAccels/") || key.contains("parkIcons/"))
+        return (key.contains(cognitoManager.federatedID) || key.contains("rideAccels/") || key.contains("parkIcons/") || key.contains("recs/"))
     }
 
     suspend fun genPresignedURI(key: String, expireMins: Int): URI {

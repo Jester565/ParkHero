@@ -1,6 +1,9 @@
 package com.dis.ajcra.distest2
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -12,14 +15,14 @@ import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.media.MediaRecorder
 import android.opengl.Matrix
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.NotificationCompat
 import android.util.Log
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
-import com.dis.ajcra.distest2.accel.AccelService
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
@@ -27,13 +30,14 @@ import kotlinx.coroutines.experimental.async
 import tutorial.Acceleration
 import java.io.File
 import java.util.*
-
+import kotlin.concurrent.fixedRateTimer
 
 
 class AccelService2 : Service() {
     companion object {
-        const val ACCEL_DELAY = 16L
+        const val ACCEL_DELAY = 33L
         const val ACCEL_MULT = 32726.0f/10.0f
+        const val ACCEL_CHANNEL_ID = "DisAccel"
     }
 
     //Data structures for calculations the netAcceleration
@@ -46,7 +50,6 @@ class AccelService2 : Service() {
     private var netAcceleration = FloatArray(3, {0.0f})
     private var netAccelCount: Int = 0
     private var startTime: Date? = null
-    private var recordCount: Int = 0
     private var avgLongitude: Double = 0.0
     private var avgLatitude: Double = 0.0
     private var gpsRecordCount: Int = 0
@@ -63,11 +66,12 @@ class AccelService2 : Service() {
     private lateinit var cognitoManager: CognitoManager
     private lateinit var cfm: CloudFileManager
 
-    private var accelDataTimerHandler: Handler = Handler()
-
     private var running = false
 
     private var ridename: String? = null
+
+    private var audioRecorder: MediaRecorder? = null
+    private var audioPath: String? = null
 
     private fun accelToInt(accel: Float): Int {
         return (accel * ACCEL_MULT).toInt()
@@ -131,27 +135,6 @@ class AccelService2 : Service() {
         override fun onProviderDisabled(p0: String?) {}
     }
 
-    private var accelDataRunner: Runnable = object: Runnable {
-        override fun run() {
-            if (running) {
-                var now = Date()
-                var targetTime = startTime!!.time + recordCount * AccelService.ACCEL_DELAY
-                var delay = targetTime - now.time + AccelService.ACCEL_DELAY
-                if (delay < 0) {
-                    delay = 0
-                }
-                recordCount++
-                accelDataTimerHandler.postDelayed(this, delay)
-                synchronized(netAcceleration) {
-                    netAccelCount = 0
-                    accelDataBuilder.addX(accelToInt(netAcceleration[0]))
-                    accelDataBuilder.addY(accelToInt(netAcceleration[1]))
-                    accelDataBuilder.addZ(accelToInt(netAcceleration[2]))
-                }
-            }
-        }
-    }
-
     fun startCollection() {
         Log.d("ACCEL", "Starting collection")
         sensorManager.registerListener(sensorListener, gravitySensor, SensorManager.SENSOR_DELAY_FASTEST)
@@ -161,10 +144,34 @@ class AccelService2 : Service() {
         running = true
         startTime = Date()
 
-        recordCount = 0
         gpsRecordCount = 0
 
-        accelDataTimerHandler.postDelayed(accelDataRunner, AccelService.ACCEL_DELAY)
+        if (ridename != null) {
+            audioRecorder = MediaRecorder()
+            audioPath = this.filesDir.toString() + "/" + ridename + ".3gpp"
+            Log.d("ACCEL", "AudioPath: " + audioPath)
+
+            audioRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
+            audioRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+            audioRecorder!!.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB)
+            audioRecorder!!.setOutputFile(audioPath!!)
+
+            audioRecorder!!.prepare()
+            audioRecorder!!.start()
+
+            fixedRateTimer(period=ACCEL_DELAY, action={
+                if (!running) {
+                    cancel()
+                }
+                synchronized(netAcceleration) {
+                    netAccelCount = 0
+                    accelDataBuilder.addMillis(Date().time)
+                    accelDataBuilder.addX(accelToInt(netAcceleration[0]))
+                    accelDataBuilder.addY(accelToInt(netAcceleration[1]))
+                    accelDataBuilder.addZ(accelToInt(netAcceleration[2]))
+                }
+            })
+        }
     }
 
 
@@ -173,37 +180,53 @@ class AccelService2 : Service() {
         running = false
         sensorManager.unregisterListener(sensorListener)
         locationManager.removeUpdates(locationListener)
+        audioRecorder?.stop()
+        audioRecorder?.reset()
+        audioRecorder?.release()
+        audioRecorder = null
+
+        if (audioPath != null) {
+            var audioFile = File(audioPath)
+            audioPath = null
+            async {
+                cfm.upload("recs/" + ridename + ".3gpp", audioFile.toURI(), object : CloudFileListener() {
+                    override fun onComplete(id: Int, file: File) {
+                        super.onComplete(id, file)
+                        Log.d("ACCEL", "Audio upload complete")
+                    }
+                })
+            }
+        }
+
+
         if (ridename == null) {
             async {
-                uploadAcceleration("accels/" + cognitoManager.federatedID + "/" + UUID.randomUUID().toString())
+                var uuid = UUID.randomUUID().toString()
+                uploadAcceleration("accels/" + cognitoManager.federatedID + "/" + uuid, uuid)
                 accelDataBuilder.clear()
             }
         } else {
             async {
-                uploadAcceleration("rideAccels/" + ridename)
+                var uuid = UUID.randomUUID().toString()
+                uploadAcceleration("rideAccels/" + ridename, ridename!!)
                 accelDataBuilder.clear()
                 ridename = null
             }
         }
     }
 
-    fun uploadAcceleration(objKey: String) {
-        accelDataBuilder.setStartEpochMillis(startTime!!.time)
+    fun uploadAcceleration(objKey: String, fileName: String) {
         accelDataBuilder.setLongitude(avgLongitude)
         accelDataBuilder.setLatitude(avgLatitude)
         var accelDataMsg = accelDataBuilder.build()
         var dataStr = accelDataMsg.toByteString()
-        var file = File(applicationContext.filesDir, "accels")
+        var file = File(applicationContext.filesDir, fileName)
         file.writeBytes(dataStr.toByteArray())
         async {
             cfm.upload(objKey, file.toURI(), object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {
                     Log.d("ACCEL", "Upload error: " + ex?.message)
                 }
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {}
-
-                override fun onStateChanged(id: Int, state: TransferState?) {}
 
                 override fun onComplete(id: Int, file: File) {
                     Log.d("ACCEL", "Upload complete: " + objKey)
@@ -219,7 +242,22 @@ class AccelService2 : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         ridename = intent?.extras?.getString("ridename")
-        Log.d("ACCEL", "AccelService2 Started")
+        createNotificationChannel(AccelService2.ACCEL_CHANNEL_ID, "Acceleration", "Acceleration")
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            val notification = Notification.Builder(applicationContext, AccelService2.ACCEL_CHANNEL_ID)
+                    .setContentTitle("ACCEL")
+                    .setContentText("Monitoring Acceleration")
+                    .build()
+            startForeground(101, notification)
+        } else {
+            val notification = NotificationCompat.Builder(this)
+                    .setContentTitle("ACCEL")
+                    .setContentText("Monitoring Acceleration")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .build()
+
+            startForeground(101, notification)
+        }
 
         cognitoManager = CognitoManager.GetInstance(applicationContext)
         cfm = CloudFileManager(cognitoManager, applicationContext)
@@ -236,6 +274,8 @@ class AccelService2 : Service() {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10f, locationListener)
         }
         startCollection()
+
+
         return START_NOT_STICKY
     }
 
@@ -246,5 +286,19 @@ class AccelService2 : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopCollection()
+    }
+
+    private fun createNotificationChannel(id: String, name: String, desc: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create the NotificationChannel
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val mChannel = NotificationChannel(id, name, importance)
+            mChannel.description = desc
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            val notificationManager = getSystemService(
+                    Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
     }
 }

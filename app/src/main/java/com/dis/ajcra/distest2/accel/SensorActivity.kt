@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
@@ -12,6 +13,8 @@ import android.widget.Button
 import android.widget.EditText
 import com.dis.ajcra.distest2.AccelService2
 import com.dis.ajcra.distest2.R
+
+
 
 
 
@@ -32,7 +35,7 @@ class SensorActivity : AppCompatActivity() {
         if (!checkLocationPermission(applicationContext)) {
             ActivityCompat.requestPermissions(
                     this,
-                    arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
+                    arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO),
                     LOCATION_PERMISSION_CODE)
         }
     }
@@ -81,14 +84,18 @@ class SensorActivity : AppCompatActivity() {
     }
 
     fun startRecogntionCapture() {
-        var intent = Intent(applicationContext, AccelService2::class.java)
+        var intent = Intent(this, AccelService2::class.java)
         startService(intent)
     }
 
     fun startFingerprintCapture() {
-        var intent = Intent(applicationContext, AccelService2::class.java)
-        intent.putExtra("ridename", ridenameField.text.toString())
-        startService(intent)
+        val serviceIntent = Intent(this, AccelService2::class.java)
+        serviceIntent.putExtra("ridename", ridenameField.text.toString())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 
     fun stopCapture() {

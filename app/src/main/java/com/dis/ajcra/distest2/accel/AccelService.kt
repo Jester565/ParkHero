@@ -11,7 +11,6 @@ import android.opengl.Matrix
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
@@ -41,16 +40,11 @@ class AccelService : Service() {
     private lateinit var cfm: CloudFileManager
 
     private var sensorListener = object: SensorEventListener2 {
-        override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+        override fun onAccuracyChanged(p0: Sensor?, p1: Int) { }
 
-        }
-
-        override fun onFlushCompleted(p0: Sensor?) {
-
-        }
+        override fun onFlushCompleted(p0: Sensor?) { }
 
         override fun onSensorChanged(evt: SensorEvent?) {
-            Log.d("STATE", "SENSOR CALLED")
             if (evt != null) {
                 when (evt.sensor.type) {
                     Sensor.TYPE_GRAVITY -> {
@@ -71,7 +65,6 @@ class AccelService : Service() {
                         SensorManager.getRotationMatrix(r, null, gravity, geoMagnetic);
                         Matrix.invertM(rinv, 0, r, 0)
                         Matrix.multiplyMV(trueAcceleration, 0, rinv, 0, linearAcceleration, 0)
-                        //coordText.text = "X: " + trueAcceleration[0] + "\nY: " + trueAcceleration[1] + "\nZ: " + trueAcceleration[2] + "\nTheta: " + trueAcceleration[3]
                         synchronized(netAcceleration) {
                             netAccelCount++
                             var i = 0
@@ -116,7 +109,6 @@ class AccelService : Service() {
     }
 
     fun startCollection() {
-        Log.d("ACCEL", "Starting collection")
         sensorManager.registerListener(sensorListener, gravitySensor, SensorManager.SENSOR_DELAY_FASTEST)
         sensorManager.registerListener(sensorListener, geoMagneticSensor, SensorManager.SENSOR_DELAY_FASTEST)
         sensorManager.registerListener(sensorListener, linearAccelerationSensor, SensorManager.SENSOR_DELAY_FASTEST)
@@ -128,34 +120,16 @@ class AccelService : Service() {
     fun stopCollection() {
         sensorManager.unregisterListener(sensorListener)
         var accelDataMsg = accelDataBuilder.build()
-        var i = 0
-        while (i < accelDataMsg.xCount) {
-            Log.d("STATE", "X: " + accelDataMsg.getX(i) + "  Y: " + accelDataMsg.getY(i) + "  Z: " + accelDataMsg.getZ(i))
-            i++
-        }
         var dataStr = accelDataMsg.toByteString()
         var file = File(applicationContext.filesDir, "accels")
         file.writeBytes(dataStr.toByteArray())
         async {
             cfm.upload("accels", file.toURI(), object : CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {
-
-                }
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-
-                }
-
-                override fun onStateChanged(id: Int, state: TransferState?) {
-
-                }
-
                 override fun onComplete(id: Int, file: File) {
                     Log.d("STATE", "Upload complete")
                 }
             })
         }
-        //Log.d("STATE", "DATA: " + dataStr)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
