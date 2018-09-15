@@ -104,7 +104,7 @@
         <activity android:name=".pass.PassActivity" />
 
         <service
-            android:name=".AccelService2"
+            android:name=".accel.AccelService2"
             android:enabled="true"
             android:exported="true" />
 

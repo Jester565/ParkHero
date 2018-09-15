@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import com.dis.ajcra.distest2.AccelService2
 import com.dis.ajcra.distest2.R
 
 

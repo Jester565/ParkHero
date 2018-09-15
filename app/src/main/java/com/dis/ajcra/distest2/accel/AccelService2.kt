@@ -1,4 +1,4 @@
-package com.dis.ajcra.distest2
+package com.dis.ajcra.distest2.accel
 
 import android.Manifest
 import android.app.Notification
@@ -159,7 +159,7 @@ class AccelService2 : Service() {
             audioRecorder!!.prepare()
             audioRecorder!!.start()
 
-            fixedRateTimer(period=ACCEL_DELAY, action={
+            fixedRateTimer(period= ACCEL_DELAY, action={
                 if (!running) {
                     cancel()
                 }
@@ -242,9 +242,9 @@ class AccelService2 : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         ridename = intent?.extras?.getString("ridename")
-        createNotificationChannel(AccelService2.ACCEL_CHANNEL_ID, "Acceleration", "Acceleration")
+        createNotificationChannel(ACCEL_CHANNEL_ID, "Acceleration", "Acceleration")
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            val notification = Notification.Builder(applicationContext, AccelService2.ACCEL_CHANNEL_ID)
+            val notification = Notification.Builder(applicationContext, ACCEL_CHANNEL_ID)
                     .setContentTitle("ACCEL")
                     .setContentText("Monitoring Acceleration")
                     .build()
