@@ -8,15 +8,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#660000">
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/rowride_img"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:scaleType="centerInside"
-            android:adjustViewBounds="true"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/ic_cancel_black_24dp"/>
+            android:src="@drawable/ic_cancel_black_24dp"
+            android:padding="5dp"/>
         <TextView
             android:id="@+id/rowride_name"
             android:layout_width="wrap_content"

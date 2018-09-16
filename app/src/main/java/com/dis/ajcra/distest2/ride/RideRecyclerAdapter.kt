@@ -10,12 +10,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
+import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
@@ -122,7 +122,7 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
         var rootView: View
         var ctx: Context
         var bgLayout: RelativeLayout
-        var imgView: ImageView
+        var imgView: CircleImageView
         var imgKey: String? = null
 
         constructor(itemView: View)
