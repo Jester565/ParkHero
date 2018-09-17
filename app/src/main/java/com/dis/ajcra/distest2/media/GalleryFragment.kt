@@ -234,13 +234,13 @@ class GalleryFragment : Fragment() {
             this.dataset = dataset
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_picture, parent, false)
             var viewHolder = ViewHolder(view)
             return viewHolder
         }
 
-        override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder?.imgView?.tag = position.toString()
             holder?.imgView?.setOnLongClickListener(object: View.OnLongClickListener {
                 override fun onLongClick(view: View?): Boolean {

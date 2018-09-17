@@ -28,7 +28,7 @@ class FastPassRecyclerAdapter(private var transactions: List<DisFastPassTransact
     private var fpDateFormat2: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH)
     private var outputHourFormat: SimpleDateFormat = SimpleDateFormat("h:mm a", Locale.ENGLISH)
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): FastPassRecyclerAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FastPassRecyclerAdapter.ViewHolder {
         var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_fastpasstrans, parent, false)
         var viewHolder = FastPassRecyclerAdapter.ViewHolder(view)
         return viewHolder
@@ -38,7 +38,7 @@ class FastPassRecyclerAdapter(private var transactions: List<DisFastPassTransact
         return transactions.size
     }
 
-    override fun onBindViewHolder(holder: FastPassRecyclerAdapter.ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: FastPassRecyclerAdapter.ViewHolder, position: Int) {
         if (holder != null) {
             var transaction = transactions.get(position)
             var fpDate = parseFpDate(transaction.fpDT()!!)

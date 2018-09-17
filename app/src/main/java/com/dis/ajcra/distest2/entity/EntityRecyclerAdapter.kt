@@ -29,13 +29,13 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
         this.dataset = dataset
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_entity, parent, false)
         var viewHolder = ViewHolder(view)
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         var entity = dataset[position]
         holder!!.profImgView.setOnClickListener {
             var profile = dataset[holder!!.adapterPosition].owner

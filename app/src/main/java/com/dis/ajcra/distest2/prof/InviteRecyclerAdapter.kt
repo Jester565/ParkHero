@@ -34,13 +34,13 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
         this.dataset = dataset
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_invite, parent, false)
         var viewHolder = ViewHolder(view)
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if (dataset[holder!!.adapterPosition].isOwner) {
             holder!!.arrowImgView.visibility = View.VISIBLE
         } else {

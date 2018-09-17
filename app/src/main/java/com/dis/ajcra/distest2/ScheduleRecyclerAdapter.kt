@@ -25,7 +25,8 @@ class ScheduleRecyclerAdapter(private var schedules: List<GetSchedulesQuery.Sche
     private var inputHourFormat: SimpleDateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
     private var outputHourFormat: SimpleDateFormat = SimpleDateFormat("h:mm a", Locale.ENGLISH)
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ScheduleRecyclerAdapter.ViewHolder {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_schedule, parent, false)
         var viewHolder = ScheduleRecyclerAdapter.ViewHolder(view)
         return viewHolder
@@ -35,7 +36,7 @@ class ScheduleRecyclerAdapter(private var schedules: List<GetSchedulesQuery.Sche
         return schedules.size
     }
 
-    override fun onBindViewHolder(holder: ScheduleRecyclerAdapter.ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: ScheduleRecyclerAdapter.ViewHolder, position: Int) {
         if (holder != null) {
             var schedule = schedules.get(position)
             Log.d("STATE", "Binding view holder for: " + schedule.parkName())
