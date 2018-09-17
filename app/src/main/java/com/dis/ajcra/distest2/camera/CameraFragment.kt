@@ -50,7 +50,6 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
 
     //Get picture taken and recorded events
     class DlCameraListener: CameraListener {
-
         private var cognitoManager: CognitoManager
         //private var transferUtil: TransferUtility
         private var appCtx: Context
@@ -58,6 +57,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         private var compressor: Compressor
         private var galleryFragment: GalleryFragment
         private var visionHandler: VisionHandler
+        private var onPhotoCallback: ((File) -> Unit)? = null
+
         constructor(cognitoManager: CognitoManager, galleryFragment: GalleryFragment, appContext: Context, activity: Activity) {
             this.cognitoManager = cognitoManager
             this.galleryFragment = galleryFragment
@@ -69,6 +70,10 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
             visionHandler = VisionHandler(activity)
         }
 
+        fun setOnPhotoCallback(cb: ((File) -> Unit)?) {
+            onPhotoCallback = cb
+        }
+
         override fun onPictureTaken(jpeg: ByteArray?) {
             async {
                 //Save jpeg byte array to file
@@ -77,14 +82,18 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
                     jpegFile.writeBytes(jpeg)
                 }
                 var compFile = compressor.compressToFile(jpegFile)
-                var objKey = "media/" + cognitoManager.federatedID + "/" + compFile.name
-                Log.d("STATE", "File Name: " + jpegFile.name)
-                Log.d("STATE", "File Len: " + jpegFile.length())
-                Log.d("STATE", "ObjKey: " + objKey)
-                visionHandler.processFile(appCtx, Uri.fromFile(compFile))
+                if (onPhotoCallback != null) {
+                    onPhotoCallback?.invoke(compFile)
+                } else {
+                    var objKey = "media/" + cognitoManager.federatedID + "/" + compFile.name
+                    Log.d("STATE", "File Name: " + jpegFile.name)
+                    Log.d("STATE", "File Len: " + jpegFile.length())
+                    Log.d("STATE", "ObjKey: " + objKey)
+                    visionHandler.processFile(appCtx, Uri.fromFile(compFile))
 
-                cloudFileManager.upload(objKey, compFile.toURI(), object: CloudFileListener() {})
-                galleryFragment.galleryUpdated(objKey)
+                    cloudFileManager.upload(objKey, compFile.toURI(), object : CloudFileListener() {})
+                    galleryFragment.galleryUpdated(objKey)
+                }
             }
         }
 
@@ -118,6 +127,8 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
     private lateinit var galleryLayout: LinearLayout
     private lateinit var galleryFragment: GalleryFragment
     private var recordTimer: Timer = Timer()
+    private var cameraListener: DlCameraListener? = null
+    private var onPhotoCallback: ((File) -> Unit)? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater!!.inflate(R.layout.fragment_camera, container, false)
@@ -291,6 +302,11 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         return rootView
     }
 
+    fun setOnPhotoCallback(cb: ((File) -> Unit)?) {
+        onPhotoCallback = cb
+        cameraListener?.setOnPhotoCallback(cb)
+    }
+
     override fun onRecyclerViewCreated(recyclerView: RecyclerView) {
         gallerySlider.setScrollableView(recyclerView)
     }
@@ -304,7 +320,9 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         var transaction = childFragmentManager.beginTransaction()
         transaction.add(R.id.camera_gallerylayout, galleryFragment).commit()
         var cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
-        cameraView.addCameraListener(DlCameraListener(cognitoManager, galleryFragment, activity!!.applicationContext, activity!!))
+        cameraListener = DlCameraListener(cognitoManager, galleryFragment, activity!!.applicationContext, activity!!)
+        cameraListener?.setOnPhotoCallback(onPhotoCallback)
+        cameraView.addCameraListener(cameraListener)
     }
 
     //Called when the activity starts or redisplayed
