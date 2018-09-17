@@ -7,42 +7,29 @@
     android:background="#F0550000">
     <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:id="@+id/addpass_topText"
+        android:id="@+id/renameprofile_topText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pass ID (on back of pass):" />
+        android:text="New Name:" />
     <EditText
-        android:id="@+id/addpass_passEdit"
+        android:id="@+id/renameprofile_nameEdit"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/addpass_topText"
-        android:hint="80115001751241241"
+        android:layout_below="@id/renameprofile_topText"
         android:inputType="text"
         android:imeOptions="actionDone"/>
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/addpass_passaddButton"
+        android:id="@+id/renameprofile_checkButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/addpass_passEdit"
-        android:src="@drawable/ic_add_circle_black_24dp"
+        android:layout_below="@id/renameprofile_nameEdit"
+        android:src="@drawable/ic_check_black_24dp"
         app:elevation="4dp"
         app:fabSize="normal" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/addpass_cameraButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/addpass_passEdit"
-        android:layout_marginTop="5dp"
-        android:background="#66BB0000"
-        android:src="@drawable/ic_camera_black_24dp"
-        app:elevation="4dp"
-        app:fabSize="mini" />
-
     <ProgressBar
-        android:id="@+id/addpass_progress"
+        android:id="@+id/renameprofile_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

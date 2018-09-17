@@ -7,12 +7,14 @@ import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
+import com.dis.ajcra.distest2.pass.RenameProfileFragment
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
@@ -25,6 +27,9 @@ class MyProfileFragment : Fragment() {
 
     private lateinit var profImg: ImageView
     private lateinit var nameText: TextView
+
+    private lateinit var editProfImg: ImageButton
+    private lateinit var editProfName: ImageButton
 
     private lateinit var subLoginToken: String
 
@@ -39,7 +44,9 @@ class MyProfileFragment : Fragment() {
     override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         if (rootView != null) {
             profImg = rootView.findViewById(R.id.myprofile_profimg)
+            editProfImg = rootView.findViewById(R.id.myprofile_imgEdit)
             nameText = rootView.findViewById(R.id.myprofile_name)
+            editProfName = rootView.findViewById(R.id.myprofile_nameEdit)
         }
     }
 
@@ -78,12 +85,14 @@ class MyProfileFragment : Fragment() {
                             }
                         }, null, true)
                     }
-                    profImg.setOnClickListener {
-                        //var intent = Intent(this@MyProfileFragment.context, ProfilePicSelection::class.java)
-                        //startActivity(intent)
-                    }
-
                     nameText.setText(myProfile.getName().await())
+                    editProfName.setOnClickListener {
+                        var esf = RenameProfileFragment.GetInstance(nameText.text.toString())
+                        esf.setOnRenameCallback { newName ->
+                            nameText.setText(newName)
+                        }
+                        esf.show(fragmentManager, "Entity Send")
+                    }
                 }
             }
         }

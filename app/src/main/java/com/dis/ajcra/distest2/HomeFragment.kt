@@ -24,6 +24,7 @@ import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
 import com.dis.ajcra.distest2.media.CloudFileManager.Companion.BUCKET_NAME
 import com.dis.ajcra.distest2.prof.MyProfile
+import com.dis.ajcra.distest2.prof.MyProfileActivity
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.UserSearchActivity
 import com.dis.ajcra.fastpass.RidesUpdatedSubscription
@@ -89,6 +90,11 @@ class HomeFragment : Fragment() {
 
         partyButton.setOnClickListener {
             var intent = Intent(this@HomeFragment.context, PartyActivity::class.java)
+            startActivity(intent)
+        }
+
+        profilePicView.setOnClickListener {
+            var intent = Intent(this@HomeFragment.context, MyProfileActivity::class.java)
             startActivity(intent)
         }
 

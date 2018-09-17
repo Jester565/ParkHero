@@ -37,6 +37,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minWidth="100dp"
+                    android:layout_centerHorizontal="true"
                     app:srcCompat="@color/colorAccent" />
                 <TextView
                     android:id="@+id/home_name"
@@ -46,6 +47,7 @@
                     android:layout_below="@+id/home_profilepic"
                     android:layout_marginTop="-29dp"
                     android:textSize="20dp"
+                    android:maxWidth="200dp"
                     android:background="#CCFF0000"
                     android:layout_centerHorizontal="true"
                     android:textAlignment="center"

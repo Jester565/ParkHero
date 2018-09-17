@@ -7,33 +7,52 @@
 
     <ImageView
         android:id="@+id/myprofile_profimg"
+        android:src="@drawable/edit_icon"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"/>
     <ImageButton
+        android:id="@+id/myprofile_imgEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/edit_icon"
-        android:layout_alignBottom="@+id/myprofile_profimg"
+        android:layout_alignTop="@+id/myprofile_profimg"
         android:layout_alignRight="@+id/myprofile_profimg"/>
-
-    <TextView
-        android:id="@+id/myprofile_name"
+    <RelativeLayout
+        android:id="@+id/myprofile_nameLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="30dp"
-        android:background="@color/colorPrimaryDark"
-        android:layout_below="@+id/myprofile_profimg"
-        android:gravity="center"/>
+        android:background="#DD0000"
+        android:layout_below="@id/myprofile_profimg">
+        <TextView
+            android:id="@+id/myprofile_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="35dp"
+            android:background="#DD0000"
+            android:layout_alignParentLeft="true"
+            android:paddingLeft="4dp"
+            android:layout_toLeftOf="@id/myprofile_nameEdit"
+            android:layout_centerVertical="true"
+            />
+
+        <ImageButton
+            android:id="@+id/myprofile_nameEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/edit_icon"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
 
     <Button
         android:id="@+id/myprofile_logoutButton"
         android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/myprofile_name"
+        android:layout_below="@+id/myprofile_nameLayout"
         android:textSize="20dp"
         android:background="#EE0000"
         android:layout_centerHorizontal="true"

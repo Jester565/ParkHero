@@ -22,6 +22,15 @@ class ProfileManager {
 
     companion object {
         var PROF_SETTINGS_NAME = "prof_prefs"
+
+        fun GetInstance(appContext: Context): ProfileManager {
+            if (ProfileManagerInstance == null) {
+                ProfileManagerInstance = ProfileManager(CognitoManager.GetInstance(appContext), appContext)
+            }
+            return ProfileManagerInstance!!
+        }
+
+        private var ProfileManagerInstance: ProfileManager? = null
     }
 
     constructor(cognitoManager: CognitoManager, ctx: Context) {
