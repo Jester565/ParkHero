@@ -83,7 +83,7 @@ class InviteListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
-            if (ex != null) {
+            if (ex == null) {
                 async(UI) {
                     adapter.notifyItemRangeRemoved(0, dataset.size)
                     dataset.clear()

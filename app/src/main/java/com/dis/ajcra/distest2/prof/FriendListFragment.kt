@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -80,12 +81,17 @@ class FriendListFragment : Fragment() {
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
                 async(UI) {
+                    profile = profileManager.getMyProfile().await()!!
                     adapter.notifyItemRangeRemoved(0, dataset.size)
                     dataset.clear()
-                    var friends = profile.getFriends().await()
-                    for (friend in friends) {
-                        dataset.add(ProfileItem(friend))
-                        adapter.notifyItemInserted(dataset.size - 1)
+                    try {
+                        var friends = profile.getFriends().await()
+                        for (friend in friends) {
+                            dataset.add(ProfileItem(friend))
+                            adapter.notifyItemInserted(dataset.size - 1)
+                        }
+                    } catch (ex: Exception) {
+                        Log.d("STATE", "FRIEND EX: " + ex)
                     }
                 }
             }
@@ -104,6 +110,10 @@ class FriendListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var selectable = arguments?.getBoolean("selectable")
+        if (selectable != null) {
+            this.selectable = selectable
+        }
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         profileManager = ProfileManager(cognitoManager, this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)

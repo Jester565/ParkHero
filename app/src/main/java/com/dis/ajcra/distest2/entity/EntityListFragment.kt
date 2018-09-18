@@ -49,13 +49,12 @@ class EntityListFragment : Fragment() {
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
                 async(UI) {
-                    adapter.notifyItemRangeRemoved(0, dataset.size)
-                    dataset.clear()
                     var entities = profileManager.getEntities().await()
+                    dataset.clear()
                     entities.forEach { it ->
                         dataset.add(it)
-                        adapter.notifyItemInserted(dataset.size - 1)
                     }
+                    adapter.notifyDataSetChanged()
                 }
             }
         }

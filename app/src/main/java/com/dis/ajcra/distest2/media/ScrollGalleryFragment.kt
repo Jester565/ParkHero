@@ -22,6 +22,7 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
     private var activity: Activity
     private var cognitoManager: CognitoManager
     private var cfm: CloudFileManager
+    private var fragments: ArrayList<Fragment> = ArrayList()
 
     constructor(activity: Activity, fm: FragmentManager, cfm: CloudFileManager, cognitoManager: CognitoManager)
             :super(fm)
@@ -51,6 +52,7 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
             }
         }
 
+        fragments.clear()
         var targetKeyI = 0
         for (objKey in objKeys) {
             if (objKey.substring(objKey.length - 3) == "jpg") {
@@ -72,8 +74,8 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
             if (targetKey == objKey) {
                 targetKeyI = fragments.size - 1
             }
-            notifyDataSetChanged()
         }
+        notifyDataSetChanged()
         targetKeyI
     }
 
@@ -90,8 +92,6 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
     override fun getCount(): Int {
         return fragments.size
     }
-
-    private var fragments: ArrayList<Fragment> = ArrayList<Fragment>()
 }
 
 
