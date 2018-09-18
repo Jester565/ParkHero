@@ -40,15 +40,19 @@ class ProfileManager {
         apiClient = factory.build(DisneyAppClient::class.java)
     }
 
-    fun genMyProfile(): Deferred<MyProfile> = async {
+    fun genMyProfile(): Deferred<MyProfile?> = async {
         var profile = getMyProfile().await()
         Log.d("STATE", "Profile")
         if (profile == null) {
-            Log.d("STATE", "Creating profile")
-            profile = createMyProfile().await()
-            Log.d("STATE", "Ending profile")
+            try {
+                Log.d("STATE", "Creating profile")
+                profile = createMyProfile().await()
+                Log.d("STATE", "Ending profile")
+            } catch (ex: Exception) {
+                Log.d("STATE", "Getting profile after exception")
+            }
         }
-        profile as MyProfile
+        profile
     }
 
     fun getMyProfile(): Deferred<MyProfile?> = async {

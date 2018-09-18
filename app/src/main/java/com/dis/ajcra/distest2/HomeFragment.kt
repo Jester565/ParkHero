@@ -1,10 +1,10 @@
 package com.dis.ajcra.distest2
 
+import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.widget.CardView
 import android.util.Log
@@ -13,30 +13,36 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
+import com.amazonaws.regions.Region
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.GetObjectRequest
+import com.amazonaws.services.sns.AmazonSNSClient
+import com.amazonaws.services.sns.model.SubscribeRequest
 import com.dis.ajcra.distest2.entity.EntityListFragment
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.login.LoginActivity
 import com.dis.ajcra.distest2.login.RegisterActivity
-import com.dis.ajcra.distest2.media.CloudFileManager.Companion.BUCKET_NAME
+import com.dis.ajcra.distest2.media.CloudFileListener
+import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.MyProfile
 import com.dis.ajcra.distest2.prof.MyProfileActivity
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.UserSearchActivity
 import com.dis.ajcra.fastpass.RidesUpdatedSubscription
+import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import java.io.File
 
 
 class HomeFragment : Fragment() {
     lateinit var cognitoManager: CognitoManager
     lateinit var profileManager: ProfileManager
+    lateinit var cfm: CloudFileManager
     lateinit var s3Client: AmazonS3Client
-    lateinit var profilePicView: ImageView
+    lateinit var profilePicView: CircleImageView
     lateinit var profileNameText: TextView
     lateinit var signInButton: Button
     lateinit var signUpButton: Button
@@ -64,6 +70,7 @@ class HomeFragment : Fragment() {
         scrollView = rootView.findViewById(R.id.home_scrollview)
         profView = rootView.findViewById(R.id.home_profilelayout)
         profileManager = ProfileManager(cognitoManager, context!!.applicationContext)
+        cfm = CloudFileManager(cognitoManager, context!!.applicationContext)
 
         scrollView.setOnScrollChangeListener(object: NestedScrollView.OnScrollChangeListener {
             override fun onScrollChange(v: NestedScrollView?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int) {
@@ -112,6 +119,9 @@ class HomeFragment : Fragment() {
             if (ex == null) {
                 async(UI) {
                     myProfile = profileManager.genMyProfile().await()
+                    if (myProfile == null) {
+                        return@async
+                    }
                     profileNameText.text = myProfile!!.getName().await()
                     if (!cognitoManager.hasCredentials().await()) {
                         accountLayout.visibility = View.VISIBLE
@@ -122,6 +132,29 @@ class HomeFragment : Fragment() {
                         signUpButton.setOnClickListener {
                             var intent = Intent(this@HomeFragment.context, RegisterActivity::class.java)
                             startActivity(intent)
+                        }
+                    }
+
+                    var preferences = context!!.applicationContext.getSharedPreferences("SNS", Context.MODE_PRIVATE)
+                    var snsEndpoint = preferences.getString("snsArn", "NONE")
+                    var snsTopic = preferences.getString("snsTopic", "NONE")
+                    var topicName = cognitoManager.federatedID.substring(cognitoManager.federatedID.indexOf(':') + 1)
+                    if (snsEndpoint != "NONE" && (snsTopic == "NONE" || snsTopic != topicName)) {
+                        async {
+                            //TODO: Unsubscribe from existing topics
+                            var client = AmazonSNSClient(cognitoManager!!.credentialsProvider)
+                            client!!.setRegion(Region.getRegion(Regions.US_WEST_2))
+                            try {
+                                var req = client!!.createTopic(topicName)
+                                var subReq = SubscribeRequest()
+                                subReq.endpoint = snsEndpoint
+                                subReq.protocol = "application"
+                                subReq.topicArn = req.topicArn
+                                client!!.subscribe(subReq)
+                                preferences.edit().putString("snsTopic", topicName)
+                            } catch (ex: Exception) {
+                                Log.d("STATE", "SNS EX: " + ex + " - " + ex.message)
+                            }
                         }
                     }
                     initProfilePic()
@@ -140,22 +173,23 @@ class HomeFragment : Fragment() {
         this.childFragmentManager.beginTransaction().replace(R.id.home_entitylistholder, entityListFragment).commit()
     }
 
-    private fun initProfilePic() {
-        var objReq: GetObjectRequest = GetObjectRequest(BUCKET_NAME, "profileImgs/blank-profile-picture-973460_640.png")
-        async {
-            try {
-                var response = s3Client.getObject(objReq)
-                var bmp = BitmapFactory.decodeStream(response.objectContent);
-                activity!!.runOnUiThread {
-                    var roundedBmp = RoundedBitmapDrawableFactory.create(resources, bmp)
-                    roundedBmp.isCircular = true
-                    profilePicView.setImageDrawable(roundedBmp)
-                    Log.d("STATE", "Updated profile pic view")
-                }
-            } catch (e: Exception) {
-                Log.d("STATE", e.message)
-            }
+    private suspend fun initProfilePic() {
+        var myProfile = profileManager.getMyProfile().await()
+        if (myProfile == null) {
+            return
         }
+        var objKey = myProfile.getProfilePicUrl().await()
+        if (objKey == null) {
+            objKey = "profileImgs/blank-profile-picture-973460_640.png"
+        }
+        cfm.download(objKey, object: CloudFileListener() {
+            override fun onComplete(id: Int, file: File) {
+                super.onComplete(id, file)
+                async(UI) {
+                    profilePicView.setImageURI(Uri.fromFile(file))
+                }
+            }
+        })
     }
 
     override fun onStop() {

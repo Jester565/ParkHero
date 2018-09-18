@@ -5,22 +5,28 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
+import com.amazonaws.regions.Region
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.sns.AmazonSNSClient
+import com.amazonaws.services.sns.model.*
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.ProfileActivity
+import com.dis.ajcra.distest2.prof.ProfileManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.experimental.async
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.File
-import java.lang.Exception
+import java.util.*
 
 
 class SnsEvent {
@@ -35,12 +41,97 @@ class SnsEvent {
 
 class DisGcmListener : FirebaseMessagingService() {
     companion object {
-        var FRIEND_INVITE = "FriendInvite"
-        var FRIEND_ADDED = "FriendAdded"
-        var FRIEND_REMOVED = "FriendRemoved"
-        var ENTITY_SENT = "EntitySent"
-        var INVITE_CHANNEL_ID = "DisInvites"
-        var MSG_CHANNEL_ID = "DisMsgs"
+        val FRIEND_INVITE = "FriendInvite"
+        val FRIEND_ADDED = "FriendAdded"
+        val FRIEND_REMOVED = "FriendRemoved"
+        val ENTITY_SENT = "EntitySent"
+        val INVITE_CHANNEL_ID = "DisInvites"
+        val MSG_CHANNEL_ID = "DisMsgs"
+        val PLATFORM_APP_ARN = "arn:aws:sns:us-west-2:387396130957:app/GCM/DisneyApp"
+    }
+
+    private lateinit var cognitoManager: CognitoManager
+    private lateinit var client: AmazonSNSClient
+    private lateinit var profileManager: ProfileManager
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        sendRegistrationToSns(token)
+    }
+
+    fun sendRegistrationToSns(token: String) {
+        cognitoManager = CognitoManager.GetInstance(applicationContext)
+        profileManager = ProfileManager(cognitoManager, applicationContext)
+        client = AmazonSNSClient(cognitoManager!!.credentialsProvider)
+        client!!.setRegion(Region.getRegion(Regions.US_WEST_2))
+
+        var preferences = applicationContext.getSharedPreferences("SNS", Context.MODE_PRIVATE)
+        var endpointArn = getEndpointArn(preferences)
+        var updateRequired = false
+        if (endpointArn == null) {
+            endpointArn = createEndpoint(token, preferences)
+        }
+        try {
+            val req = GetEndpointAttributesRequest()
+                    .withEndpointArn(endpointArn)
+            val result = client!!.getEndpointAttributes(req)
+            updateRequired = result.attributes["Token"] != token || result.attributes["Enabled"].equals("false", ignoreCase = true)
+        } catch (ex: NotFoundException) {
+            Log.d("STATE", "GetEndpoint not found, recreating")
+            endpointArn = createEndpoint(token, preferences)
+        } catch (ex: Exception) {
+            Log.d("STATE", "GetEndpointAttributes ex: " + ex)
+        }
+
+        if (updateRequired) {
+            val attribs = HashMap<String?, String?>()
+            attribs.put("Token", token)
+            attribs.put("Enabled", "true")
+            val req = SetEndpointAttributesRequest()
+                    .withEndpointArn(endpointArn)
+                    .withAttributes(attribs)
+            client!!.setEndpointAttributes(req)
+        }
+    }
+
+    private fun createEndpoint(token: String?, preferences: SharedPreferences): String? {
+        var topicName = cognitoManager.federatedID.substring(cognitoManager.federatedID.indexOf(':') + 1)
+        var topicArn: String? = null
+        try {
+            var req = client!!.createTopic(topicName)
+            topicArn = req.topicArn
+        } catch (ex: Exception) {
+            Log.d("STATE", "Could not create topic: " + ex.message)
+        }
+        try {
+            val req = CreatePlatformEndpointRequest()
+                    .withPlatformApplicationArn(PLATFORM_APP_ARN)
+                    .withToken(token)
+                    .withCustomUserData(cognitoManager!!.federatedID)
+            val result = client!!.createPlatformEndpoint(req)
+            preferences.edit().putString("snsArn", result.endpointArn).apply()
+
+            var subReq = SubscribeRequest()
+            subReq.endpoint = result.endpointArn
+            subReq.protocol = "application"
+            subReq.topicArn = topicArn
+            client!!.subscribe(subReq)
+            preferences.edit().putString("snsTopic", topicName).apply()
+
+            return result.endpointArn
+        } catch (ex: Exception) {
+            Log.d("STATE", "CreatePlatformEndpoint err " + ex)
+        }
+
+        return null
+    }
+
+    private fun getEndpointArn(preferences: SharedPreferences): String? {
+        return preferences.getString("snsArn", null)
+    }
+
+    private fun setEndpointArn(preferences: SharedPreferences, arn: String) {
+        preferences.edit().putString("snsArn", arn).apply()
     }
 
     fun createNotificationChannel(id: String, name: String, desc: String) {

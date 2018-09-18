@@ -74,7 +74,7 @@ class PassManager {
                     var myProfile = profileManager.genMyProfile().await()
                     var dpList = arrayListOf(response)
                     for (subscriber in subscribers) {
-                        subscriber.passUpdated(myProfile.id, dpList)
+                        subscriber.passUpdated(myProfile!!.id, dpList)
                         subscriber.updateCompleted()
                     }
                     cont.resume(response)

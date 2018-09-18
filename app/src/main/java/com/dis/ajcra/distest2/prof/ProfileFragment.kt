@@ -165,7 +165,15 @@ class ProfileFragment : Fragment() {
                 }
             }
         } else {
-
+            declineButton.visibility = View.VISIBLE
+            declineButton.text = "Unfriend"
+            declineButton.setOnClickListener {
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.removeFriend().await()
+                    initFriendStatus(0)
+                }
+            }
         }
     }
 }

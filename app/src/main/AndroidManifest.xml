@@ -37,20 +37,13 @@
 
         <service android:name= "com.amazonaws.mobileconnectors.s3.transferutility.TransferService" android:enabled="true" />
         <service android:name="org.eclipse.paho.android.service.MqttService" />
-        <service android:name=".DisGcmListener">
+        <service
+            android:name=".DisGcmListener"
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service android:name=".DisIDListener">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".accel.AccelService"
-            android:enabled="true" />
-
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
             android:value="barcode,face,text" />
