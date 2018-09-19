@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileManager
-import com.dis.ajcra.distest2.prof.ProfileItem
+import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.ProfileRecyclerAdapter
 import kotlinx.coroutines.experimental.android.UI
@@ -26,7 +26,7 @@ class UserSearchFragment : Fragment() {
     private lateinit var searchField: EditText
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ProfileRecyclerAdapter
-    private var dataset: ArrayList<ProfileItem> = ArrayList<ProfileItem>()
+    private var dataset = ArrayList<Profile>()
 
     private lateinit var subLoginToken: String
 
@@ -67,7 +67,7 @@ class UserSearchFragment : Fragment() {
                             var j = 0
                             while (j < profiles.size) {
                                 while (i < dataset.size) {
-                                    var n1 = dataset[i].profile.getName().await()
+                                    var n1 = dataset[i].getName().await()
                                     var n2 = profiles[j].getName().await()
                                     if (n1.compareTo(n2, true) < 0) {
                                         dataset.removeAt(i)
@@ -76,8 +76,8 @@ class UserSearchFragment : Fragment() {
                                         break
                                     }
                                 }
-                                if (i >= dataset.size || dataset[i].profile.id != profiles[j].id) {
-                                    dataset.add(i, ProfileItem(profiles[j]))
+                                if (i >= dataset.size || dataset[i].id != profiles[j].id) {
+                                    dataset.add(i, profiles[j])
                                     adapter.notifyItemInserted(i)
                                 }
                                 i++

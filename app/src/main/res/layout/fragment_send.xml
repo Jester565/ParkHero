@@ -24,6 +24,7 @@
     </ScrollView>
     <ImageButton
         android:id="@+id/entitysend_sendbutton"
+        android:visibility="gone"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:src="@drawable/ic_send_black_24dp"

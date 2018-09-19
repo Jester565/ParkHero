@@ -40,6 +40,15 @@ class ProfileManager {
         apiClient = factory.build(DisneyAppClient::class.java)
     }
 
+    fun getPartyProfiles(): Deferred<ArrayList<Profile>> = async {
+        var result = apiClient.getpartyGet()
+        var partyProfiles = ArrayList<Profile>()
+        result.partyMembers.forEach {
+            partyProfiles.add(Profile(apiClient, it))
+        }
+        partyProfiles
+    }
+
     fun genMyProfile(): Deferred<MyProfile?> = async {
         var profile = getMyProfile().await()
         Log.d("STATE", "Profile")
@@ -143,5 +152,13 @@ class ProfileManager {
             Log.d("STATE", "GetEntities ex: " + ex)
         }
         entities
+    }
+
+    fun leaveParty() = async {
+        try {
+            apiClient.leavepartyPost()
+        } catch (ex: Exception) {
+            Log.d("STATE", "Could not leave party: " + ex)
+        }
     }
 }

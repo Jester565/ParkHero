@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
+import com.dis.ajcra.distest2.prof.ProfileManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
@@ -20,6 +21,7 @@ interface EntityBarListener {
 
 class EntityBarFragment : Fragment() {
     private lateinit var cognitoManager: CognitoManager
+    private lateinit var profileManager: ProfileManager
     private lateinit var sendButton: ImageButton
     private lateinit var infoButton: ImageButton
     private lateinit var deleteButton: ImageButton
@@ -30,6 +32,7 @@ class EntityBarFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
+        profileManager = ProfileManager.GetInstance(this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, this.context!!.applicationContext)
     }
 
@@ -50,7 +53,14 @@ class EntityBarFragment : Fragment() {
             deleteButton = rootView.findViewById(R.id.entitybar_delete)
 
             sendButton.setOnClickListener {
-                var esf = EntitySendFragment.GetInstance(this.listener!!.onGetObjKeys())
+                var esf = SendFragment.GetInstance()
+                esf.sendCallback = { profiles ->
+                    var objKeys = listener!!.onGetObjKeys()
+                    objKeys.forEach { it ->
+                        profileManager.sendEntity(it, ArrayList(profiles)).await()
+                    }
+                    true
+                }
                 esf.show(childFragmentManager, "Entity Send")
             }
             deleteButton.setOnClickListener {

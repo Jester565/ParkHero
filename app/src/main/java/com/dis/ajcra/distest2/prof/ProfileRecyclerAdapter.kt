@@ -9,21 +9,18 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
-import java.lang.Exception
 
 
 /**
@@ -40,70 +37,89 @@ class ProfileItem {
 //should contain click listeners, can have different ViewHolders
 class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHolder> {
     private var cfm: CloudFileManager
-    private var dataset: ArrayList<ProfileItem>
+    private var dataset: ArrayList<Profile>
     private var selectable: Boolean
+    private var clickSelect: Boolean
+    private var big: Boolean
 
-    constructor(cfm: CloudFileManager, dataset: ArrayList<ProfileItem>, selectable: Boolean = false) {
+    var selectedSet = HashSet<Profile>()
+        private set
+
+    var onSelectChangeCallback: ((HashSet<Profile>) -> Unit)? = null
+
+    constructor(cfm: CloudFileManager, dataset: ArrayList<Profile>, selectable: Boolean = false, clickSelect: Boolean = false, big: Boolean = false) {
         this.cfm = cfm
         this.dataset = dataset
         this.selectable = selectable
+        this.clickSelect = clickSelect
+        this.big = big
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var view = LayoutInflater.from(parent?.context).inflate(R.layout.row_profile, parent, false)
-        var viewHolder = ViewHolder(view)
-        return viewHolder
+        var view: View? = null
+        if (big) {
+            view = LayoutInflater.from(parent?.context).inflate(R.layout.row_profile, parent, false)
+        } else {
+            view = LayoutInflater.from(parent?.context).inflate(R.layout.row_profile, parent, false)
+        }
+        return ViewHolder(view)
+    }
+
+    fun removeProfile(id: String) {
+        var i = dataset.indexOfFirst {
+            id == it.id
+        }
+        var profile = dataset[i]
+        selectedSet.remove(profile)
+        dataset.removeAt(i)
+        notifyItemRemoved(i)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        var profile = dataset[holder!!.adapterPosition]
         if (selectable) {
-            holder!!.animateSelected(dataset[position].selected)
-            holder!!.rootView.setOnClickListener {
-                dataset[position].selected = !dataset[position].selected
-                holder!!.animateSelected(dataset[position].selected)
+            var selected = selectedSet.contains(profile)
+            holder!!.animateSelected(selected)
+            if (clickSelect) {
+                holder!!.rootView.setOnClickListener {
+                    if (selected) {
+                        selectedSet.remove(profile)
+                    } else {
+                        selectedSet.add(profile)
+                    }
+                    selected = !selected
+                    holder!!.animateSelected(selected)
+                    onSelectChangeCallback?.invoke(selectedSet)
+                }
+            } else {
+                holder!!.rootView.setOnLongClickListener {
+                    if (selected) {
+                        selectedSet.remove(profile)
+                    } else {
+                        selectedSet.add(profile)
+                    }
+                    selected = !selected
+                    holder!!.animateSelected(selected)
+                    onSelectChangeCallback?.invoke(selectedSet)
+                    true
+                }
             }
         } else {
             holder!!.rootView.setOnClickListener {
-                var profile = dataset[holder!!.adapterPosition].profile
                 var intent = Intent(holder!!.ctx, ProfileActivity::class.java)
                 intent.putExtra("id", profile.id)
                 holder!!.ctx.startActivity(intent)
             }
         }
         async(UI) {
-            holder!!.profNameView.text = dataset[position].profile.getName().await()
-            var inviteStatus = dataset[position].profile.getInviteStatus().await()
-            if (inviteStatus == 1) {
-                holder!!.rootView.setBackgroundColor(Color.YELLOW)
-            } else if (inviteStatus == 2) {
-                holder!!.rootView.setBackgroundColor(Color.CYAN)
-            } else if (inviteStatus == 3) {
-                holder!!.rootView.setBackgroundColor(Color.GREEN)
-            }
-            Log.d("STATE", "Name set: " + holder!!.profNameView.text)
+            holder!!.profNameView.text = profile.getName().await()
         }
         async {
-            var profilePicUrl = dataset[position].profile.getProfilePicUrl().await()
+            var profilePicUrl = profile.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
             }
             cfm.download(profilePicUrl, object : CloudFileListener() {
-                override fun onError(id: Int, ex: Exception?) {
-
-                }
-
-                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-                    async(UI) {
-
-                    }
-                }
-
-                override fun onStateChanged(id: Int, state: TransferState?) {
-                    async(UI) {
-
-                    }
-                }
-
                 override fun onComplete(id: Int, file: File) {
                     async {
                         var options = BitmapFactory.Options()

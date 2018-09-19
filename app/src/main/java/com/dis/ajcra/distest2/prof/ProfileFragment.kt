@@ -97,7 +97,12 @@ class ProfileFragment : Fragment() {
                 async(UI) {
                     nameText.setText(profile.getName().await())
                     var status = profile.getInviteStatus().await()
-                    initFriendStatus(status)
+                    var type = profile.getInviteType().await()
+                    if (type == 0) {
+                        initFriendStatus(status)
+                    } else {
+                        initPartyStatus(status)
+                    }
                 }
             }
         }
@@ -115,6 +120,7 @@ class ProfileFragment : Fragment() {
         declineButton.visibility = View.GONE
 
         if (status == 0) {
+            //NOT A FRIEND, NO INVITES
             acceptButton.visibility = View.VISIBLE
             acceptButton.text = "Send Friend Request"
             acceptButton.setOnClickListener {
@@ -129,6 +135,7 @@ class ProfileFragment : Fragment() {
                 }
             }
         } else if (status == 1) {
+            //NOT A FRIEND, YOU SENT INVITE
             declineButton.visibility = View.VISIBLE
             declineButton.text = "Cancel Friend Request"
             declineButton.setOnClickListener {
@@ -139,6 +146,7 @@ class ProfileFragment : Fragment() {
                 }
             }
         } else if (status == 2) {
+            //NOT A FRIEND, YOU RECEIVED INVITE
             acceptButton.visibility = View.VISIBLE
             declineButton.visibility = View.VISIBLE
             acceptButton.text = "Accept Friend Request"
@@ -165,6 +173,16 @@ class ProfileFragment : Fragment() {
                 }
             }
         } else {
+            acceptButton.visibility = View.VISIBLE
+            acceptButton.text = "Invite to Party"
+            acceptButton.setOnClickListener {
+                acceptButton.isEnabled = false
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.addToParty().await()
+                    initPartyStatus(1)
+                }
+            }
             declineButton.visibility = View.VISIBLE
             declineButton.text = "Unfriend"
             declineButton.setOnClickListener {
@@ -172,6 +190,48 @@ class ProfileFragment : Fragment() {
                 async(UI) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
+                }
+            }
+        }
+    }
+
+    fun initPartyStatus(status: Int) {
+        acceptButton.isEnabled = true
+        declineButton.isEnabled = true
+        acceptButton.visibility = View.GONE
+        declineButton.visibility = View.GONE
+        if (status == 1) {
+            //YOU SEND A PARTY INVITE
+            declineButton.visibility = View.VISIBLE
+            declineButton.text = "Cancel Party Invite"
+            declineButton.setOnClickListener {
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.removePartyInvite().await()
+                    initFriendStatus(3)
+                }
+            }
+        } else if (status == 2) {
+            //NOT A FRIEND, YOU RECEIVED INVITE
+            acceptButton.visibility = View.VISIBLE
+            declineButton.visibility = View.VISIBLE
+            acceptButton.text = "Accept Party Invite"
+            declineButton.text = "Decline Party Invite"
+            acceptButton.setOnClickListener {
+                acceptButton.isEnabled = false
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.addToParty().await()
+                    initFriendStatus(3)
+                }
+            }
+
+            declineButton.setOnClickListener {
+                acceptButton.isEnabled = false
+                declineButton.isEnabled = false
+                async(UI) {
+                    profile.removePartyInvite().await()
+                    initFriendStatus(3)
                 }
             }
         }

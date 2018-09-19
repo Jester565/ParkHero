@@ -2,9 +2,7 @@ package com.dis.ajcra.distest2.prof
 
 import android.util.Log
 import com.dis.ajcra.distest2.DisneyAppClient
-import com.dis.ajcra.distest2.model.AddFriendInput
-import com.dis.ajcra.distest2.model.RemoveFriendInput
-import com.dis.ajcra.distest2.model.UserInfo
+import com.dis.ajcra.distest2.model.*
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import org.json.JSONObject
@@ -18,6 +16,7 @@ open class Profile {
     var aquiredProfilePic: Boolean = false
     var profilePicUrl: String? = null
     var inviteStatus: Int = -1
+    var inviteType: Int = -1
     var apiClient: DisneyAppClient
 
     constructor(apiClient: DisneyAppClient, id: String) {
@@ -80,11 +79,25 @@ open class Profile {
             try {
                 var output = apiClient.getinvitestatusGet(id)
                 inviteStatus = output.inviteStatus
+                inviteType = output.type
             } catch (ex: Exception) {
                 Log.d("STATE", "Could not get inviate status: " + ex.message)
             }
         }
         inviteStatus
+    }
+
+    fun getInviteType(): Deferred<Int> = async {
+        if (inviteStatus < 0) {
+            try {
+                var output = apiClient.getinvitestatusGet(id)
+                inviteStatus = output.inviteStatus
+                inviteType = output.type
+            } catch (ex: Exception) {
+                Log.d("STATE", "Could not get inviate status: " + ex.message)
+            }
+        }
+        inviteType
     }
 
     fun addFriend(): Deferred<Boolean> = async {
@@ -108,6 +121,26 @@ open class Profile {
             apiClient.removefriendPost(input)
         } catch(ex: Exception) {
             Log.d("STATE", "Could not remove friend: " + ex.message)
+        }
+    }
+
+    fun addToParty() = async {
+        try {
+            var input = AddToPartyInput()
+            input.friendId = id
+            apiClient.addtopartyPost(input)
+        } catch(ex: Exception) {
+            Log.d("STATE", "Could not add friend to party: " + ex.message)
+        }
+    }
+
+    fun removePartyInvite() = async {
+        try {
+            var input = DeclinePartyInput()
+            input.friendId = id
+            apiClient.declinepartyPost(input)
+        } catch(ex: Exception) {
+            Log.d("STATE", "Could not remove party invite: " + ex.message)
         }
     }
 }
