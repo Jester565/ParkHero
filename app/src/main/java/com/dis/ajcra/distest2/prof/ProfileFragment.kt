@@ -10,12 +10,17 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import com.dis.ajcra.distest2.DisGcmListener
 import com.dis.ajcra.distest2.R
+import com.dis.ajcra.distest2.SnsEvent
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.io.File
 
 class ProfileFragment : Fragment() {
@@ -31,6 +36,32 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onSnsEvent(evt: SnsEvent) {
+        if (DisGcmListener.FRIEND_INVITE == evt.type) {
+            var userInfo = evt.payload
+            var profile = profileManager.getProfile(userInfo)
+            if (profile.id == this.profile.id) {
+                initFriendStatus(2)
+            }
+        } else if (DisGcmListener.FRIEND_REMOVED == evt.type) {
+            var userId = evt.payload.getString("removerId")
+            if (userId == profile.id) {
+                initFriendStatus(0)
+            }
+        } else if (DisGcmListener.FRIEND_ADDED == evt.type) {
+            var userId = evt.payload.getString("id")
+            if (userId == profile.id) {
+                initFriendStatus(3)
+            }
+        } else if (DisGcmListener.PARTY_INVITE == evt.type) {
+            var userId = evt.payload.getString("id")
+            if (userId == profile.id) {
+                initPartyStatus(2)
+            }
+        }
+    }
+
     private lateinit var cognitoManager: CognitoManager
     private lateinit var profileManager: ProfileManager
     private lateinit var cfm: CloudFileManager
@@ -42,6 +73,16 @@ class ProfileFragment : Fragment() {
     private lateinit var declineButton: Button
 
     private lateinit var subLoginToken: String
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var rootView = inflater!!.inflate(R.layout.fragment_profile, container, false)

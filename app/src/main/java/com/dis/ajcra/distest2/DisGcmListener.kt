@@ -45,6 +45,7 @@ class DisGcmListener : FirebaseMessagingService() {
         val FRIEND_ADDED = "FriendAdded"
         val FRIEND_REMOVED = "FriendRemoved"
         val ENTITY_SENT = "EntitySent"
+        val PARTY_INVITE = "PartyInvite"
         val INVITE_CHANNEL_ID = "DisInvites"
         val MSG_CHANNEL_ID = "DisMsgs"
         val PLATFORM_APP_ARN = "arn:aws:sns:us-west-2:387396130957:app/GCM/DisneyApp"
