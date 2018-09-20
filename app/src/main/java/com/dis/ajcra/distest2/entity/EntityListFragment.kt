@@ -34,8 +34,8 @@ class EntityListFragment : Fragment() {
     fun onSnsEvent(evt: SnsEvent) {
         if (DisGcmListener.ENTITY_SENT == evt.type) {
             var entity = Entity(profileManager, evt.payload)
-            dataset.add(entity)
-            adapter.notifyItemInserted(dataset.size - 1)
+            dataset.add(0, entity)
+            adapter.notifyItemInserted(0)
         }
     }
 
