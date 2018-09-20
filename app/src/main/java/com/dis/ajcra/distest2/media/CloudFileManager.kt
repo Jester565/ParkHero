@@ -212,6 +212,7 @@ class CloudFileManager {
     private var s3Client: AmazonS3
     private var appContext: Context
     private var cognitoManager: CognitoManager
+    private var transferSubscriptions = HashMap<UUID, (String, TransferType) -> Unit>()
     var cfiDb: CloudFileDatabase
 
     constructor(cognitoManager: CognitoManager, appContext: Context) {
@@ -335,6 +336,16 @@ class CloudFileManager {
         return metadata.lastModified.time
     }
 
+    fun addTransferListener(cb: (String, TransferType) -> Unit): UUID {
+        var uuid = UUID.randomUUID()
+        transferSubscriptions[uuid] = cb
+        return uuid
+    }
+
+    fun removeTransferListener(uuid: UUID) {
+        transferSubscriptions.remove(uuid)
+    }
+
     @Synchronized suspend fun upload(key: String, uri: URI?, listener: CloudFileListener): File? {
         //can only upload to folder owned by user
         if (isOwnedByUser(key)) {
@@ -358,6 +369,11 @@ class CloudFileManager {
             cloudFileObserver.addListener(listener)
             var awsObserver = transferUtility.upload(BUCKET_NAME, cfi.objKey, file)
             awsObserver.setTransferListener(cloudFileObserver)
+            Log.d("STATE", "PRE LOOP")
+            transferSubscriptions.forEach {
+                Log.d("STATE", "UPLOAD LOOP")
+                it.value.invoke(key, TransferType.UPLOAD)
+            }
             return file
         }
         throw Error("Cannot upload to directory you do not own")
@@ -409,7 +425,9 @@ class CloudFileManager {
             Log.d("CFM", "HttpDownload")
             httpUtility.download(presignedURI.toString(), downloadFile, cloudFileObserver)
         }
-
+        transferSubscriptions.forEach {
+            it.value.invoke(key, TransferType.DOWNLOAD)
+        }
     }
 
     suspend fun clearCache(maxMB: Float = 0f) {

@@ -27,6 +27,7 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
+import java.util.*
 
 interface GalleryFragmentListener {
     fun onRecyclerViewCreated(recyclerView: RecyclerView)
@@ -82,13 +83,27 @@ class GalleryFragment : Fragment() {
 
     private lateinit var subLoginToken: String
 
+    private var subTransferToken: UUID? = null
+
     override fun onResume() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             async(UI) {
                 adapter.notifyItemRangeRemoved(0, pictures.size)
                 pictures.clear()
+                if (subTransferToken != null) {
+                    cfm.removeTransferListener(subTransferToken!!)
+                }
 
+                subTransferToken = cfm.addTransferListener({ objKey, transferType ->
+                    async(UI) {
+                        Log.d("STATE", "TRANSFER CALLED")
+                        if (transferType == TransferType.UPLOAD) {
+                            pictures.add(0, objKey)
+                            adapter.notifyItemInserted(0)
+                        }
+                    }
+                })
                 var observerPairs = cfm.getObservers(TransferType.UPLOAD)
                 for (observerPair in observerPairs) {
                     pictures.add(observerPair.key)
@@ -115,6 +130,9 @@ class GalleryFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         cognitoManager.unsubscribeFromLogin(subLoginToken)
+        if (subTransferToken != null) {
+            cfm.removeTransferListener(subTransferToken!!)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -213,11 +231,13 @@ class GalleryFragment : Fragment() {
     }
 
     fun galleryUpdated(objKey: String) {
+        /*
         Log.d("STATE", "Gallery updated")
         async(UI) {
             pictures.add(objKey)
             adapter.notifyItemInserted(pictures.size - 1)
         }
+        */
     }
 
     fun setDrag(mode: Boolean) {
@@ -263,7 +283,6 @@ class GalleryFragment : Fragment() {
 
             async {
                 var objKey = dataset[position]
-                var observer: CloudFileObserver? = cfm.observers[objKey]
                 var file = cfm.upload(objKey, null, object : CloudFileListener() {
                     override fun onError(id: Int, ex: Exception?) {
                     }
