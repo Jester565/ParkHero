@@ -91,7 +91,7 @@ class CognitoManager {
             var bundle = Bundle()
             bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "REFRESH_LOGIN")
-            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
         }
         async(UI) {
             refreshHandler?.removeCallbacks(refreshCB)
@@ -366,6 +366,7 @@ class CognitoManager {
     }
 
     fun addLogin(provider: String, token: String) = async {
+        Log.d("COGNITOMANAGER", "ADDLOGIN: " + provider + ":" + token)
         try {
             val logins = HashMap<String, String>()
             logins.put(provider, token)
@@ -375,7 +376,7 @@ class CognitoManager {
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN")
                 bundle.putString(FirebaseAnalytics.Param.CONTENT, provider + "  :  "+ token)
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
             }
             for ((key) in credentialsProvider.logins) {
                 Log.d("STATE", "Login: " + key)
@@ -396,7 +397,7 @@ class CognitoManager {
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN_COMPLETE")
                 bundle.putString(FirebaseAnalytics.Param.CONTENT, "IDENTITY ID: " + credentialsProvider.identityId + " : " + credentialsProvider)
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
             }
         } catch (ex: Exception) {
             kotlin.run {
@@ -405,15 +406,31 @@ class CognitoManager {
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN_EXCEPTION")
                 bundle.putString(FirebaseAnalytics.Param.CONTENT, ex.message)
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
             }
-            Log.e("STATE", "ADDLOGIN EXCEPTION: " + ex.message)
+            Log.e("COGNITOMANAGER", "ADDLOGIN EXCEPTION: " + ex.message)
         }
-        refreshCB = Runnable {
-            refreshLogin()
+        async(UI) {
+            try {
+                refreshCB = Runnable {
+                    refreshLogin()
+                }
+                refreshHandler = Handler()
+                var delayMillis = credentialsProvider.sessionCredentitalsExpiration.time - Date().time + 100  //probably don't need to add 100
+                Log.d("COGNITOMANAGER", "POST DELAY MINS: " + delayMillis / (1000 * 60))
+                kotlin.run {
+                    var bundle = Bundle()
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "POSTHANLDER DELAY")
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT, "DELAY: " + delayMillis / (1000 * 60))
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+                }
+                refreshHandler?.postDelayed(refreshCB, delayMillis)
+            } catch (ex: Exception) {
+                Log.e("COGNITOMANAGER", "POST DELAY FAILED: " + ex.message)
+            }
         }
-        refreshHandler = Handler()
-        refreshHandler?.postDelayed(refreshCB, credentialsProvider.sessionCredentitalsExpiration.time - Date().time + 1000 * 15)
     }
 
     interface ResetPwdHandler {
