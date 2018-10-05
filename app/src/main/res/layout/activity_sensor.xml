@@ -27,4 +27,34 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/sensor_ridenameField"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/fingerprint_button">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ride Matches"
+                android:textSize="20dp"/>
+            <TextView
+                android:id="@+id/sensor_rideMatches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Empty"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Movement Matches"
+                android:textSize="20dp"/>
+            <TextView
+                android:id="@+id/sensor_movementMatches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Empty"/>
+        </LinearLayout>
+    </ScrollView>
 </RelativeLayout>

@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.amazonaws.appsync'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'io.fabric'
 
 protobuf {
     protoc {
@@ -50,6 +51,7 @@ dependencies {
     }
     implementation 'com.amazonaws:aws-android-sdk-appsync-compiler:2.6.+'
     implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0'
@@ -88,6 +90,7 @@ dependencies {
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.google.android.gms:play-services-auth:16.0.0'
     implementation 'com.google.protobuf:protobuf-lite:3.0.0'
     implementation 'com.journeyapps:zxing-android-embedded:3.0.2@aar'

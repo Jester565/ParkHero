@@ -9,3 +9,13 @@ message AccelerationData {
     double longitude = 5;
     double latitude = 6;
 }
+
+message RidePacks {
+	message Pack {
+		string name = 1;
+		int32 duration = 2;
+		repeated int32 counts = 3 [packed=true];
+		repeated float distributions = 4 [packed=true];
+	}
+    repeated Pack packs = 1;
+}

@@ -57,8 +57,10 @@ class FastPassRecyclerAdapter(private var transactions: List<DisFastPassTransact
             var tillStr = ""
             if (hours > 2) {
                 tillStr += "~" + Math.abs(hoursFlt).roundToInt().toString() + " hours "
-            } else {
+            } else if (hours > 0) {
                 tillStr += Math.abs(hours).toString() + " hours, " + Math.abs(minutes % 60).toString() + " minutes "
+            } else {
+                tillStr += Math.abs(minutes % 60).toString() + " minutes "
             }
             if (till) {
                 tillStr += "until ready"

@@ -1,6 +1,7 @@
 package com.dis.ajcra.distest2.login
 
 import android.content.Context
+import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import com.amazonaws.AmazonServiceException
@@ -17,6 +18,7 @@ import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundExc
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -29,6 +31,8 @@ class CognitoManager {
         get() = if (user != null) {
             user!!.userId
         } else null
+
+    private var firebaseAnalytics: FirebaseAnalytics
 
     val federatedID: String
         get() = credentialsProvider.identityId
@@ -65,6 +69,8 @@ class CognitoManager {
     }
 
     constructor(appContext: Context) {
+        firebaseAnalytics = FirebaseAnalytics.getInstance(appContext)
+
         credentialsProvider = CognitoCachingCredentialsProvider(
                 appContext, COGNITO_IDENTITY_POOL_ID, COGNITO_REGION
         )
@@ -81,6 +87,12 @@ class CognitoManager {
     }
 
     fun refreshLogin() {
+        kotlin.run {
+            var bundle = Bundle()
+            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "REFRESH_LOGIN")
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+        }
         async(UI) {
             refreshHandler?.removeCallbacks(refreshCB)
             refreshHandler = null
@@ -90,17 +102,39 @@ class CognitoManager {
             if (result.isComplete) {
                 //The current token is still valid
                 if (result.isSuccessful) {
+                    kotlin.run {
+                        var bundle = Bundle()
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "GOOGLE_LOGIN_SUCCESS_IMMEDIATE")
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT, result.getResult().idToken!!)
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    }
                     addLogin("accounts.google.com", result.getResult().idToken!!).await()
                     for (entry in loginHandlers) {
                         entry.value.invoke(null)
                     }
                 } else {
+                    kotlin.run {
+                        var bundle = Bundle()
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "GOOGLE_LOGIN_FAILURE_IMMEDIATE")
+                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    }
                     refreshSession()
                 }
             } else {
                 //We need to get a new token
                 result.addOnCompleteListener { res ->
                     if (result.isSuccessful) {
+                        kotlin.run {
+                            var bundle = Bundle()
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "GOOGLE_LOGIN_SUCCESS_LATE")
+                            bundle.putString(FirebaseAnalytics.Param.CONTENT, result.getResult().idToken!!)
+                            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                        }
                         async(UI) {
                             addLogin("accounts.google.com", result.getResult().idToken!!).await()
                             for (entry in loginHandlers) {
@@ -108,6 +142,12 @@ class CognitoManager {
                             }
                         }
                     } else {
+                        kotlin.run {
+                            var bundle = Bundle()
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "GOOGLE_LOGIN_FAILURE_LATE")
+                            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                        }
                         refreshSession()
                     }
                 }
@@ -117,17 +157,19 @@ class CognitoManager {
     fun refreshSession() {
         val handler = object : AuthenticationHandler {
             override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
+                kotlin.run {
+                    var bundle = Bundle()
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "AUTH_SUCCESS")
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT, userSession?.username)
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                }
                 async(UI) {
                     addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken).await()
                     for (entry in loginHandlers) {
                         entry.value.invoke(null)
                     }
-
-                    refreshCB = Runnable {
-                        refreshLogin()
-                    }
-                    refreshHandler = Handler()
-                    refreshHandler?.postDelayed(refreshCB, credentialsProvider.sessionCredentitalsExpiration.time - Date().time - 1000 * 30)
                 }
             }
 
@@ -324,21 +366,54 @@ class CognitoManager {
     }
 
     fun addLogin(provider: String, token: String) = async {
-        val logins = HashMap<String, String>()
-        logins.put(provider, token)
-        for ((key) in credentialsProvider.logins) {
-            Log.d("STATE", "Login: " + key)
+        try {
+            val logins = HashMap<String, String>()
+            logins.put(provider, token)
+            kotlin.run {
+                var bundle = Bundle()
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN")
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, provider + "  :  "+ token)
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            }
+            for ((key) in credentialsProvider.logins) {
+                Log.d("STATE", "Login: " + key)
+            }
+            credentialsProvider.clear()
+            for ((key) in credentialsProvider.logins) {
+                Log.d("STATE", "Login: " + key)
+            }
+            credentialsProvider.logins = logins
+            credentialsProvider.refresh()
+            Log.d("STATE", "IdentityID: " + credentialsProvider.identityId)
+            Log.d("STATE", "Aws AccessID: " + credentialsProvider.credentials.awsAccessKeyId)
+            Log.d("STATE", "Aws Secret: " + credentialsProvider.credentials.awsSecretKey)
+            Log.d("STATE", "Token: " + credentialsProvider.credentials.sessionToken)
+            kotlin.run {
+                var bundle = Bundle()
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN_COMPLETE")
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, "IDENTITY ID: " + credentialsProvider.identityId + " : " + credentialsProvider)
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            }
+        } catch (ex: Exception) {
+            kotlin.run {
+                var bundle = Bundle()
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
+                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ADD_LOGIN_EXCEPTION")
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, ex.message)
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            }
+            Log.e("STATE", "ADDLOGIN EXCEPTION: " + ex.message)
         }
-        credentialsProvider.clear()
-        for ((key) in credentialsProvider.logins) {
-            Log.d("STATE", "Login: " + key)
+        refreshCB = Runnable {
+            refreshLogin()
         }
-        credentialsProvider.logins = logins
-        credentialsProvider.refresh()
-        Log.d("STATE", "IdentityID: " + credentialsProvider.identityId)
-        Log.d("STATE", "Aws AccessID: " + credentialsProvider.credentials.awsAccessKeyId)
-        Log.d("STATE", "Aws Secret: " + credentialsProvider.credentials.awsSecretKey)
-        Log.d("STATE", "Token: " + credentialsProvider.credentials.sessionToken)
+        refreshHandler = Handler()
+        refreshHandler?.postDelayed(refreshCB, credentialsProvider.sessionCredentitalsExpiration.time - Date().time + 1000 * 15)
     }
 
     interface ResetPwdHandler {

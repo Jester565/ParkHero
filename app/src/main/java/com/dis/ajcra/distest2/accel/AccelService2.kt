@@ -26,6 +26,7 @@ import android.util.Log
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.experimental.async
 import tutorial.Acceleration
 import java.io.File
@@ -39,6 +40,8 @@ class AccelService2 : Service() {
         const val ACCEL_MULT = 32726.0f/10.0f
         const val ACCEL_CHANNEL_ID = "DisAccel"
     }
+
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     //Data structures for calculations the netAcceleration
     private var r = FloatArray(16, {0.0f})
@@ -188,30 +191,36 @@ class AccelService2 : Service() {
         if (audioPath != null) {
             var audioFile = File(audioPath)
             audioPath = null
+            kotlin.run {
+                var bundle = Bundle()
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "ACCEL_CAPTURE")
+                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "AUDIO_UPLOAD_START")
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, "Attempting audio upload: " + ridename)
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            }
             async {
                 cfm.upload("recs/" + ridename + ".3gpp", audioFile.toURI(), object : CloudFileListener() {
                     override fun onComplete(id: Int, file: File) {
                         super.onComplete(id, file)
                         Log.d("ACCEL", "Audio upload complete")
+                        kotlin.run {
+                            var bundle = Bundle()
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "ACCEL_CAPTURE")
+                            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "AUDIO_UPLOAD_COMPLETE")
+                            bundle.putString(FirebaseAnalytics.Param.CONTENT, "Name: " + file.name)
+                            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                        }
                     }
                 })
             }
         }
 
-
-        if (ridename == null) {
-            async {
-                var uuid = UUID.randomUUID().toString()
-                uploadAcceleration("accels/" + cognitoManager.federatedID + "/" + uuid, uuid)
-                accelDataBuilder.clear()
-            }
-        } else {
-            async {
-                var uuid = UUID.randomUUID().toString()
-                uploadAcceleration("rideAccels/" + ridename, ridename!!)
-                accelDataBuilder.clear()
-                ridename = null
-            }
+        async {
+            uploadAcceleration("rideAccels/" + ridename, ridename!!)
+            accelDataBuilder.clear()
+            ridename = null
         }
     }
 
@@ -222,6 +231,14 @@ class AccelService2 : Service() {
         var dataStr = accelDataMsg.toByteString()
         var file = File(applicationContext.filesDir, fileName)
         file.writeBytes(dataStr.toByteArray())
+        kotlin.run {
+            var bundle = Bundle()
+            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "ACCEL_CAPTURE")
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ACCEL_UPLOAD_START")
+            bundle.putString(FirebaseAnalytics.Param.CONTENT, "Attempting accel upload: " + ridename)
+            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+        }
         async {
             cfm.upload(objKey, file.toURI(), object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {
@@ -230,6 +247,14 @@ class AccelService2 : Service() {
 
                 override fun onComplete(id: Int, file: File) {
                     Log.d("ACCEL", "Upload complete: " + objKey)
+                    kotlin.run {
+                        var bundle = Bundle()
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "ACCEL_CAPTURE")
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ACCEL_UPLOAD_COMPLETE")
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT, "Accel upload complete: " + ridename)
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
+                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    }
                 }
             })
         }
@@ -241,6 +266,7 @@ class AccelService2 : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         ridename = intent?.extras?.getString("ridename")
         createNotificationChannel(ACCEL_CHANNEL_ID, "Acceleration", "Acceleration")
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
