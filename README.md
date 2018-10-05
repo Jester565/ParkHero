@@ -6,4 +6,4 @@ Android & Wear OS application to share photos, choose your next ride, manage Fas
 [![Alt text](/rdme/demo.png)](https://www.youtube.com/watch?v=l1O32jm3PX8)
 
 ## This Repo
-This is the code for the android frontend for smart phones.  There is also a (Wear OS Repo)[https://github.com/Jester565/ParkHeroWear] and a (Backend Repo)[https://github.com/Jester565/ParkHeroBackend].
+This is the code for the android frontend for smart phones.  There is also a [Wear OS Repo](https://github.com/Jester565/ParkHeroWear) and a [Backend Repo](https://github.com/Jester565/ParkHeroBackend).
