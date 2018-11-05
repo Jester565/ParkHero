@@ -8,9 +8,7 @@ import com.dis.ajcra.distest2.AppSyncTest
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideTime
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,7 +36,7 @@ class RideManager {
 
     constructor(cognitoManager: CognitoManager, ctx: Context) {
         appSync = AppSyncTest.GetInstance(cognitoManager, ctx)
-        crDb = Room.databaseBuilder(ctx, RideCacheDatabase::class.java, "rides4").build()
+        crDb = Room.databaseBuilder(ctx, RideCacheDatabase::class.java, "rides7").build()
     }
 
     fun initRide(crInfo: CRInfo, rideID: String, rideInfo: DisRide.Info, rideTime: DisRideTime?) {
@@ -98,7 +96,7 @@ class RideManager {
                updateArr.add(ride)
             }
         }
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             for (ride in updateArr) {
                 cacheRide(ride)
             }
@@ -166,16 +164,16 @@ class RideManager {
         */
     }
 
-    fun _listRides(cb: ListRidesCB) = async {
-        var cachedRidesJob = async(UI) {
+    fun _listRides(cb: ListRidesCB) = GlobalScope.async(Dispatchers.IO) {
+        var cachedRidesJob = async(Dispatchers.Main) {
             initRides().await()
             cb.init(rides)
         }
 
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             appSync.getRides(object: AppSyncTest.GetRidesCallback {
                 override fun onResponse(response: List<DisRide>) {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         cachedRidesJob.await()
                         handleUpdatedRideList(response, cb)
                         reqCount++
@@ -191,10 +189,10 @@ class RideManager {
             }, AppSyncResponseFetchers.NETWORK_ONLY)
         }
 
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             appSync.updateRides(object : AppSyncTest.UpdateRidesCallback {
                 override fun onResponse(response: List<DisRide>?) {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         cachedRidesJob.await()
                         if (response != null) {
                             handleUpdatedRideList(response, cb)
@@ -213,26 +211,26 @@ class RideManager {
         }
     }
 
-    private fun initRides() = async {
+    private fun initRides() = GlobalScope.async(Dispatchers.IO) {
         if (rides.isEmpty()) {
             var cachedRideList = getCachedRides().await()
             rides.addAll(cachedRideList)
         }
     }
 
-    private fun cacheRide(ride: CRInfo) = async {
+    private fun cacheRide(ride: CRInfo) = GlobalScope.async(Dispatchers.IO) {
         crDb.crInfoDao().addCRInfo(ride)
     }
 
-    private fun cacheRideTime(ride: CRInfo) = async {
+    private fun cacheRideTime(ride: CRInfo) = GlobalScope.async(Dispatchers.IO) {
         crDb.crInfoDao().updateRideTime(ride.id, ride.status, ride.waitTime, ride.fpTime, ride.waitRating, ride.lastChangeTime)
     }
 
-    private fun getCachedRides(): Deferred<List<CRInfo>> = async {
+    private fun getCachedRides(): Deferred<List<CRInfo>> = GlobalScope.async(Dispatchers.IO) {
         crDb.crInfoDao().listCacheRides()
     }
 
-    private fun getCachedRides(pinned: Boolean): Deferred<List<CRInfo>> = async {
+    private fun getCachedRides(pinned: Boolean): Deferred<List<CRInfo>> = GlobalScope.async(Dispatchers.IO) {
         crDb.crInfoDao().listCacheRideOfPin(pinned)
     }
 

@@ -15,8 +15,10 @@ import com.amazonaws.mobileconnectors.apigateway.ApiClientException
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.google.gson.JsonParser
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class RenameProfileFragment : DialogFragment() {
     companion object {
@@ -67,7 +69,7 @@ class RenameProfileFragment : DialogFragment() {
     }
 
     fun rename(name: String) {
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             nameEditText.setFocusable(false)
             checkButton.visibility = View.GONE
             changeProgressBar.visibility = View.VISIBLE

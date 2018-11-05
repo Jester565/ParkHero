@@ -19,9 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.*
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -53,7 +51,7 @@ class CognitoManager {
 
     private var googleSignInClient: GoogleSignInClient
 
-    fun hasCredentials(): Deferred<Boolean> = async {
+    fun hasCredentials(): Deferred<Boolean> = GlobalScope.async(Dispatchers.IO) {
         var hasCreds = false
         try {
             credentialsProvider.refresh()
@@ -93,7 +91,7 @@ class CognitoManager {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "REFRESH_LOGIN")
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
         }
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             refreshHandler?.removeCallbacks(refreshCB)
             refreshHandler = null
             refreshCB = null
@@ -135,7 +133,7 @@ class CognitoManager {
                             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
                         }
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             addLogin("accounts.google.com", result.getResult().idToken!!).await()
                             for (entry in loginHandlers) {
                                 entry.value.invoke(null)
@@ -165,7 +163,7 @@ class CognitoManager {
                     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                     firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
                 }
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken).await()
                     for (entry in loginHandlers) {
                         entry.value.invoke(null)
@@ -207,7 +205,7 @@ class CognitoManager {
     fun subscribeToLogin(cb: (Exception?) -> Unit): String {
         var token = UUID.randomUUID().toString()
         loginHandlers[token] = cb
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             try {
                 if (credentialsProvider.sessionCredentitalsExpiration > Date()) {
                     cb(null)
@@ -318,7 +316,7 @@ class CognitoManager {
     fun login(pwd: String, cb: LoginHandler) {
         val handler = object : AuthenticationHandler {
             override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken)
                     refreshLogin()
                     cb.onSuccess()
@@ -365,11 +363,9 @@ class CognitoManager {
         }
     }
 
-    fun addLogin(provider: String, token: String) = async {
+    fun addLogin(provider: String, token: String) = GlobalScope.async(Dispatchers.IO) {
         Log.d("COGNITOMANAGER", "ADDLOGIN: " + provider + ":" + token)
         try {
-            val logins = HashMap<String, String>()
-            logins.put(provider, token)
             kotlin.run {
                 var bundle = Bundle()
                 bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "COGNITO")
@@ -378,6 +374,8 @@ class CognitoManager {
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                 firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
             }
+            val logins = HashMap<String, String>()
+            logins.put(provider, token)
             for ((key) in credentialsProvider.logins) {
                 Log.d("STATE", "Login: " + key)
             }
@@ -410,7 +408,7 @@ class CognitoManager {
             }
             Log.e("COGNITOMANAGER", "ADDLOGIN EXCEPTION: " + ex.message)
         }
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             try {
                 refreshCB = Runnable {
                     refreshLogin()

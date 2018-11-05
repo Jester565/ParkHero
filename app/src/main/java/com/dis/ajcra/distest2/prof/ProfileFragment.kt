@@ -16,8 +16,10 @@ import com.dis.ajcra.distest2.SnsEvent
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -106,14 +108,14 @@ class ProfileFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async {
+                GlobalScope.launch(Dispatchers.IO) {
                     var profilePicUrl = profile.getProfilePicUrl().await()
                     if (profilePicUrl == null) {
                         profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
                     }
                     cfm.download(profilePicUrl, object : CloudFileListener() {
                         override fun onComplete(id: Int, file: File) {
-                            async {
+                            async(Dispatchers.IO) {
                                 var options = BitmapFactory.Options()
                                 options.inJustDecodeBounds = true
                                 BitmapFactory.decodeFile(file.absolutePath, options)
@@ -128,14 +130,14 @@ class ProfileFragment : Fragment() {
                                 options.inJustDecodeBounds = false
                                 options.inSampleSize = imgScale
                                 var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                async(UI) {
+                                launch(Dispatchers.Main) {
                                     profImg.setImageBitmap(bmap)
                                 }
                             }
                         }
                     }, null, true)
                 }
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     nameText.setText(profile.getName().await())
                     var status = profile.getInviteStatus().await()
                     var type = profile.getInviteType().await()
@@ -166,7 +168,7 @@ class ProfileFragment : Fragment() {
             acceptButton.text = "Send Friend Request"
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     var nowFriend = profile.addFriend().await()
                     if (nowFriend) {
                         initFriendStatus(3)
@@ -181,7 +183,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Cancel Friend Request"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -195,7 +197,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     var nowFriend = profile.addFriend().await()
                     if (nowFriend) {
                         initFriendStatus(3)
@@ -208,7 +210,7 @@ class ProfileFragment : Fragment() {
             declineButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -219,7 +221,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.addToParty().await()
                     initPartyStatus(1)
                 }
@@ -228,7 +230,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Unfriend"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -247,7 +249,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Cancel Party Invite"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.removePartyInvite().await()
                     initFriendStatus(3)
                 }
@@ -261,7 +263,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.addToParty().await()
                     initFriendStatus(3)
                 }
@@ -270,7 +272,7 @@ class ProfileFragment : Fragment() {
             declineButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile.removePartyInvite().await()
                     initFriendStatus(3)
                 }

@@ -15,8 +15,10 @@ import android.widget.Toast
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.camera.CameraActivity
 import com.dis.ajcra.distest2.login.CognitoManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class AddPassFragment : DialogFragment() {
     companion object {
@@ -74,7 +76,7 @@ class AddPassFragment : DialogFragment() {
     }
 
     fun addPass(passID: String) {
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             addButton.visibility = View.GONE
             addProgressBar.visibility = View.VISIBLE
             var pass = passManager.addPass(passID)

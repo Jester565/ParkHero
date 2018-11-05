@@ -13,8 +13,10 @@ import com.dis.ajcra.distest2.entity.EntityBarFragment
 import com.dis.ajcra.distest2.entity.EntityBarListener
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.github.chrisbanes.photoview.PhotoView
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 
@@ -48,7 +50,7 @@ class PictureFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         this.photoView = view!!.findViewById(R.id.picture_photoview)
         entityBar = EntityBarFragment()
-        childFragmentManager.beginTransaction().replace(R.id.picture_entitybarholder, entityBar).commit()
+        childFragmentManager.beginTransaction().replace(R.id.picture_entitybarholder, entityBar!!).commit()
         entityBar!!.setListener(object : EntityBarListener {
             override fun onDelete() {
                 listener!!.onDelete()
@@ -90,12 +92,12 @@ class PictureFragment : Fragment() {
     }
 
     fun download() {
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             cfm.download(key.toString(), object : CloudFileListener() {
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    async(Dispatchers.IO) {
                         var bmp = BitmapFactory.decodeFile(file.absolutePath)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             photoView?.setImageBitmap(bmp)
                         }
                     }

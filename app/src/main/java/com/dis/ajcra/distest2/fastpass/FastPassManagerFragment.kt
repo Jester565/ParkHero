@@ -15,8 +15,9 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.ride.RideManager
 import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class FastPassManagerFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
@@ -66,7 +67,7 @@ class FastPassManagerFragment : Fragment() {
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             appSync.updateFastPasses(object: AppSyncTest.UpdateFastPassesCallback {
                 override fun onResponse(response: List<DisFastPassTransaction>) {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         dataset.clear()
                         if (response.size > 0) {
                             dataset.addAll(response)

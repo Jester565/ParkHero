@@ -2,9 +2,7 @@ package com.dis.ajcra.distest2.accel
 
 import android.arch.persistence.room.Room
 import android.content.Context
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.*
 import java.util.*
 
 class AccelStore {
@@ -51,34 +49,34 @@ class AccelStore {
         rideMatchSubscriptions.remove(id)
     }
 
-    fun getRideMatches(): Deferred<List<RideMatch>> = async {
+    fun getRideMatches(): Deferred<List<RideMatch>> = GlobalScope.async(Dispatchers.IO) {
         accelDB.accelDatabaseDao().listRideMatches()
     }
 
-    fun getMovementMatches(): Deferred<List<MovementMatch>> = async {
+    fun getMovementMatches(): Deferred<List<MovementMatch>> = GlobalScope.async(Dispatchers.IO) {
         accelDB.accelDatabaseDao().listMovementMatches()
     }
 
-    fun storeRideMatch(name: String, distance: Double, time: Long) = async {
+    fun storeRideMatch(name: String, distance: Double, time: Long) = GlobalScope.async(Dispatchers.IO) {
         var rm = RideMatch()
         rm.name = name
         rm.distance = distance
         rm.time = time
         accelDB.accelDatabaseDao().insertRideMatch(rm)
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             rideMatchSubscriptions.forEach { it ->
                 it.value.invoke(rm)
             }
         }
     }
 
-    fun storeMovementMatch(name: String, confidence: Int, time: Long) = async {
+    fun storeMovementMatch(name: String, confidence: Int, time: Long) = GlobalScope.async(Dispatchers.IO) {
         var mm = MovementMatch()
         mm.name = name
         mm.confidence = confidence
         mm.time = time
         accelDB.accelDatabaseDao().insertMovementMatch(mm)
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             movementMatchSubscriptions.forEach { it ->
                 it.value.invoke(mm)
             }

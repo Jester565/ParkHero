@@ -7,8 +7,8 @@ import com.dis.ajcra.distest2.model.*
 import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideTime
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import org.json.JSONObject
 import java.sql.Date
 import java.sql.Time

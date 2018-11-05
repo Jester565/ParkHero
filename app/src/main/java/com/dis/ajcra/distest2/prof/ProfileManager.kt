@@ -9,8 +9,10 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.model.CreateUserInput
 import com.dis.ajcra.distest2.model.SendEntityInput
 import com.dis.ajcra.distest2.model.UserInfo
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import org.json.JSONObject
 
 /**
@@ -40,7 +42,7 @@ class ProfileManager {
         apiClient = factory.build(DisneyAppClient::class.java)
     }
 
-    fun getPartyProfiles(): Deferred<ArrayList<Profile>> = async {
+    fun getPartyProfiles(): Deferred<ArrayList<Profile>> = GlobalScope.async(Dispatchers.IO) {
         var result = apiClient.getpartyGet()
         var partyProfiles = ArrayList<Profile>()
         result.partyMembers.forEach {
@@ -49,7 +51,7 @@ class ProfileManager {
         partyProfiles
     }
 
-    fun genMyProfile(): Deferred<MyProfile?> = async {
+    fun genMyProfile(): Deferred<MyProfile?> = GlobalScope.async(Dispatchers.IO) {
         var profile = getMyProfile().await()
         Log.d("STATE", "Profile")
         if (profile == null) {
@@ -64,7 +66,7 @@ class ProfileManager {
         profile
     }
 
-    fun getMyProfile(): Deferred<MyProfile?> = async {
+    fun getMyProfile(): Deferred<MyProfile?> = GlobalScope.async(Dispatchers.IO) {
         var myProfile: MyProfile? = null
         try {
             val output = apiClient.getuserGet(null)
@@ -90,7 +92,7 @@ class ProfileManager {
         return Profile(apiClient, uObj)
     }
 
-    fun sendEntity(objKey: String, sendToProfiles: ArrayList<Profile>): Deferred<Boolean> = async {
+    fun sendEntity(objKey: String, sendToProfiles: ArrayList<Profile>): Deferred<Boolean> = GlobalScope.async(Dispatchers.IO) {
         var success = false
         try {
             var input = SendEntityInput()
@@ -108,7 +110,7 @@ class ProfileManager {
         success
     }
 
-    fun createMyProfile(): Deferred<MyProfile> = async {
+    fun createMyProfile(): Deferred<MyProfile> = GlobalScope.async(Dispatchers.IO) {
         var myProfile = null
         try {
             val input = CreateUserInput()
@@ -122,7 +124,7 @@ class ProfileManager {
         myProfile as MyProfile
     }
 
-    fun getUsers(prefix: String): Deferred<ArrayList<Profile>> = async {
+    fun getUsers(prefix: String): Deferred<ArrayList<Profile>> = GlobalScope.async(Dispatchers.IO) {
         var profiles = ArrayList<Profile>()
         try {
             val output = apiClient.getusersGet("true", prefix)
@@ -141,7 +143,7 @@ class ProfileManager {
     }
 
     //There may be a better place to put this
-    fun getEntities(): Deferred<ArrayList<Entity>> = async {
+    fun getEntities(): Deferred<ArrayList<Entity>> = GlobalScope.async(Dispatchers.IO) {
         var entities = ArrayList<Entity>()
         try {
             var eInfos = apiClient.getentitiesGet("0")
@@ -154,7 +156,7 @@ class ProfileManager {
         entities
     }
 
-    fun leaveParty() = async {
+    fun leaveParty() = GlobalScope.async(Dispatchers.IO) {
         try {
             apiClient.leavepartyPost()
         } catch (ex: Exception) {

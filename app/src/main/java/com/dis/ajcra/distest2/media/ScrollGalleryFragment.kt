@@ -14,9 +14,7 @@ import android.view.ViewGroup
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.*
 
 class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
     private var activity: Activity
@@ -32,9 +30,9 @@ class ScrollGalleryPagerAdapter: FragmentStatePagerAdapter {
         this.cognitoManager = cognitoManager
     }
 
-    fun init(targetKey: String): Deferred<Int> = async(UI) {
+    fun init(targetKey: String): Deferred<Int> = GlobalScope.async(Dispatchers.Main) {
         Log.d("STATE", "Running ui")
-        var job = async {
+        var job = GlobalScope.async(Dispatchers.IO) {
             Log.d("STATE", "Running job")
             cfm.listObjects("media/" + cognitoManager.federatedID, true)
         }
@@ -121,7 +119,7 @@ class ScrollGalleryFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     var pagerI = pagerAdapter.init(arguments!!.getString(OBJKEY_PARAM)).await()
                     viewPager.currentItem = pagerI
                 }

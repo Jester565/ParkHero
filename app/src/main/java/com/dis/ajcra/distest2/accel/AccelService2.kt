@@ -27,7 +27,9 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import tutorial.Acceleration
 import java.io.File
 import java.util.*
@@ -197,9 +199,9 @@ class AccelService2 : Service() {
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "AUDIO_UPLOAD_START")
                 bundle.putString(FirebaseAnalytics.Param.CONTENT, "Attempting audio upload: " + ridename)
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                firebaseAnalytics.logEvent("RIDE_STORE", bundle)
             }
-            async {
+            GlobalScope.launch(Dispatchers.Default) {
                 cfm.upload("recs/" + ridename + ".3gpp", audioFile.toURI(), object : CloudFileListener() {
                     override fun onComplete(id: Int, file: File) {
                         super.onComplete(id, file)
@@ -210,14 +212,14 @@ class AccelService2 : Service() {
                             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "AUDIO_UPLOAD_COMPLETE")
                             bundle.putString(FirebaseAnalytics.Param.CONTENT, "Name: " + file.name)
                             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                            firebaseAnalytics.logEvent("RIDE_STORE", bundle)
                         }
                     }
                 })
             }
         }
 
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             uploadAcceleration("rideAccels/" + ridename, ridename!!)
             accelDataBuilder.clear()
             ridename = null
@@ -237,9 +239,9 @@ class AccelService2 : Service() {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ACCEL_UPLOAD_START")
             bundle.putString(FirebaseAnalytics.Param.CONTENT, "Attempting accel upload: " + ridename)
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+            firebaseAnalytics.logEvent("RIDE_STORE", bundle)
         }
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             cfm.upload(objKey, file.toURI(), object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {
                     Log.d("ACCEL", "Upload error: " + ex?.message)
@@ -253,7 +255,7 @@ class AccelService2 : Service() {
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "ACCEL_UPLOAD_COMPLETE")
                         bundle.putString(FirebaseAnalytics.Param.CONTENT, "Accel upload complete: " + ridename)
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                        firebaseAnalytics.logEvent("RIDE_STORE", bundle)
                     }
                 }
             })

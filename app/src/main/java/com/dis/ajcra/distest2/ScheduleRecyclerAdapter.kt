@@ -14,8 +14,9 @@ import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.fastpass.GetSchedulesQuery
 import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,15 +63,14 @@ class ScheduleRecyclerAdapter(private var schedules: List<GetSchedulesQuery.Sche
             holder.iconView.borderColor = borderColor
 
             Log.d("STATE", "ParkIcon: " + schedule.parkIconUrl()!!)
-            async {
-
+            GlobalScope.launch(Dispatchers.IO) {
                 cfm.download(schedule.parkIconUrl()!!, object : CloudFileListener() {
                     override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
                         Log.d("STATE", "ParkIcon downloading")
                     }
 
                     override fun onComplete(id: Int, file: File) {
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder.iconView.setImageURI(Uri.fromFile(file))
                         }
                     }

@@ -14,8 +14,10 @@ import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.ProfileActivity
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -43,11 +45,10 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
             intent.putExtra("id", profile.id)
             holder!!.ctx.startActivity(intent)
         }
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             holder!!.profNameView.setText(entity.owner.getName().await())
-
         }
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             var profilePicUrl = entity.owner.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -66,7 +67,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    async(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -77,7 +78,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder!!.profImgView!!.setImageBitmap(bmap)
                         }
                     }
@@ -90,7 +91,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                 override fun onStateChanged(id: Int, state: TransferState?) {}
 
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    async(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -101,7 +102,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder!!.imgView!!.setImageBitmap(bmap)
                         }
                     }

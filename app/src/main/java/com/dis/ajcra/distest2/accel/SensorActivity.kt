@@ -13,8 +13,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.dis.ajcra.distest2.R
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -94,7 +95,7 @@ class SensorActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             var rideMatches = accelStore.getRideMatches()
             var rideStr = ""
             rideMatches.await().forEach { rm ->

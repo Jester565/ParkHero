@@ -27,11 +27,11 @@ protobuf {
     }
 }
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.dis.ajcra.distest2"
-        minSdkVersion 24
-        targetSdkVersion 26
+        minSdkVersion 28
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -46,6 +46,10 @@ android {
 }
 
 dependencies {
+    implementation 'com.android.support:cardview-v7:28.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation('com.amazonaws:aws-android-sdk-appsync:2.6.+') {
         exclude group: 'com.google.code.gson'
     }
@@ -53,25 +57,20 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:16.0.1'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.24.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    implementation 'com.android.support:cardview-v7:27.1.0'
-    implementation 'com.android.support:appcompat-v7:27.1.0'
-    implementation 'com.android.support:design:27.1.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.0'
     implementation 'com.otaliastudios:cameraview:1.5.1'
     implementation 'com.theartofdev.edmodo:android-image-cropper:2.7+'
-    implementation('com.amazonaws:aws-android-sdk-core:2.6.3') {
+    implementation('com.amazonaws:aws-android-sdk-core:2.6.+') {
         exclude group: 'com.google.code.gson'
     }
-    implementation('com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.6.3') {
+    implementation('com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.6.+') {
         exclude group: 'com.google.code.gson'
     }
-    implementation('com.amazonaws:aws-android-sdk-sns:2.6.3') {
+    implementation('com.amazonaws:aws-android-sdk-sns:2.6.+') {
         exclude group: 'com.google.code.gson'
     }
-    implementation('com.amazonaws:aws-android-sdk-s3:2.6.3') {
+    implementation('com.amazonaws:aws-android-sdk-s3:2.6.+') {
         exclude group: 'com.google.code.gson'
     }
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
@@ -84,7 +83,6 @@ dependencies {
 
     // Room (use 1.1.0-beta1 for latest beta)
     implementation "android.arch.persistence.room:runtime:1.1.1"
-    implementation 'com.android.support:support-v4:26.1.0'
     kapt "android.arch.persistence.room:compiler:1.1.1"
     implementation group: 'info.debatty', name: 'java-string-similarity', version: '0.10'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
@@ -98,6 +96,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-vision:16.0.0'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
     implementation 'com.github.prolificinteractive:material-calendarview:1.6.1'
+    implementation 'com.github.MFlisar:DragSelectRecyclerView:0.3'
 }
 
 apply plugin: 'com.google.gms.google-services'

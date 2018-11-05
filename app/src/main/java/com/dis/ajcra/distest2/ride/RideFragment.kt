@@ -28,8 +28,9 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -233,7 +234,7 @@ class RideFragment : Fragment() {
         if (!infoSet) {
             var picUrl = ride.picURL
             if (picUrl != null) {
-                async {
+                GlobalScope.launch(Dispatchers.IO) {
                     picUrl = picUrl?.substring(0, picUrl?.length!! - 4) + "-2" + picUrl?.substring(picUrl?.length!! - 4)
                     Log.d("STATE", "PICURL: " + picUrl)
                     cfm.download(picUrl.toString(), object : CloudFileListener() {
@@ -245,7 +246,7 @@ class RideFragment : Fragment() {
 
                         override fun onComplete(id: Int, file: File) {
                             Log.d("STATE", "Ride download complete")
-                            async(UI) {
+                            GlobalScope.launch(Dispatchers.Main) {
                                 rideImg.setImageURI(Uri.fromFile(file))
                             }
                         }
@@ -287,11 +288,10 @@ class RideFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             rideManager.getRideDPs(rideID, object: AppSyncTest.GetRideDPsCallback {
                 override fun onResponse(rideDPs: AppSyncTest.DisRideDPs?) {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         Log.d("STATE", "COMPLETED RideDPS")
                         if (rideDPs == null || !initMultiChart(rideDPs)) {
                             noDataText.visibility = View.VISIBLE

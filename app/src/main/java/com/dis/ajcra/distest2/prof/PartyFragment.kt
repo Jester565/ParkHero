@@ -17,8 +17,10 @@ import com.dis.ajcra.distest2.SnsEvent
 import com.dis.ajcra.distest2.entity.SendFragment
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -126,7 +128,7 @@ class PartyFragment : Fragment() {
             }
 
             leavePartyButton.setOnClickListener {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     inviteButton.isEnabled = false
                     leavePartyButton.isEnabled = false
                     profileManager.leaveParty().await()
@@ -136,7 +138,7 @@ class PartyFragment : Fragment() {
         }
     }
 
-    fun updateParty() = async(UI) {
+    fun updateParty() = GlobalScope.async(Dispatchers.Main) {
         try {
             var partyProfiles = profileManager.getPartyProfiles().await()
             dataset.clear()

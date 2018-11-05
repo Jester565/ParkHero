@@ -26,9 +26,9 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOption
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class VisionHandler {
@@ -103,7 +103,7 @@ class VisionHandler {
 
                 var button: Button = layout.findViewById(R.id.toastvis_button)
                 button.setOnClickListener {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         var passManager = PassManager.GetInstance(CognitoManager.GetInstance(activity.applicationContext), activity.applicationContext)
                         var rawValue = barcode.rawValue
                         if (rawValue != null) {

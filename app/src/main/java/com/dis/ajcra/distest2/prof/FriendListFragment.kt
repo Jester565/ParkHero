@@ -15,8 +15,9 @@ import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.ProfileRecyclerAdapter
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -84,7 +85,7 @@ class FriendListFragment : Fragment() {
 
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profile = profileManager.getMyProfile().await()!!
                     adapter?.notifyItemRangeRemoved(0, dataset.size)
                     dataset.clear()

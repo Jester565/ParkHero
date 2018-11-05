@@ -19,6 +19,13 @@ class CRInfo {
     var pinned: Boolean = false
 }
 
+@Entity
+class Filter {
+    @PrimaryKey
+    var id: String = ""
+    var rideID: String = ""
+}
+
 @Dao
 interface CRInfoDao {
     @Query("SELECT * FROM CRInfo WHERE id=:rideID")
@@ -46,7 +53,20 @@ interface CRInfoDao {
     fun delete(pinInfo: CRInfo)
 }
 
-@Database(entities = arrayOf(CRInfo::class), version=6)
+@Dao
+interface FilterDao {
+    @Query("SELECT id FROM Filter ORDER BY id")
+    fun listFilters(): List<String>
+
+    @Query("SELECT rideID FROM Filter WHERE id=:filterID")
+    fun getFilteredRides(filterID: String): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun addFilter(filter: Filter)
+}
+
+@Database(entities = arrayOf(CRInfo::class, Filter::class), version=7)
 abstract class RideCacheDatabase: RoomDatabase() {
     abstract fun crInfoDao(): CRInfoDao
+    abstract fun filterDao(): FilterDao
 }

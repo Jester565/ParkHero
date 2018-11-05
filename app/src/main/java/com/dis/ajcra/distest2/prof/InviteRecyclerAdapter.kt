@@ -16,10 +16,10 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
-import java.lang.Exception
 
 /**
  * Created by ajcra on 1/25/2018.
@@ -47,7 +47,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             holder!!.acceptButton.visibility = View.VISIBLE
             holder!!.declineButton.visibility = View.VISIBLE
             holder!!.acceptButton.setOnClickListener {v ->
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     dataset[holder!!.adapterPosition].target.addFriend().await()
                     v.isEnabled = false
                     dataset[holder!!.adapterPosition].accept()
@@ -56,7 +56,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                 }
             }
             holder!!.declineButton.setOnClickListener {v ->
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     dataset[holder!!.adapterPosition].target.removeFriend().await()
                     v.isEnabled = false
                     dataset[holder!!.adapterPosition].decline()
@@ -71,7 +71,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             intent.putExtra("id", profile.id)
             holder!!.ctx.startActivity(intent)
         }
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             holder!!.profNameView.text = dataset[position].target.getName().await()
             var inviteStatus = dataset[position].target.getInviteStatus().await()
             if (inviteStatus == 1) {
@@ -83,7 +83,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             }
             Log.d("STATE", "Name set: " + holder!!.profNameView.text)
         }
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             var profilePicUrl = dataset[position].target.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -94,19 +94,15 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                 }
 
                 override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
-                    async(UI) {
 
-                    }
                 }
 
                 override fun onStateChanged(id: Int, state: TransferState?) {
-                    async(UI) {
 
-                    }
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    GlobalScope.launch(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -117,7 +113,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder!!.profImgView!!.setImageBitmap(bmap)
                         }
                     }

@@ -32,8 +32,10 @@ import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.UserSearchActivity
 import com.dis.ajcra.fastpass.RidesUpdatedSubscription
 import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -117,10 +119,10 @@ class HomeFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     myProfile = profileManager.genMyProfile().await()
                     if (myProfile == null) {
-                        return@async
+                        return@launch
                     }
                     profileNameText.text = myProfile!!.getName().await()
                     if (!cognitoManager.hasCredentials().await()) {
@@ -138,9 +140,9 @@ class HomeFragment : Fragment() {
                     var preferences = context!!.applicationContext.getSharedPreferences("SNS", Context.MODE_PRIVATE)
                     var snsEndpoint = preferences.getString("snsArn", "NONE")
                     var snsTopic = preferences.getString("snsTopic", "NONE")
-                    var topicName = cognitoManager.federatedID.substring(cognitoManager.federatedID.indexOf(':') + 1)
-                    if (snsEndpoint != "NONE" && (snsTopic == "NONE" || snsTopic != topicName)) {
-                        async {
+                    async(Dispatchers.IO) {
+                        var topicName = cognitoManager.federatedID.substring(cognitoManager.federatedID.indexOf(':') + 1)
+                        if (snsEndpoint != "NONE" && (snsTopic == "NONE" || snsTopic != topicName)) {
                             //TODO: Unsubscribe from existing topics
                             var client = AmazonSNSClient(cognitoManager!!.credentialsProvider)
                             client!!.setRegion(Region.getRegion(Regions.US_WEST_2))
@@ -156,8 +158,8 @@ class HomeFragment : Fragment() {
                                 Log.d("STATE", "SNS EX: " + ex + " - " + ex.message)
                             }
                         }
+                        initProfilePic()
                     }
-                    initProfilePic()
                 }
             }
         }
@@ -185,7 +187,7 @@ class HomeFragment : Fragment() {
         cfm.download(objKey, object: CloudFileListener() {
             override fun onComplete(id: Int, file: File) {
                 super.onComplete(id, file)
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     profilePicView.setImageURI(Uri.fromFile(file))
                 }
             }

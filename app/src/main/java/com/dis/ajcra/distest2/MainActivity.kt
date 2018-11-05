@@ -13,9 +13,12 @@ class DlPagerAdapter: FragmentPagerAdapter {
     constructor(fm: FragmentManager)
             :super(fm)
     {
-        fragments.add(CameraFragment.GetInstance())
-        fragments.add(HomeFragment())
-        fragments.add(RideTimesFragment())
+        cameraFragment = CameraFragment.GetInstance()
+        homeFragment = HomeFragment()
+        rideTimesFragment = RideTimesFragment()
+        fragments.add(cameraFragment)
+        fragments.add(homeFragment)
+        fragments.add(rideTimesFragment)
     }
 
     override fun getItem(position: Int): Fragment {
@@ -26,6 +29,21 @@ class DlPagerAdapter: FragmentPagerAdapter {
         return fragments.size
     }
 
+    fun onBackButtonPressed(viewPager: ViewPager): Boolean {
+        if (viewPager.currentItem == 2 && !rideTimesFragment.handleBackButton()) {
+            return false
+        } else if (viewPager.currentItem == 0 && !cameraFragment.handleBackButton()) {
+            return false
+        } else if (viewPager.currentItem != 1) {
+            viewPager.currentItem = 1
+            return false
+        }
+        return true
+    }
+
+    private var cameraFragment: CameraFragment
+    private var homeFragment: HomeFragment
+    private var rideTimesFragment: RideTimesFragment
     private var fragments: ArrayList<Fragment> = ArrayList<Fragment>()
 }
 
@@ -33,9 +51,18 @@ class MainActivity: FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        var pagerAdapter = DlPagerAdapter(supportFragmentManager)
-        var viewPager = findViewById<ViewPager>(R.id.main_viewpager)
-        viewPager.adapter = pagerAdapter
-        viewPager.currentItem = 1
+        pagerAdapter = DlPagerAdapter(supportFragmentManager)
+        viewPager = findViewById<ViewPager>(R.id.main_viewpager)
+        viewPager!!.adapter = pagerAdapter
+        viewPager!!.currentItem = 1
     }
+
+    override fun onBackPressed() {
+        if (pagerAdapter == null || pagerAdapter!!.onBackButtonPressed(viewPager!!)) {
+            super.onBackPressed()
+        }
+    }
+
+    private var viewPager: ViewPager? = null
+    private var pagerAdapter: DlPagerAdapter? = null
 }

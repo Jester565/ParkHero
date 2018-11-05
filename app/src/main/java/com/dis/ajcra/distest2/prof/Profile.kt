@@ -3,8 +3,10 @@ package com.dis.ajcra.distest2.prof
 import android.util.Log
 import com.dis.ajcra.distest2.DisneyAppClient
 import com.dis.ajcra.distest2.model.*
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import org.json.JSONObject
 
 /**
@@ -40,28 +42,28 @@ open class Profile {
         this.profilePicUrl = userObj.getString("profilePicUrl")
     }
 
-    fun getUser() = async {
+    fun getUser() = GlobalScope.async(Dispatchers.IO) {
         var output = apiClient.getuserGet(id)
         name = output.name
         aquiredProfilePic = true
         profilePicUrl = output.profilePicUrl
     }
 
-    fun getName(): Deferred<String> = async {
+    fun getName(): Deferred<String> = GlobalScope.async(Dispatchers.IO) {
         if (name == null) {
             getUser().await()
         }
         name as String
     }
 
-    fun getProfilePicUrl(): Deferred<String?> = async {
+    fun getProfilePicUrl(): Deferred<String?> = GlobalScope.async(Dispatchers.IO) {
         if (!aquiredProfilePic) {
             getUser().await()
         }
         profilePicUrl
     }
 
-    fun getFriends(): Deferred<List<Profile>> = async {
+    fun getFriends(): Deferred<List<Profile>> = GlobalScope.async(Dispatchers.IO) {
         var friendArr = ArrayList<Profile>()
         try {
             var output = apiClient.getfriendsGet(id)
@@ -74,7 +76,7 @@ open class Profile {
         friendArr
     }
 
-    fun getInviteStatus(): Deferred<Int> = async {
+    fun getInviteStatus(): Deferred<Int> = GlobalScope.async(Dispatchers.IO) {
         if (inviteStatus < 0) {
             try {
                 var output = apiClient.getinvitestatusGet(id)
@@ -87,7 +89,7 @@ open class Profile {
         inviteStatus
     }
 
-    fun getInviteType(): Deferred<Int> = async {
+    fun getInviteType(): Deferred<Int> = GlobalScope.async(Dispatchers.IO) {
         if (inviteStatus < 0) {
             try {
                 var output = apiClient.getinvitestatusGet(id)
@@ -100,7 +102,7 @@ open class Profile {
         inviteType
     }
 
-    fun addFriend(): Deferred<Boolean> = async {
+    fun addFriend(): Deferred<Boolean> = GlobalScope.async(Dispatchers.IO) {
         var nowFriend = false
         try {
             var input = AddFriendInput()
@@ -113,7 +115,7 @@ open class Profile {
         nowFriend
     }
 
-    fun removeFriend() = async {
+    fun removeFriend() = GlobalScope.async(Dispatchers.IO) {
         var nowFriend = false
         try {
             var input = RemoveFriendInput()
@@ -124,7 +126,7 @@ open class Profile {
         }
     }
 
-    fun addToParty() = async {
+    fun addToParty() = GlobalScope.async(Dispatchers.IO) {
         try {
             var input = AddToPartyInput()
             input.friendId = id
@@ -134,7 +136,7 @@ open class Profile {
         }
     }
 
-    fun removePartyInvite() = async {
+    fun removePartyInvite() = GlobalScope.async(Dispatchers.IO) {
         try {
             var input = DeclinePartyInput()
             input.friendId = id

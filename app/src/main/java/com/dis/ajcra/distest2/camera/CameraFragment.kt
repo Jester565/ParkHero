@@ -27,7 +27,7 @@ import com.dis.ajcra.distest2.media.GalleryFragmentListener
 import com.otaliastudios.cameraview.*
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import id.zelory.compressor.Compressor
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.*
 import java.io.File
 import java.util.*
 
@@ -75,7 +75,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         }
 
         override fun onPictureTaken(jpeg: ByteArray?) {
-            async {
+            GlobalScope.launch(Dispatchers.IO) {
                 //Save jpeg byte array to file
                 var jpegFile = File(appCtx.filesDir, UUID.randomUUID().toString() + ".jpg")
                 if (jpeg != null) {
@@ -100,7 +100,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         override fun onVideoTaken(file: File?) {
             if (file != null) {
                 Log.d("STATE", "Uploading video")
-                async {
+                GlobalScope.launch(Dispatchers.IO) {
                     var objKey = "media/" + cognitoManager.federatedID + "/" + file.name
                     cloudFileManager.upload(objKey, file.toURI(), object : CloudFileListener() {
                         override fun onComplete(id: Int, file: File) {
@@ -302,6 +302,14 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         return rootView
     }
 
+    fun handleBackButton(): Boolean {
+        if (gallerySlider.panelState != SlidingUpPanelLayout.PanelState.COLLAPSED) {
+            gallerySlider.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+            return false
+        }
+        return true
+    }
+
     fun setOnPhotoCallback(cb: ((File) -> Unit)?) {
         onPhotoCallback = cb
         cameraListener?.setOnPhotoCallback(cb)
@@ -352,7 +360,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
 
     //When activity is no longer displayed
     override fun onPause() {
-        cameraView.stop()
         super.onPause()
+        cameraView.stop()
     }
 }

@@ -15,7 +15,7 @@ class MyProfileActivity : FragmentActivity() {
         setContentView(R.layout.activity_my_profile)
         myProfileFragment = MyProfileFragment()
         var transaction = supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.myprofileactivity_layout, myProfileFragment).commit()
+        transaction.replace(R.id.myprofileactivity_layout, myProfileFragment!!).commit()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

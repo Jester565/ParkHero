@@ -6,9 +6,12 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.fastpass.ListPassesQuery
 import com.dis.ajcra.fastpass.fragment.DisPass
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlin.coroutines.experimental.suspendCoroutine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class PassManager {
     companion object {
@@ -70,7 +73,7 @@ class PassManager {
     suspend fun addPass(passID: String) = suspendCoroutine<DisPass> { cont ->
         appSync.addPass(passID, object: AppSyncTest.AddPassCallback {
             override fun onResponse(response: DisPass) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     var myProfile = profileManager.genMyProfile().await()
                     var dpList = arrayListOf(response)
                     for (subscriber in subscribers) {
@@ -90,7 +93,7 @@ class PassManager {
     suspend fun removePass(passID: String) = suspendCoroutine<Boolean> { cont ->
         appSync.removePass(passID, object: AppSyncTest.RemovePassCallback {
             override fun onResponse(response: Boolean) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     for (subscriber in subscribers) {
                         subscriber.passRemoved(passID)
                         subscriber.updateCompleted()

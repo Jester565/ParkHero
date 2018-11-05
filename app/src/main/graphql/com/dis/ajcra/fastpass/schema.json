@@ -121,6 +121,46 @@
                             },
                             "isDeprecated": false,
                             "deprecationReason": null
+                        },
+                        {
+                            "name": "getRideFilters",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "RideFilter",
+                                    "ofType": null
+                                }
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "getParkingLocation",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "Location",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "getParkingPosition",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "ParkingPosition",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
                         }
                     ],
                     "inputFields": null,
@@ -1095,6 +1135,210 @@
                 },
                 {
                     "kind": "OBJECT",
+                    "name": "RideFilter",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "filterID",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "notifyConfig",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "NotifyConfig",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "rideIDs",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
+                    "name": "NotifyConfig",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "waitRating",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "waitTime",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "fastPassTime",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "distance",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "inLineTime",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
+                    "name": "Location",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "latitude",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "longitude",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
+                    "name": "ParkingPosition",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "level",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "row",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "col",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
                     "name": "Mutation",
                     "description": null,
                     "fields": [
@@ -1291,6 +1535,216 @@
                             },
                             "isDeprecated": false,
                             "deprecationReason": null
+                        },
+                        {
+                            "name": "initUser",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "updateRideFilter",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "rideFilter",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "INPUT_OBJECT",
+                                        "name": "RideFilterIn",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "RideFilter",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "deleteRideFilter",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "filterID",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "updateParkingLocation",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "latitude",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Float",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "longitude",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Float",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "updateParkingPosition",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "level",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "row",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "col",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "updateLocation",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "latitude",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Float",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "longitude",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Float",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "inPark",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Int",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        },
+                        {
+                            "name": "updateLineStatus",
+                            "description": null,
+                            "args": [
+                                {
+                                    "name": "time",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "Int",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                {
+                                    "name": "rideID",
+                                    "description": null,
+                                    "type": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            ],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
                         }
                     ],
                     "inputFields": null,
@@ -1400,6 +1854,112 @@
                     "possibleTypes": null
                 },
                 {
+                    "kind": "INPUT_OBJECT",
+                    "name": "RideFilterIn",
+                    "description": null,
+                    "fields": null,
+                    "inputFields": [
+                        {
+                            "name": "filterID",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "notifyConfig",
+                            "description": null,
+                            "type": {
+                                "kind": "INPUT_OBJECT",
+                                "name": "NotifyInput",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "rideIDs",
+                            "description": null,
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            },
+                            "defaultValue": null
+                        }
+                    ],
+                    "interfaces": null,
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "INPUT_OBJECT",
+                    "name": "NotifyInput",
+                    "description": null,
+                    "fields": null,
+                    "inputFields": [
+                        {
+                            "name": "waitRating",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "waitTime",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "fastPassTime",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "distance",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Float",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        },
+                        {
+                            "name": "inLineTime",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "Int",
+                                "ofType": null
+                            },
+                            "defaultValue": null
+                        }
+                    ],
+                    "interfaces": null,
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
                     "kind": "OBJECT",
                     "name": "Subscription",
                     "description": null,
@@ -1411,6 +1971,56 @@
                             "type": {
                                 "kind": "OBJECT",
                                 "name": "RideArr",
+                                "ofType": null
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
+                    "name": "RideFilters",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "RideFilters",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "RideFilter",
+                                    "ofType": null
+                                }
+                            },
+                            "isDeprecated": false,
+                            "deprecationReason": null
+                        }
+                    ],
+                    "inputFields": null,
+                    "interfaces": [],
+                    "enumValues": null,
+                    "possibleTypes": null
+                },
+                {
+                    "kind": "OBJECT",
+                    "name": "Basic",
+                    "description": null,
+                    "fields": [
+                        {
+                            "name": "name",
+                            "description": null,
+                            "args": [],
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
                                 "ofType": null
                             },
                             "isDeprecated": false,
@@ -1442,7 +2052,8 @@
                                         "name": null,
                                         "ofType": {
                                             "kind": "OBJECT",
-                                            "name": "__Type"
+                                            "name": "__Type",
+                                            "ofType": null
                                         }
                                     }
                                 }
@@ -1493,7 +2104,8 @@
                                         "name": null,
                                         "ofType": {
                                             "kind": "OBJECT",
-                                            "name": "__Directive"
+                                            "name": "__Directive",
+                                            "ofType": null
                                         }
                                     }
                                 }
@@ -1811,7 +2423,8 @@
                                         "name": null,
                                         "ofType": {
                                             "kind": "OBJECT",
-                                            "name": "__InputValue"
+                                            "name": "__InputValue",
+                                            "ofType": null
                                         }
                                     }
                                 }
@@ -2067,7 +2680,8 @@
                                         "name": null,
                                         "ofType": {
                                             "kind": "OBJECT",
-                                            "name": "__InputValue"
+                                            "name": "__InputValue",
+                                            "ofType": null
                                         }
                                     }
                                 }
@@ -2235,6 +2849,11 @@
                 {
                     "name": "include",
                     "description": "Directs the executor to include this field or fragment only when the `if` argument is true",
+                    "locations": [
+                        "FIELD",
+                        "FRAGMENT_SPREAD",
+                        "INLINE_FRAGMENT"
+                    ],
                     "args": [
                         {
                             "name": "if",
@@ -2258,6 +2877,11 @@
                 {
                     "name": "skip",
                     "description": "Directs the executor to skip this field or fragment when the `if`'argument is true.",
+                    "locations": [
+                        "FIELD",
+                        "FRAGMENT_SPREAD",
+                        "INLINE_FRAGMENT"
+                    ],
                     "args": [
                         {
                             "name": "if",
@@ -2281,14 +2905,69 @@
                 {
                     "name": "defer",
                     "description": "This directive allows results to be deferred during execution",
+                    "locations": [
+                        "FIELD"
+                    ],
                     "args": [],
                     "onOperation": false,
                     "onFragment": false,
                     "onField": true
                 },
                 {
+                    "name": "deprecated",
+                    "description": null,
+                    "locations": [
+                        "FIELD_DEFINITION",
+                        "ENUM_VALUE"
+                    ],
+                    "args": [
+                        {
+                            "name": "reason",
+                            "description": null,
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            },
+                            "defaultValue": "\"No longer supported\""
+                        }
+                    ],
+                    "onOperation": false,
+                    "onFragment": false,
+                    "onField": false
+                },
+                {
+                    "name": "aws_subscribe",
+                    "description": "Tells the service which mutation triggers this subscription.",
+                    "locations": [
+                        "FIELD_DEFINITION"
+                    ],
+                    "args": [
+                        {
+                            "name": "mutations",
+                            "description": "List of mutations which will trigger this subscription when they are called.",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            },
+                            "defaultValue": null
+                        }
+                    ],
+                    "onOperation": false,
+                    "onFragment": false,
+                    "onField": false
+                },
+                {
                     "name": "aws_auth",
                     "description": "Directs the schema to enforce authorization on a field",
+                    "locations": [
+                        "FIELD_DEFINITION"
+                    ],
                     "args": [
                         {
                             "name": "cognito_groups",
@@ -2311,53 +2990,14 @@
                 },
                 {
                     "name": "aws_publish",
-                    "description": "Tells the service which subscriptions will be published to when this mutation is called.",
+                    "description": "Tells the service which subscriptions will be published to when this mutation is called. This directive is deprecated use @aws_susbscribe directive instead.",
+                    "locations": [
+                        "FIELD_DEFINITION"
+                    ],
                     "args": [
                         {
                             "name": "subscriptions",
                             "description": "List of subscriptions which will be published to when this mutation is called.",
-                            "type": {
-                                "kind": "LIST",
-                                "name": null,
-                                "ofType": {
-                                    "kind": "SCALAR",
-                                    "name": "String",
-                                    "ofType": null
-                                }
-                            },
-                            "defaultValue": null
-                        }
-                    ],
-                    "onOperation": false,
-                    "onFragment": false,
-                    "onField": false
-                },
-                {
-                    "name": "deprecated",
-                    "description": null,
-                    "args": [
-                        {
-                            "name": "reason",
-                            "description": null,
-                            "type": {
-                                "kind": "SCALAR",
-                                "name": "String",
-                                "ofType": null
-                            },
-                            "defaultValue": "\"No longer supported\""
-                        }
-                    ],
-                    "onOperation": false,
-                    "onFragment": false,
-                    "onField": false
-                },
-                {
-                    "name": "aws_subscribe",
-                    "description": "Tells the service which mutation triggers this subscription.",
-                    "args": [
-                        {
-                            "name": "mutations",
-                            "description": "List of mutations which will trigger this subscription when they are called.",
                             "type": {
                                 "kind": "LIST",
                                 "name": null,

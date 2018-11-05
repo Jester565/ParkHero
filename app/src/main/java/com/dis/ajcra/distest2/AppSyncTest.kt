@@ -1,13 +1,16 @@
 package com.dis.ajcra.distest2
 
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
+import com.amazonaws.mobileconnectors.appsync.cache.normalized.sql.AppSyncSqlHelper
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.amazonaws.regions.Regions
 import com.apollographql.apollo.GraphQLCall
 import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory
 import com.apollographql.apollo.exception.ApolloException
 import com.apollographql.apollo.fetcher.ResponseFetcher
 import com.dis.ajcra.distest2.login.CognitoManager
@@ -16,39 +19,68 @@ import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import com.dis.ajcra.fastpass.fragment.DisPass
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideDP
+import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.*
+
 
 class AppSyncTest {
     companion object {
         private var instance: AppSyncTest? = null
         fun GetInstance(cognitoManager: CognitoManager, ctx: Context): AppSyncTest {
             if (instance == null) {
-                instance = AppSyncTest()
-                instance!!.getClient(cognitoManager, ctx)
+                instance = AppSyncTest(cognitoManager, ctx)
             }
             return instance as AppSyncTest
         }
     }
     private var client: AWSAppSyncClient? = null
+    private var firebaseAnalytics: FirebaseAnalytics
 
-    fun parseRespErrs(response: Response<Any>): Pair<Int?, String>? {
-        Log.d("STATE", "RESP ERRORS: " + response.operation().name())
+    constructor(cognitoManager: CognitoManager, ctx: Context) {
+        firebaseAnalytics = FirebaseAnalytics.getInstance(ctx)
+        setClient(cognitoManager, ctx)
+    }
+
+    fun parseRespErrs(response: Response<Any>, tag: String? = null): Pair<Int?, String>? {
+        var logMsg: String? = null
         for (error in response.errors()) {
             var errorMsg = error.message()
             if (errorMsg != null) {
-                Log.d("STATE", errorMsg)
+                logMsg = response.operation().name().toString() + " Error: " + errorMsg
+                Log.e("APPSYNC", logMsg)
+                if (tag != null) {
+                    Log.e(tag, logMsg)
+                }
                 var colonIdx = errorMsg.indexOf(":")
                 if (colonIdx >= 0) {
                     try {
                         return Pair(errorMsg.substring(0, colonIdx).toInt(), errorMsg)
                     } catch(ex: NumberFormatException) {
-                        Log.d("STATE", "# form exception")
+                        Log.e("APPSYNC", "# form exception")
                     }
                 } else {
-                    Log.d("STATE", "No statusCode in error")
+                    Log.w("APPSYNC", "No statusCode in error (this can be ok)")
                 }
                 return Pair(null, errorMsg)
+            }
+        }
+        if (logMsg == null) {
+            logMsg = response.operation().name().toString() + " Error"
+            Log.e("APPSYNC", logMsg)
+            if (tag != null) {
+                Log.e(tag, logMsg)
+            }
+        }
+        if (logMsg != null) {
+            GlobalScope.launch(Dispatchers.IO) {
+                var bundle = Bundle()
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "APPSYNC")
+                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, logMsg!!)
+                firebaseAnalytics.logEvent("APPSYNC_ERROR", bundle)
             }
         }
         return null
@@ -63,11 +95,10 @@ class AppSyncTest {
         (client as AWSAppSyncClient).mutate(AddPassMutation.builder().passID(passID).build())
                 .enqueue(object: GraphQLCall.Callback<AddPassMutation.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("PARK_PASS", "ADDPASS APPSYNC FAILURE: " + e.message)
                     }
 
                     override fun onResponse(response: Response<AddPassMutation.Data>) {
-                        Log.d("STATE", "ON RESP")
                         if (!response.hasErrors()) {
                             cb.onResponse(response.data()!!.addPass()!!.fragments().disPass())
                         } else {
@@ -87,11 +118,10 @@ class AppSyncTest {
         (client as AWSAppSyncClient).mutate(RemovePassMutation.builder().passID(passID).build())
                 .enqueue(object: GraphQLCall.Callback<RemovePassMutation.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("PARK_PASS", "REMOVEPASS APPSYNC FAILURE: " + e.message)
                     }
 
                     override fun onResponse(response: Response<RemovePassMutation.Data>) {
-                        Log.d("STATE", "ON RESP")
                         if (!response.hasErrors()) {
                             cb.onResponse(true)
                         } else {
@@ -108,15 +138,15 @@ class AppSyncTest {
     }
 
     fun listPasses(cb: ListPassesCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.CACHE_AND_NETWORK) {
+        Log.d("PASS", Log.getStackTraceString(Exception()))
         (client as AWSAppSyncClient).query(ListPassesQuery.builder().build())
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<ListPassesQuery.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("PARK_PASS", "LISTPASS APPSYNC FAILURE: " + e.message)
                     }
 
                     override fun onResponse(response: Response<ListPassesQuery.Data>) {
-                        Log.d("STATE", "ON RESP")
                         if (!response.hasErrors()) {
                             var userPasses = response.data()!!.listPasses()!!
                             cb.onResponse(userPasses)
@@ -139,11 +169,10 @@ class AppSyncTest {
                 .targetPasses(targetPassIDs)
                 .build()).enqueue(object: GraphQLCall.Callback<AddFastPassMutation.Data>() {
             override fun onFailure(e: ApolloException) {
-                Log.d("STATE", "ON FAILURE: " + e.message)
+                Log.e("FAST_PASS", "ADDFASTPASS APPSYNC FAILURE: " + e.message)
             }
 
             override fun onResponse(response: Response<AddFastPassMutation.Data>) {
-                Log.d("STATE", "ON RESP")
                 if (!response.hasErrors()) {
                     cb.onResponse(response.data()!!.addFastPass()!!.fragments().disFastPassTransaction())
                 } else {
@@ -164,11 +193,10 @@ class AppSyncTest {
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<ListFastPassesQuery.Data>() {
             override fun onFailure(e: ApolloException) {
-                Log.d("STATE", "ON FAILURE: " + e.message)
+                Log.e("FAST_PASS", "LISTFASTPASS APPSYNC FAILURE: " + e.message)
             }
 
             override fun onResponse(response: Response<ListFastPassesQuery.Data>) {
-                Log.d("STATE", "ON RESP")
                 if (!response.hasErrors()) {
                     var disFastPasses = ArrayList<DisFastPassTransaction>()
                     var fastPasses = response.data()!!.listFastPasses()!!
@@ -193,11 +221,10 @@ class AppSyncTest {
         (client as AWSAppSyncClient).mutate(UpdateFastPassesMutation.builder().build())
                 .enqueue(object: GraphQLCall.Callback<UpdateFastPassesMutation.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("FAST_PASS", "UPDATEFASTPASS APPSYNC FAILURE: " + e.message)
                     }
 
                     override fun onResponse(response: Response<UpdateFastPassesMutation.Data>) {
-                        Log.d("STATE", "ON RESP")
                         if (!response.hasErrors()) {
                             var disFastPasses = ArrayList<DisFastPassTransaction>()
                             if (response.data()?.updateFastPasses()?.fps() != null) {
@@ -225,13 +252,11 @@ class AppSyncTest {
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<GetRidesQuery.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e)
+                        Log.e("RIDE", "GETRIDES APPSYNC FAILURE: " + e.message)
                     }
 
                     override fun onResponse(response: Response<GetRidesQuery.Data>) {
-                        Log.d("STATE", "ON GET RIDES RESP")
                         if (!response.hasErrors()) {
-                            Log.d("STATE", "GetRidesQuery RESP: ")
                             var rides = response.data()!!.rides!!
                             var disRides = ArrayList<DisRide>()
                             for (ride in rides) {
@@ -253,39 +278,31 @@ class AppSyncTest {
     }
 
     fun updateRides(cb: UpdateRidesCallback) {
-        Log.d("STATE", "Running updating rides")
-        try {
-            (client as AWSAppSyncClient).mutate(UpdateRidesMutation.builder().build())
-                    .enqueue(object : GraphQLCall.Callback<UpdateRidesMutation.Data>() {
-                        override fun onFailure(e: ApolloException) {
-                            Log.d("STATE", "ON FAILURE: " + e.message)
-                        }
+        (client as AWSAppSyncClient).mutate(UpdateRidesMutation.builder().build())
+                .enqueue(object : GraphQLCall.Callback<UpdateRidesMutation.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.e("RIDE", "UPDATERIDES APPSYNC FAILURE: " + e.message)
+                    }
 
-                        override fun onResponse(response: Response<UpdateRidesMutation.Data>) {
-                            Log.d("STATE", "ON RESP")
-                            if (!response.hasErrors()) {
-                                Log.d("STATE", "UpdateRidesMutations RESP: ")
-                                var disRideUpdates = ArrayList<DisRide>()
-                                var ridesUpdatedContainer = response.data()!!.updateRides()
-                                if (ridesUpdatedContainer != null && ridesUpdatedContainer.rides() != null) {
-                                    for (rideUpdate in ridesUpdatedContainer.rides()!!) {
-                                        var disRideUpdate = rideUpdate.fragments().disRide()
-                                        Log.d("STATE", "RideID: " + disRideUpdate.id())
-                                        disRideUpdates.add(disRideUpdate)
-                                    }
-                                    cb.onResponse(disRideUpdates)
-                                } else {
-                                    cb.onResponse(null)
+                    override fun onResponse(response: Response<UpdateRidesMutation.Data>) {
+                        if (!response.hasErrors()) {
+                            var disRideUpdates = ArrayList<DisRide>()
+                            var ridesUpdatedContainer = response.data()!!.updateRides()
+                            if (ridesUpdatedContainer != null && ridesUpdatedContainer.rides() != null) {
+                                for (rideUpdate in ridesUpdatedContainer.rides()!!) {
+                                    var disRideUpdate = rideUpdate.fragments().disRide()
+                                    disRideUpdates.add(disRideUpdate)
                                 }
+                                cb.onResponse(disRideUpdates)
                             } else {
-                                var errRes = parseRespErrs(response as Response<Any>)
-                                cb.onError(errRes?.first, errRes?.second)
+                                cb.onResponse(null)
                             }
+                        } else {
+                            var errRes = parseRespErrs(response as Response<Any>)
+                            cb.onError(errRes?.first, errRes?.second)
                         }
-                    })
-        } catch (ex: Exception) {
-            Log.d("STATE","BRAKAKA " + ex.message)
-        }
+                    }
+                })
     }
 
     interface RideUpdateSubscribeCallback {
@@ -298,19 +315,17 @@ class AppSyncTest {
         var subscription = (client as AWSAppSyncClient).subscribe(RidesUpdatedSubscription.builder().build())
         subscription.execute(object: AppSyncSubscriptionCall.Callback<RidesUpdatedSubscription.Data> {
             override fun onFailure(e: ApolloException) {
-                Log.d("STATE", "RidedUpdatedSubscription ERR: " + e.message)
+                Log.e("RIDE", "SusbscribeToRideUpdates APPSYNC FAILURE: " + e.message)
                 cb.onFailure(e)
             }
 
             override fun onResponse(response: Response<RidesUpdatedSubscription.Data>) {
-                Log.d("STATE", "RideUpdatedSubscription RESP: ")
                 if (!response.hasErrors()) {
                     var ridesUpdatedContainer = response.data()!!.ridesUpdated()
                     var disRideUpdates = ArrayList<DisRide>()
                     if (ridesUpdatedContainer != null) {
                         for (rideUpdate in ridesUpdatedContainer.rides()!!) {
                             var disRideUpdate = rideUpdate.fragments().disRide()
-                            Log.d("STATE", "RideID: " + disRideUpdate.id())
                             disRideUpdates.add(disRideUpdate)
                         }
                     }
@@ -321,7 +336,7 @@ class AppSyncTest {
             }
 
             override fun onCompleted() {
-                Log.d("STATE", "COMPLETED")
+                Log.d("RIDE", "Subscribed to ride updates")
                 onCompleted()
             }
         })
@@ -344,15 +359,13 @@ class AppSyncTest {
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<GetRideDPsQuery.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("RIDE", "GETRIDEDPS APPSYNC FAILURE: " + e.message)
                         cb.onError(null, e.message)
                     }
 
                     override fun onResponse(response: Response<GetRideDPsQuery.Data>) {
-                        Log.d("STATE", "ON GET DPS RESP")
                         if (!response.hasErrors()) {
                             if (response.data() != null && response.data()?.rideDPs != null) {
-                                Log.d("STATE", "GetRideDPS RESP: ")
                                 var dpResp = response.data()!!.rideDPs!!
                                 var disRideDPs = DisRideDPs()
                                 for (dp in dpResp.rideTimes()!!) {
@@ -382,13 +395,13 @@ class AppSyncTest {
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<GetSchedulesQuery.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.e("SCHEDULE", "GETSCHEDULES APPSYNC FAILURE: " + e.message)
                         cb.onError(null, e.message)
                     }
 
                     override fun onResponse(response: Response<GetSchedulesQuery.Data>) {
-                        if (!response.hasErrors()) {
-                            cb.onResponse(response.data()!!.schedules?.schedules()!!)
+                        if (!response.hasErrors() && response.data()!!.schedules != null) {
+                            cb.onResponse(response.data()!!.schedules!!.schedules()!!)
                         } else {
                             var parsedErr = parseRespErrs(response as Response<Any>)
                             cb.onError(parsedErr?.first, parsedErr?.second)
@@ -407,7 +420,7 @@ class AppSyncTest {
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<GetHourlyWeatherQuery.Data>() {
                     override fun onFailure(e: ApolloException) {
-                        Log.d("STATE", "ON FAILURE: " + e.message)
+                        Log.d("SCHEDULE", "GETHOURLYWEATHER APPSYNC FAILURE: " + e.message)
                         cb.onError(null, e.message)
                     }
 
@@ -422,8 +435,15 @@ class AppSyncTest {
                 })
     }
 
-    fun getClient(cognitoManager: CognitoManager, ctx: Context) {
+    fun getClient(): AWSAppSyncClient {
+        return client!!
+    }
+
+    private fun setClient(cognitoManager: CognitoManager, ctx: Context) {
         if (client == null) {
+            var apolloSqlHelper = AppSyncSqlHelper(ctx, "AppSync")
+            val cacheFactory = SqlNormalizedCacheFactory(apolloSqlHelper)
+
             var appSyncConfigIn = ctx.resources.openRawResource(R.raw.appsync)
             var appSyncConfigStr = appSyncConfigIn.bufferedReader().readText()
             var appSyncConfig = JSONObject(appSyncConfigStr)
@@ -432,6 +452,7 @@ class AppSyncTest {
                 .credentialsProvider(cognitoManager.credentialsProvider)
                 .region(Regions.fromName(appSyncConfig.getString("region")))
                 .serverUrl(appSyncConfig.getString("graphqlEndpoint"))
+                .normalizedCache(cacheFactory)
                 .build()
         }
     }

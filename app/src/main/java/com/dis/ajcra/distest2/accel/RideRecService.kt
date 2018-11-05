@@ -24,8 +24,9 @@ import com.google.android.gms.location.ActivityRecognition
 import com.google.android.gms.location.ActivityRecognitionClient
 import com.google.android.gms.location.ActivityRecognitionResult
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import tutorial.Acceleration
 import java.io.File
 import java.io.FileInputStream
@@ -47,7 +48,7 @@ class RideRecService : Service() {
         const val SMART_ACCEL_MIN = 10000
         const val MAXIMUM_DISTRIBUTION = 0.75
         const val NUM_SECTIONS = 8
-        const val MIN_NONZERO_COUNT = 10
+        const val MIN_NONZERO_COUNT = 32
         const val MAX_DISTANCE = 5.5
         const val MOVEMENT_ACTION = "com.dis.ajcra.ditest2.MOVEMENT_MATCH"
     }
@@ -61,7 +62,7 @@ class RideRecService : Service() {
     private var linearAcceleration = FloatArray(4, {0.0f})
     private var netAcceleration = FloatArray(3, {0.0f})
     private var netAccelCount: Int = 0
-    private var testStr: String? = "bigthunder"
+    private var testStr: String? = null
     private var testArrs = arrayOf(ArrayList<Int>(), ArrayList<Int>(), ArrayList<Int>())
     private var testI = 0
 
@@ -269,7 +270,7 @@ class RideRecService : Service() {
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "NONZERO")
                 bundle.putString(FirebaseAnalytics.Param.CONTENT, nonZeroCount.toString())
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                firebaseAnalytics.logEvent("RIDE_MATCH", bundle)
             }
             Log.d("RIDE_MATCH", "NONZERO: " + nonZeroCount)
             if (nonZeroCount >= MIN_NONZERO_COUNT) {
@@ -281,7 +282,7 @@ class RideRecService : Service() {
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Distribution")
                     bundle.putString(FirebaseAnalytics.Param.CONTENT, dist.toString())
                     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    firebaseAnalytics.logEvent("RIDE_MATCH", bundle)
                 }
                 kotlin.run {
                     var bundle = Bundle()
@@ -289,7 +290,7 @@ class RideRecService : Service() {
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Zeros")
                     bundle.putString(FirebaseAnalytics.Param.CONTENT, updateIsZeros.toString())
                     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    firebaseAnalytics.logEvent("RIDE_MATCH", bundle)
                 }
                 Log.d("RIDE_MATCH", "DIST: " + dist + "  UpdateIsZeros: " + updateIsZeros)
                 if (ridePacks != null && (dist <= MAXIMUM_DISTRIBUTION || updateIsZeros)) {
@@ -305,11 +306,11 @@ class RideRecService : Service() {
                             bundle.putString(FirebaseAnalytics.Param.CONTENT, result.name + ":" + result.distance)
                         }
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                        firebaseAnalytics.logEvent("RIDE_MATCH", bundle)
                     }
                     if (result != null) {
                         //Convert index back to time (may be slightly off right now)
-                        var matchTime = millis.last() - (((smartAvgs.size - result.idx).toDouble()/smartAvgs.size.toDouble()) * NUM_SECTIONS * CHECK_RATE).toLong()
+                        var matchTime = millis.last() - (((smartAvgs[0].size - result.idx).toDouble()/smartAvgs[0].size.toDouble()) * NUM_SECTIONS * CHECK_RATE).toLong()
                         accelStore!!.storeRideMatch(result.name, result.distance, matchTime)
                         resetAccels()
                     }
@@ -340,7 +341,7 @@ class RideRecService : Service() {
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "MOVEMENT_MATCH")
                     bundle.putString(FirebaseAnalytics.Param.CONTENT, result.mostProbableActivity.toString())
                     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
-                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
+                    firebaseAnalytics.logEvent("MOVEMENT_MATCH", bundle)
                 }
                 accelStore?.storeMovementMatch(result.mostProbableActivity.toString(), result.mostProbableActivity.confidence, result.time)
             }
@@ -567,7 +568,7 @@ class RideRecService : Service() {
         geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         linearAccelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         if (testStr != null) {
-            async(UI) {
+            var job = GlobalScope.launch(Dispatchers.Main) {
                 var cfm = CloudFileManager.GetInstance(CognitoManager.GetInstance(applicationContext), applicationContext)
                 Log.d("RIDE_MATCH", "Downloading test file")
                 cfm.download("rideAccels/" + testStr, object : CloudFileListener() {

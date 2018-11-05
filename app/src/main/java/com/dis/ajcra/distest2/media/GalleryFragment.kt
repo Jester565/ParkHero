@@ -24,8 +24,10 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferType
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.camera.CameraFragment
 import com.dis.ajcra.distest2.login.CognitoManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 
@@ -88,7 +90,7 @@ class GalleryFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
-            async(UI) {
+            GlobalScope.launch(Dispatchers.Main) {
                 adapter.notifyItemRangeRemoved(0, pictures.size)
                 pictures.clear()
                 if (subTransferToken != null) {
@@ -96,7 +98,7 @@ class GalleryFragment : Fragment() {
                 }
 
                 subTransferToken = cfm.addTransferListener({ objKey, transferType ->
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         Log.d("STATE", "TRANSFER CALLED")
                         if (transferType == TransferType.UPLOAD) {
                             pictures.add(0, objKey)
@@ -109,7 +111,7 @@ class GalleryFragment : Fragment() {
                     pictures.add(observerPair.key)
                     adapter.notifyItemInserted(pictures.size - 1)
                 }
-                var job = async {
+                var job = GlobalScope.async(Dispatchers.IO) {
                     Log.d("STATE", "Running job")
                     cfm.listObjects("media/" + cognitoManager.federatedID, true)
                 }
@@ -281,7 +283,7 @@ class GalleryFragment : Fragment() {
                 holder!!.ctx.startActivity(intent)
             }
 
-            async {
+            GlobalScope.launch(Dispatchers.IO) {
                 var objKey = dataset[position]
                 var file = cfm.upload(objKey, null, object : CloudFileListener() {
                     override fun onError(id: Int, ex: Exception?) {
@@ -289,7 +291,7 @@ class GalleryFragment : Fragment() {
 
                     override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
                         Log.d("STATE", "Progress change called: " + bytesCurrent + "/" + bytesTotal)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder!!.upArrow.visibility = View.VISIBLE
                             var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.ctx, R.anim.pulse)
                             holder!!.upArrow.startAnimation(pulseAnimation)
@@ -300,14 +302,14 @@ class GalleryFragment : Fragment() {
                     }
 
                     override fun onComplete(id: Int, file: File) {
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             holder!!.upArrow.clearAnimation()
                             holder!!.upArrow.visibility = View.GONE
                         }
                     }
                 })
                 if (file != null) {
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         holder!!.upArrow.visibility = View.VISIBLE
                         var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.upArrow.context, R.anim.pulse)
                         holder!!.upArrow.startAnimation(pulseAnimation)
@@ -322,7 +324,7 @@ class GalleryFragment : Fragment() {
                     options.inJustDecodeBounds = false
                     options.inSampleSize = imgScale
                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                    async(UI) {
+                    GlobalScope.launch(Dispatchers.Main) {
                         holder?.imgView?.setImageBitmap(bmap)
                     }
                 } else {
@@ -337,7 +339,7 @@ class GalleryFragment : Fragment() {
                         }
 
                         override fun onComplete(id: Int, file: File) {
-                            async {
+                            async(Dispatchers.IO) {
                                 var options = BitmapFactory.Options()
                                 options.inJustDecodeBounds = true
                                 BitmapFactory.decodeFile(file.absolutePath, options)
@@ -348,7 +350,7 @@ class GalleryFragment : Fragment() {
                                 options.inJustDecodeBounds = false
                                 options.inSampleSize = imgScale
                                 var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                async(UI) {
+                                GlobalScope.launch(Dispatchers.Main) {
                                     holder?.imgView?.setImageBitmap(bmap)
                                 }
                             }

@@ -11,8 +11,9 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.login.FriendListFragment
 import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class SendFragment: DialogFragment() {
     companion object {
@@ -55,7 +56,7 @@ class SendFragment: DialogFragment() {
         if (view != null) {
             sendButton = view.findViewById(R.id.entitysend_sendbutton)
             sendButton.setOnClickListener {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     sendButton.isEnabled = false
                     var dismiss = sendCallback?.invoke(friendListFragment.getSelected()!!)
                     if (dismiss != null && dismiss) {

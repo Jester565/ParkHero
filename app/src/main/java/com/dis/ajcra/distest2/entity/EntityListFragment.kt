@@ -13,8 +13,9 @@ import com.dis.ajcra.distest2.SnsEvent
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.ProfileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -48,7 +49,7 @@ class EntityListFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     var entities = profileManager.getEntities().await()
                     dataset.clear()
                     entities.forEach { it ->

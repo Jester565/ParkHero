@@ -24,8 +24,10 @@ import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.fastpass.fragment.DisPass
 import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 
 class PassFragment : Fragment() {
@@ -68,7 +70,7 @@ class PassFragment : Fragment() {
 
     private var listPassCB = object: PassManager.ListPassesCB {
         override fun passUpdated(userID: String, passes: List<DisPass>) {
-            async(UI) {
+            GlobalScope.launch(Dispatchers.Main) {
                 var profile: Profile?
                 var profileI = passProfiles.indexOfFirst { it ->
                     it.id == userID
@@ -113,7 +115,7 @@ class PassFragment : Fragment() {
         }
 
         override fun updateCompleted() {
-            async(UI) {
+            GlobalScope.launch(Dispatchers.Main) {
                 var updated = onLoadCB?.invoke(dataset)
                 if (updated != null && updated) {
                     adapter.notifyDataSetChanged()
@@ -183,7 +185,7 @@ class PassFragment : Fragment() {
         recyclerView.adapter = adapter
 
         recyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 Log.d("STATE", "StateChange: " + newState)
                 if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
@@ -196,8 +198,8 @@ class PassFragment : Fragment() {
                 }
             }
 
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView!!, dx, dy)
                 var c1 = colorArr.get(position % colorArr.size)
                 var c2 = 0
                 if (scrollLevel > 0) {
@@ -247,7 +249,7 @@ class PassFragment : Fragment() {
         recyclerView.setBackgroundColor(colorArr.get(position % colorArr.size))
         var profile = passProfiles.get(position)
         passChangeCB?.invoke(dataset[position])
-        async(UI) {
+        GlobalScope.launch(Dispatchers.IO) {
             if (profile != null) {
                 Log.d("STATE", "PROFILE IS NULL")
             }
@@ -257,7 +259,7 @@ class PassFragment : Fragment() {
             }
             cfm.download(profPicUrl, object : CloudFileListener() {
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    async(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -268,7 +270,7 @@ class PassFragment : Fragment() {
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
+                        GlobalScope.launch(Dispatchers.Main) {
                             profileImg.setImageBitmap(bmap)
                         }
                     }

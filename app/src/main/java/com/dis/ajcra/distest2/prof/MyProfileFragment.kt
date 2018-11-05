@@ -23,8 +23,10 @@ import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.pass.RenameProfileFragment
 import com.theartofdev.edmodo.cropper.CropImage
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URI
 
@@ -73,16 +75,16 @@ class MyProfileFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                async(UI) {
+                GlobalScope.launch(Dispatchers.Main) {
                     myProfile = profileManager.getMyProfile().await() as MyProfile
-                    async {
+                    launch(Dispatchers.IO) {
                         var profilePicUrl = myProfile.getProfilePicUrl().await()
                         if (profilePicUrl == null) {
                             profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
                         }
                         cfm.download(profilePicUrl, object : CloudFileListener() {
                             override fun onComplete(id: Int, file: File) {
-                                async {
+                                async(Dispatchers.IO) {
                                     var options = BitmapFactory.Options()
                                     options.inJustDecodeBounds = true
                                     BitmapFactory.decodeFile(file.absolutePath, options)
@@ -97,7 +99,7 @@ class MyProfileFragment : Fragment() {
                                     options.inJustDecodeBounds = false
                                     options.inSampleSize = imgScale
                                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                    async(UI) {
+                                    launch(Dispatchers.Main) {
                                         profImg.setImageBitmap(bmap)
                                     }
                                 }
@@ -116,7 +118,7 @@ class MyProfileFragment : Fragment() {
                         cameraFragment!!.arguments!!.putBoolean("videoEnabled", false)
                         cameraFragment!!.arguments!!.putBoolean("galleryEnabled", false)
                         var transaction = fragmentManager!!.beginTransaction()
-                        transaction.replace(R.id.myprofile_cameraHolder, cameraFragment).commit()
+                        transaction.replace(R.id.myprofile_cameraHolder, cameraFragment!!).commit()
                         profileLayout.visibility = View.GONE
                         cameraLayout.visibility = View.VISIBLE
                     }
@@ -138,7 +140,7 @@ class MyProfileFragment : Fragment() {
             val result = CropImage.getActivityResult(data)
             if (resultCode == RESULT_OK) {
                 val resultUri = result.uri
-                async {
+                GlobalScope.launch(Dispatchers.IO) {
                     var objKey = "tmpProfileImgs/" + cognitoManager.federatedID + ".jpg"
                     cfm.upload(objKey, URI(result.uri.toString()), object : CloudFileListener() {})
                 }
@@ -159,7 +161,7 @@ class MyProfileFragment : Fragment() {
 
     fun removeCameraFragment() {
         var transaction = fragmentManager!!.beginTransaction()
-        transaction.remove(cameraFragment).commit()
+        transaction.remove(cameraFragment!!).commit()
         cameraLayout.visibility = View.GONE
         profileLayout.visibility = View.VISIBLE
         cameraFragment = null

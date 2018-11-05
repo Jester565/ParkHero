@@ -18,8 +18,10 @@ import android.widget.TextView
 import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -111,17 +113,17 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
                 holder!!.ctx.startActivity(intent)
             }
         }
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             holder!!.profNameView.text = profile.getName().await()
         }
-        async {
+        GlobalScope.launch(Dispatchers.IO) {
             var profilePicUrl = profile.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
             }
             cfm.download(profilePicUrl, object : CloudFileListener() {
                 override fun onComplete(id: Int, file: File) {
-                    async {
+                    async(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -132,7 +134,7 @@ class ProfileRecyclerAdapter: RecyclerView.Adapter<ProfileRecyclerAdapter.ViewHo
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        async(UI) {
+                        launch(Dispatchers.Main) {
                             holder!!.profImgView!!.setImageBitmap(bmap)
                         }
                     }

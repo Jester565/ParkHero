@@ -6,8 +6,10 @@ import com.dis.ajcra.distest2.model.CreateEndpointInput
 import com.dis.ajcra.distest2.model.RemoveFriendInput
 import com.dis.ajcra.distest2.model.RenameUserInput
 import com.dis.ajcra.distest2.model.UserInfo
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 class MyProfile: Profile {
     constructor(apiClient: DisneyAppClient, id: String)
@@ -22,19 +24,19 @@ class MyProfile: Profile {
 
     }
 
-    fun rename(newName: String) = async {
+    fun rename(newName: String) = GlobalScope.async(Dispatchers.IO) {
         var input = RenameUserInput()
         input.name = newName
         apiClient.renameuserPost(input)
     }
 
-    fun removeFriend(friendId: String) = async {
+    fun removeFriend(friendId: String) = GlobalScope.async(Dispatchers.IO) {
         var input = RemoveFriendInput()
         input.friendId = friendId
         apiClient.removefriendPost(input)
     }
 
-    fun getInvites(): Deferred<List<Invite>> = async {
+    fun getInvites(): Deferred<List<Invite>> = GlobalScope.async(Dispatchers.IO) {
         var invArr = ArrayList<Invite>()
         try {
             var output = apiClient.getinvitesGet(null)
@@ -47,7 +49,7 @@ class MyProfile: Profile {
         invArr
     }
 
-    fun setEndpointArn(arn: String) = async {
+    fun setEndpointArn(arn: String) = GlobalScope.async(Dispatchers.IO) {
         try {
             var input = CreateEndpointInput()
             input.endpointArn = arn

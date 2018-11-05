@@ -20,8 +20,10 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URI
 
@@ -98,8 +100,8 @@ class VideoFragment : Fragment() {
     }
 
     fun download() {
-        async(UI) {
-            var getURIJob = async {
+        GlobalScope.launch(Dispatchers.Main) {
+            var getURIJob = async(Dispatchers.IO) {
                 cfm.genPresignedURI(key!!.toString(), 60)
             }
             var uri = getURIJob.await()

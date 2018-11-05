@@ -68,6 +68,56 @@ fragment DisRideDP on RideDP {
     dateTime
 }
 
+fragment DisNotify on NotifyConfig {
+    waitRating
+    waitTime
+    fastPassTime
+    distance
+    inLineTime
+}
+
+fragment DisRideFilter on RideFilter {
+    filterID
+    rideIDs
+    notifyConfig {
+        ...DisNotify
+    }
+}
+
+query GetRides {
+    getRides {
+        ...DisRide
+    }
+}
+
+query ListRideFilters {
+    getRideFilters {
+        ...DisRideFilter
+    }
+}
+
+mutation AddRideFilter($filterID: String, $rideIDs: [String], $notifyConfig: NotifyInput) {
+    updateRideFilter(rideFilter: {
+        filterID: $filterID
+        rideIDs: $rideIDs
+        notifyConfig: $notifyConfig
+    }) {
+        filterID
+        rideIDs
+        notifyConfig {
+            waitRating
+            waitTime
+            fastPassTime
+            distance
+            inLineTime
+        }
+    }
+}
+
+mutation DeleteRideFilter($filterID: String) {
+    deleteRideFilter(filterID: $filterID)
+}
+
 mutation AddPass($passID:String) {
     addPass(passID:$passID) {
         ...DisPass
@@ -96,12 +146,6 @@ query ListPasses {
         passes {
             ...DisPass
         }
-    }
-}
-
-query GetRides {
-    getRides {
-        ...DisRide
     }
 }
 
