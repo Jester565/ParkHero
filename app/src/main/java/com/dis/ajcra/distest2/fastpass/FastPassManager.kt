@@ -6,7 +6,7 @@ import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -98,7 +98,7 @@ class FastPassManager {
     suspend fun removeFastPass(passID: String) = suspendCoroutine<Boolean> { cont ->
         appSync.removePass(passID, object: AppSyncTest.RemovePassCallback {
             override fun onResponse(response: Boolean) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     for (subscriber in subscribers) {
                         subscriber.passRemoved(passID)
                         subscriber.updateCompleted()

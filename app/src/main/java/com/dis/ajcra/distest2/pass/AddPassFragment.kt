@@ -76,7 +76,7 @@ class AddPassFragment : DialogFragment() {
     }
 
     fun addPass(passID: String) {
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             addButton.visibility = View.GONE
             addProgressBar.visibility = View.VISIBLE
             var pass = passManager.addPass(passID)

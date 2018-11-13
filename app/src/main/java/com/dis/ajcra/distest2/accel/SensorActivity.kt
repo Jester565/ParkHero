@@ -15,7 +15,7 @@ import android.widget.TextView
 import com.dis.ajcra.distest2.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -95,7 +95,7 @@ class SensorActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             var rideMatches = accelStore.getRideMatches()
             var rideStr = ""
             rideMatches.await().forEach { rm ->

@@ -24,7 +24,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.File
@@ -173,7 +173,7 @@ class DisGcmListener : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             var entityID = payload.getString("id")
             var url = payload.getString("url")
             var ownerName = payload.getJSONObject("owner").getString("name")
@@ -239,7 +239,7 @@ class DisGcmListener : FirebaseMessagingService() {
             profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
         }
 
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             cfm.download(profilePicUrl, object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {
                 }

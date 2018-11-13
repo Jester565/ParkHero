@@ -11,6 +11,7 @@ import android.support.design.chip.Chip
 import android.support.design.chip.ChipGroup
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Editable
@@ -32,6 +33,7 @@ import com.dis.ajcra.fastpass.fragment.DisRideFilter
 import com.michaelflisar.dragselectrecyclerview.DragSelectTouchListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 
@@ -45,6 +47,7 @@ class RideTimesFragment: Fragment() {
     }
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var scheduleButton: ImageButton
     private lateinit var passButton: ImageButton
     private lateinit var timeButton: ImageButton
@@ -136,6 +139,7 @@ class RideTimesFragment: Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater!!.inflate(R.layout.fragment_ride_times, container, false)
         recyclerView = rootView.findViewById(R.id.ridelist_recycler)
+        swipeRefreshLayout = rootView.findViewById(R.id.ridelist_swipe)
         scheduleButton = rootView.findViewById(R.id.ridelist_scheduleButton)
         passButton = rootView.findViewById(R.id.ridelist_passButton)
         timeButton = rootView.findViewById(R.id.ridelist_timeButton)
@@ -154,7 +158,14 @@ class RideTimesFragment: Fragment() {
         filterEditText = rootView.findViewById(R.id.ridelist_filtername)
         filterCreateButton = rootView.findViewById(R.id.ridelist_createfilter)
 
+        swipeRefreshLayout.setOnRefreshListener {
+            getRides({
+                swipeRefreshLayout.isRefreshing = false
+            })
+        }
+
         var cancelFilter = {
+            swipeRefreshLayout.isEnabled = true
             filterChips.forEach {
                 it.first.isChecked = it.second.active
             }
@@ -206,6 +217,7 @@ class RideTimesFragment: Fragment() {
         }
 
         var onFilterEdit: (rideFilter: RideFilter) -> Unit = { rideFilter ->
+            swipeRefreshLayout.isEnabled = false
             unselectAll()
             filterEditText.setText(rideFilter.id)
             //Select rides from filter
@@ -222,6 +234,7 @@ class RideTimesFragment: Fragment() {
         }
 
         var onFilterMerge: (rideFilters: List<RideFilter>) -> Unit = { rideFilters ->
+            swipeRefreshLayout.isEnabled = false
             unselectAll()
             var combinedRideIDs = HashSet<String>()
             rideFilters.forEach { rideFilter ->
@@ -329,12 +342,29 @@ class RideTimesFragment: Fragment() {
                     if (it.second.id == filterID) {
                         filterChipGroup.removeView(it.first)
                         filterChips.remove(it)
+                        return
                     }
                 }
             }
 
             override fun onFilterUpdated(rideFilter: DisRideFilter) {
-                //onFilterUpdate.invoke(entry, rideFilter)
+                var filter = filterChips.find {
+                    it.second.id == rideFilter.filterID()
+                }
+                if (filter != null) {
+                    filter.second.rideIDs = rideFilter.rideIDs()!!
+                    if (filter.second.active) {
+                        var filters = ArrayList<RideFilter>()
+                        filterChips.forEach { entry ->
+                            if (entry.second.active) {
+                                filters.add(entry.second)
+                            }
+                        }
+                        onFilter.invoke(filters, true)
+                    }
+                } else {
+                    onFilterAdd.invoke(rideFilter)
+                }
             }
         })
 
@@ -371,10 +401,12 @@ class RideTimesFragment: Fragment() {
         filterCreateButton.setOnClickListener {
             rideFilterManager.updateFilter(filterEditText.text.toString(), selectedRideIDs.toList())
             filterEditText.setText("")
+            swipeRefreshLayout.isEnabled = true
             unselectAll()
         }
 
         filterCancelCreationButton.setOnClickListener {
+            swipeRefreshLayout.isEnabled = true
             unselectAll()
             filterEditText.setText("")
         }
@@ -384,11 +416,13 @@ class RideTimesFragment: Fragment() {
         }
 
         filterDeleteButton.setOnClickListener {
+            var filterIDs = ArrayList<String>()
             filterChips.forEach {
                 if (it.first.isChecked) {
-                    rideFilterManager.deleteFilter(it.second.id)
+                    filterIDs.add(it.second.id)
                 }
             }
+            rideFilterManager.deleteFilters(filterIDs)
             cancelFilter.invoke()
         }
 
@@ -464,10 +498,11 @@ class RideTimesFragment: Fragment() {
                 if (selectedRideIDs.isEmpty()) {
                     navigateBar.visibility = View.VISIBLE
                     filterCreateBar.visibility = View.GONE
-
+                    swipeRefreshLayout.isEnabled = true
                 } else {
                     navigateBar.visibility = View.GONE
                     filterCreateBar.visibility = View.VISIBLE
+                    swipeRefreshLayout.isEnabled = false
                 }
             }
 
@@ -538,28 +573,27 @@ class RideTimesFragment: Fragment() {
             return false
         }
         else if (!selectedRideIDs.isEmpty()) {
+            swipeRefreshLayout.isEnabled = true
             unselectAll()
             return false
         }
         return true
     }
 
-    fun getRides() {
+    fun getRides(updateCompleteCB: (() -> Unit)? = null) {
         rideManager.listRides(object: RideManager.ListRidesCB {
             override fun onAllUpdated(rides: ArrayList<CRInfo>) {
-                //animateBackground()
+                updateCompleteCB?.invoke()
             }
 
             override fun init(rideUpdates: ArrayList<CRInfo>) {
-                if (rides.isEmpty()) {
-                    for (ride in rideUpdates) {
-                        rides.put(ride.id, ride)
-                        if (visibleRideIDs == null || visibleRideIDs!!.contains(ride.id)) {
-                            addOrUpdateRideInAdapter(ride)
-                        }
+                for (ride in rideUpdates) {
+                    rides.put(ride.id, ride)
+                    if (visibleRideIDs == null || visibleRideIDs!!.contains(ride.id)) {
+                        addOrUpdateRideInAdapter(ride)
                     }
-                    adapter.notifyDataSetChanged()
                 }
+                adapter.notifyDataSetChanged()
             }
 
             override fun onAdd(ride: CRInfo) {

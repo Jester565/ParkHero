@@ -8,7 +8,10 @@ import com.dis.ajcra.distest2.AppSyncTest
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.fragment.DisRide
 import com.dis.ajcra.fastpass.fragment.DisRideTime
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -96,7 +99,7 @@ class RideManager {
                updateArr.add(ride)
             }
         }
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             for (ride in updateArr) {
                 cacheRide(ride)
             }
@@ -170,10 +173,10 @@ class RideManager {
             cb.init(rides)
         }
 
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             appSync.getRides(object: AppSyncTest.GetRidesCallback {
                 override fun onResponse(response: List<DisRide>) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         cachedRidesJob.await()
                         handleUpdatedRideList(response, cb)
                         reqCount++
@@ -189,10 +192,10 @@ class RideManager {
             }, AppSyncResponseFetchers.NETWORK_ONLY)
         }
 
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             appSync.updateRides(object : AppSyncTest.UpdateRidesCallback {
                 override fun onResponse(response: List<DisRide>?) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         cachedRidesJob.await()
                         if (response != null) {
                             handleUpdatedRideList(response, cb)

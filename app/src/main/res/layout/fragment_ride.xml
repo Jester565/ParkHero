@@ -54,6 +54,7 @@
                 android:text="30"
                 />
             <TextView
+                android:id="@+id/ride_minutewaitlabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/ride_waitMins"
@@ -80,6 +81,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
                 <TextView
+                    android:id="@+id/ride_fpLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="FastPasses For"
@@ -96,6 +98,7 @@
                     android:textSize="27dp"
                     android:text="1:15 AM - 2:15 AM"/>
                 <TextView
+                    android:id="@+id/ride_fpSubLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Are Being Distributed"
@@ -114,6 +117,7 @@
                 android:layout_centerHorizontal="true" />
         </RelativeLayout>
         <View
+            android:id="@+id/ride_waitratedivider"
             android:layout_marginVertical="10dp"
             android:layout_width="fill_parent"
             android:layout_height="2dip"
@@ -121,9 +125,12 @@
             android:layout_below="@+id/ride_timeLayout"/>
         <RelativeLayout
             android:id="@+id/ride_ratingLayout"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/ride_timeLayout">
+            android:layout_below="@+id/ride_timeLayout"
+            android:layout_margin="5dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@id/ride_waitRateHorizontalDivider">
             <TextView
                 android:id="@+id/ride_waitRating"
                 android:layout_width="wrap_content"
@@ -133,6 +140,7 @@
                 android:textSize="40dp"
                 android:text="8.2"/>
             <TextView
+                android:id="@+id/ride_waitRatingSubLabel"
                 android:layout_marginTop="15dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -142,6 +150,49 @@
                 android:text="Wait Rating" />
         </RelativeLayout>
         <View
+            android:id="@+id/ride_waitRateHorizontalDivider"
+            android:layout_width="2dip"
+            android:layout_height="match_parent"
+            android:background="#44000000"
+            android:layout_below="@+id/ride_waitLayout"
+            android:layout_alignBottom="@+id/ride_lastUpdateLayout"
+            android:layout_centerHorizontal="true"/>
+        <RelativeLayout
+            android:id="@+id/ride_lastUpdateLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ride_timeLayout"
+            android:layout_margin="5dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignLeft="@id/ride_waitRateHorizontalDivider"
+            android:layout_alignBottom="@id/ride_chartdivider">
+            <TextView
+                android:id="@+id/ride_lastUpdateLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Updated"
+                android:textSize="16dp"
+                android:layout_centerHorizontal="true"
+                android:layout_above="@id/ride_lastUpdate"/>
+            <TextView
+                android:id="@+id/ride_lastUpdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:textSize="35dp"
+                android:text="8.2"/>
+            <TextView
+                android:id="@+id/ride_lastUpdateSubLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/ride_lastUpdate"
+                android:layout_centerHorizontal="true"
+                android:textSize="16dp"
+                android:text="Minutes Ago" />
+        </RelativeLayout>
+        <View
+            android:id="@+id/ride_chartdivider"
             android:layout_marginVertical="10dp"
             android:layout_width="fill_parent"
             android:layout_height="2dip"

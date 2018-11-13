@@ -22,7 +22,7 @@ import com.dis.ajcra.fastpass.fragment.DisRideDP
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import org.json.JSONObject
 import java.util.*
 
@@ -76,7 +76,7 @@ class AppSyncTest {
             }
         }
         if (logMsg != null) {
-            GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.async(Dispatchers.IO) {
                 var bundle = Bundle()
                 bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "APPSYNC")
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, logMsg!!)

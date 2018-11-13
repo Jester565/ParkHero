@@ -75,9 +75,9 @@ class MyProfileFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     myProfile = profileManager.getMyProfile().await() as MyProfile
-                    launch(Dispatchers.IO) {
+                    async(Dispatchers.IO) {
                         var profilePicUrl = myProfile.getProfilePicUrl().await()
                         if (profilePicUrl == null) {
                             profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -99,7 +99,7 @@ class MyProfileFragment : Fragment() {
                                     options.inJustDecodeBounds = false
                                     options.inSampleSize = imgScale
                                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                    launch(Dispatchers.Main) {
+                                    async(Dispatchers.Main) {
                                         profImg.setImageBitmap(bmap)
                                     }
                                 }
@@ -140,7 +140,7 @@ class MyProfileFragment : Fragment() {
             val result = CropImage.getActivityResult(data)
             if (resultCode == RESULT_OK) {
                 val resultUri = result.uri
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.async(Dispatchers.IO) {
                     var objKey = "tmpProfileImgs/" + cognitoManager.federatedID + ".jpg"
                     cfm.upload(objKey, URI(result.uri.toString()), object : CloudFileListener() {})
                 }

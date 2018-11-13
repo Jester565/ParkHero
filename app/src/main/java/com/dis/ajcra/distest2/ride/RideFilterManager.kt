@@ -11,12 +11,15 @@ import com.apollographql.apollo.fetcher.ResponseFetcher
 import com.dis.ajcra.distest2.AppSyncTest
 import com.dis.ajcra.distest2.login.CognitoManager
 import com.dis.ajcra.fastpass.AddRideFilterMutation
-import com.dis.ajcra.fastpass.DeleteRideFilterMutation
+import com.dis.ajcra.fastpass.DeleteRideFiltersMutation
 import com.dis.ajcra.fastpass.ListRideFiltersQuery
 import com.dis.ajcra.fastpass.fragment.DisNotify
 import com.dis.ajcra.fastpass.fragment.DisRideFilter
 import com.dis.ajcra.fastpass.type.NotifyInput
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.util.*
 
 
@@ -113,55 +116,56 @@ class RideFilterManager {
                 })
     }
 
-    fun deleteFilter(filterID: String) = GlobalScope.async(Dispatchers.Main) {
-        if (rideFilters.remove(filterID) != null) {
+    fun deleteFilters(filterIDs: ArrayList<String>) = GlobalScope.async(Dispatchers.Main) {
+        filterIDs.forEach {
+            rideFilters.remove(it)
             filterSubscriptions.forEach { uuid, filterCallback ->
-                filterCallback.onFilterRemoved(filterID)
+                filterCallback.onFilterRemoved(it)
             }
-            //Optimistically update the cache
-            var listRideFiltersQuery = ListRideFiltersQuery.builder().build()
-            client.query(listRideFiltersQuery)
-                    .responseFetcher(AppSyncResponseFetchers.CACHE_ONLY)
-                    .enqueue(object : GraphQLCall.Callback<ListRideFiltersQuery.Data>() {
-                        override fun onFailure(e: ApolloException) {
-                            Log.e("RIDEFILTER", "LISTRIDEFILTERS OPTIMISTIC UPDATE ERROR: " + e.message)
-                        }
-
-                        override fun onResponse(response: Response<ListRideFiltersQuery.Data>) {
-                            var newList = ArrayList<ListRideFiltersQuery.GetRideFilter>()
-                            response.data()?.rideFilters?.forEach {
-                                //Don't add old RideFilter, we are about to replace it
-                                if (it.fragments().disRideFilter().filterID() != filterID) {
-                                    newList.add(it)
-                                }
-                            }
-                            var newRideFilterListData = ListRideFiltersQuery.Data(newList)
-                            try {
-                                client.getStore().write(listRideFiltersQuery, newRideFilterListData).execute()
-                            } catch (e: ApolloException) {
-                                Log.e("RIDEFILTER", "Failed to update ListRideFilters query optimistically", e)
-                            }
-
-                        }
-                    })
-            Log.d("RIDEFILTER", "MUTATE: " + filterID)
-            client.mutate(DeleteRideFilterMutation.builder().filterID(filterID).build())
-                    .enqueue(object : GraphQLCall.Callback<DeleteRideFilterMutation.Data>() {
-                        override fun onFailure(e: ApolloException) {
-                            Log.e("RIDEFILTER", "DELETERIDEFILTER ERROR: " + e.message)
-                        }
-
-                        override fun onResponse(response: Response<DeleteRideFilterMutation.Data>) {
-                            if (response.hasErrors()) {
-                                Log.e("RIDEFILTER", "DELETERIDEFILTERS PARSE ERROR!")
-                                var errRes = appSyncManager.parseRespErrs(response as Response<Any>)
-                            }
-                        }
-                    })
         }
+        //Optimistically update the cache
+        var listRideFiltersQuery = ListRideFiltersQuery.builder().build()
+        client.query(listRideFiltersQuery)
+                .responseFetcher(AppSyncResponseFetchers.CACHE_ONLY)
+                .enqueue(object : GraphQLCall.Callback<ListRideFiltersQuery.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.e("RIDEFILTER", "LISTRIDEFILTERS OPTIMISTIC UPDATE ERROR: " + e.message)
+                    }
+
+                    override fun onResponse(response: Response<ListRideFiltersQuery.Data>) {
+                        var newList = ArrayList<ListRideFiltersQuery.GetRideFilter>()
+                        response.data()?.rideFilters?.forEach {
+                            //Don't add old RideFilter, we are about to replace it
+                            if (!filterIDs.contains(it.fragments().disRideFilter().filterID())) {
+                                newList.add(it)
+                            }
+                        }
+                        var newRideFilterListData = ListRideFiltersQuery.Data(newList)
+                        try {
+                            client.getStore().write(listRideFiltersQuery, newRideFilterListData).execute()
+                        } catch (e: ApolloException) {
+                            Log.e("RIDEFILTER", "Failed to update ListRideFilters query optimistically", e)
+                        }
+
+                    }
+                })
+
+        client.mutate(DeleteRideFiltersMutation.builder().filterIDs(filterIDs).build())
+                .enqueue(object : GraphQLCall.Callback<DeleteRideFiltersMutation.Data>() {
+                    override fun onFailure(e: ApolloException) {
+                        Log.e("RIDEFILTER", "DELETERIDEFILTER ERROR: " + e.message)
+                    }
+
+                    override fun onResponse(response: Response<DeleteRideFiltersMutation.Data>) {
+                        if (response.hasErrors()) {
+                            Log.e("RIDEFILTER", "DELETERIDEFILTERS PARSE ERROR!")
+                            var errRes = appSyncManager.parseRespErrs(response as Response<Any>)
+                        }
+                    }
+                })
     }
 
-    fun listFilters(fetcher: ResponseFetcher = AppSyncResponseFetchers.CACHE_FIRST) {
+    fun listFilters(fetcher: ResponseFetcher = AppSyncResponseFetchers.NETWORK_FIRST) {
         client.query(ListRideFiltersQuery.builder().build())
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<ListRideFiltersQuery.Data>() {
@@ -170,7 +174,7 @@ class RideFilterManager {
                     }
 
                     override fun onResponse(response: Response<ListRideFiltersQuery.Data>) {
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             if (!response.hasErrors()) {
                                 var dataRideFilters = response.data()?.rideFilters
                                 dataRideFilters?.forEach { it ->

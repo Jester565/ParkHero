@@ -45,10 +45,10 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
             intent.putExtra("id", profile.id)
             holder!!.ctx.startActivity(intent)
         }
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             holder!!.profNameView.setText(entity.owner.getName().await())
         }
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             var profilePicUrl = entity.owner.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -78,7 +78,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder!!.profImgView!!.setImageBitmap(bmap)
                         }
                     }
@@ -102,7 +102,7 @@ class EntityRecyclerAdapter: RecyclerView.Adapter<EntityRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder!!.imgView!!.setImageBitmap(bmap)
                         }
                     }

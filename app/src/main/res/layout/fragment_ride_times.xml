@@ -6,13 +6,19 @@
     android:theme="@style/MaterialRed"
     tools:context="com.dis.ajcra.distest2.ride.RideTimesFragment">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/ridelist_recycler"
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/ridelist_swipe"
         android:layout_width="match_parent"
-        android:layout_marginTop="44dp"
-        android:layout_height="wrap_content">
-
-    </android.support.v7.widget.RecyclerView>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="43dp">
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/ridelist_recycler"
+            android:layout_width="match_parent"
+            android:layout_marginTop="44dp"
+            android:layout_height="wrap_content">
+        </android.support.v7.widget.RecyclerView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/ridelist_navigatebar"

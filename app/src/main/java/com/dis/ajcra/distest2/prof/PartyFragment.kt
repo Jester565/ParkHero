@@ -128,7 +128,7 @@ class PartyFragment : Fragment() {
             }
 
             leavePartyButton.setOnClickListener {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     inviteButton.isEnabled = false
                     leavePartyButton.isEnabled = false
                     profileManager.leaveParty().await()

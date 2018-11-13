@@ -114,8 +114,8 @@ mutation AddRideFilter($filterID: String, $rideIDs: [String], $notifyConfig: Not
     }
 }
 
-mutation DeleteRideFilter($filterID: String) {
-    deleteRideFilter(filterID: $filterID)
+mutation DeleteRideFilters($filterIDs: [String]) {
+    deleteRideFilters(filterIDs: $filterIDs)
 }
 
 mutation AddPass($passID:String) {

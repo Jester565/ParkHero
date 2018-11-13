@@ -63,7 +63,7 @@ class AccelStore {
         rm.distance = distance
         rm.time = time
         accelDB.accelDatabaseDao().insertRideMatch(rm)
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             rideMatchSubscriptions.forEach { it ->
                 it.value.invoke(rm)
             }
@@ -76,7 +76,7 @@ class AccelStore {
         mm.confidence = confidence
         mm.time = time
         accelDB.accelDatabaseDao().insertMovementMatch(mm)
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             movementMatchSubscriptions.forEach { it ->
                 it.value.invoke(mm)
             }

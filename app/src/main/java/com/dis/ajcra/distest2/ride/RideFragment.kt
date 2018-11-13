@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
@@ -28,16 +29,15 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 
-class RideFragment : Fragment() {
+class RideFragment : CoroutineScope, Fragment() {
     private lateinit var cognitoManager: CognitoManager
     private lateinit var cfm: CloudFileManager
     private lateinit var rideManager: RideManager
@@ -47,16 +47,54 @@ class RideFragment : Fragment() {
     private lateinit var noDataText: TextView
     private lateinit var rideNameText: TextView
     private lateinit var rideWaitText: TextView
+    private lateinit var rideFPLabel: TextView
     private lateinit var rideFPText: TextView
+    private lateinit var rideFPSubLabel: TextView
     private lateinit var rideRatingText: TextView
+    private lateinit var rideRatingSubLabel: TextView
+    private lateinit var rideLastUpdatedLabel: TextView
+    private lateinit var rideLastUpdatedText: TextView
+    private lateinit var rideLastUpdatedSubLabel: TextView
     private lateinit var rideImg: ImageView
+    private lateinit var minuteWaitLabel: TextView
     private var ratingFormat = DecimalFormat("#.#")
     private var fpParseFormat = SimpleDateFormat("HH:mm:ss")
     private var dateDispFormat = SimpleDateFormat("h:mm a")
+    var dateParser = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     private var infoSet: Boolean = false
+    private var lastUpdateRefreshHandler: Handler? = null
+    private var rideDPs: AppSyncTest.DisRideDPs? = null
+    private var waitTime: Int? = null
+    private var fastPassTime: String? = null
+    private var lastUpdated: Long? = null
+
+    private var displayLastUpdated = {
+        var lastUpdatedTimestamp = lastUpdated
+        if (lastUpdatedTimestamp != null) {
+            rideLastUpdatedLabel.text = "Updated"
+            var updatedMinsAgo = (Date().time - lastUpdatedTimestamp) / (1000 * 60)
+            if (updatedMinsAgo == 0L) {
+                rideLastUpdatedText.text = "Just Now"
+                rideLastUpdatedSubLabel.text = ""
+            } else {
+                rideLastUpdatedText.text = updatedMinsAgo.toString()
+                rideLastUpdatedSubLabel.text = "Minutes Ago"
+            }
+        }
+    }
+
+    lateinit var job: Job
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        job = Job()
         cognitoManager = CognitoManager.GetInstance(this.context!!.applicationContext)
         cfm = CloudFileManager.GetInstance(cognitoManager, context!!.applicationContext)
         rideManager = RideManager.GetInstance(cognitoManager, context!!.applicationContext)
@@ -71,9 +109,16 @@ class RideFragment : Fragment() {
         noDataText = rootView.findViewById(R.id.ride_nodata)
         rideNameText = rootView.findViewById(R.id.ride_name)
         rideWaitText = rootView.findViewById(R.id.ride_waitMins)
+        rideFPLabel = rootView.findViewById(R.id.ride_fpLabel)
         rideFPText = rootView.findViewById(R.id.ride_fpText)
+        rideFPSubLabel = rootView.findViewById(R.id.ride_fpSubLabel)
         rideRatingText = rootView.findViewById(R.id.ride_waitRating)
+        rideRatingSubLabel = rootView.findViewById(R.id.ride_waitRatingSubLabel)
         rideImg = rootView.findViewById(R.id.ride_img)
+        minuteWaitLabel = rootView.findViewById(R.id.ride_minutewaitlabel)
+        rideLastUpdatedLabel = rootView.findViewById(R.id.ride_lastUpdateLabel)
+        rideLastUpdatedText = rootView.findViewById(R.id.ride_lastUpdate)
+        rideLastUpdatedSubLabel = rootView.findViewById(R.id.ride_lastUpdateSubLabel)
 
         return rootView
     }
@@ -145,23 +190,26 @@ class RideFragment : Fragment() {
 
     }
 
-    fun getChartDps(dps: ArrayList<DisRideDP>, label: String, color: Int, textColor: Int): LineDataSet? {
+    fun getChartDps(dps: List<DisRideDP>, label: String, color: Int, textColor: Int): LineDataSet? {
         var graphEntries = ArrayList<Entry>()
-        var formatParser = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         var cal = GregorianCalendar.getInstance()
         var lastDow: Int? = null
         for (rideDP in dps) {
             if (rideDP.dateTime() != null) {
                 var waitMins = rideDP.waitTime()
                 if (waitMins != null) {
-                    var date = formatParser.parse(rideDP.dateTime())
+                    var date = dateParser.parse(rideDP.dateTime())
                     cal.time = date
                     var dow = cal.get(Calendar.DAY_OF_WEEK)
                     var hour = cal.get(Calendar.HOUR_OF_DAY)
                     var mins = cal.get(Calendar.MINUTE)
+                    if (lastDow == null) {
+                        lastDow = dow
+                    }
                     if (lastDow != null && lastDow != dow) {
                         hour += 24
                     }
+                    Log.d("RIDEDP", "X: " + (hour.toFloat() * 100f + (mins.toFloat()/60f) * 100f))
                     graphEntries.add(Entry(hour.toFloat() * 100f + (mins.toFloat()/60f) * 100f, waitMins.toFloat()))
                 }
             }
@@ -197,10 +245,10 @@ class RideFragment : Fragment() {
         return false
     }
 
-    fun initMultiChart(rideDPs: AppSyncTest.DisRideDPs): Boolean {
+    fun initMultiChart(historicalDPs: List<DisRideDP>, predictedDPs: List<DisRideDP>): Boolean {
         Log.d("STATE", "RIDE DPS not null")
-        var historicDataset = getChartDps(rideDPs.rideDPs, "Wait Times", Color.rgb(200, 200, 200), Color.WHITE)
-        var predictDataset = getChartDps(rideDPs.predictedDPs, "Predict Times", Color.rgb(50, 50, 50), Color.BLACK)
+        var historicDataset = getChartDps(historicalDPs, "Wait Times", Color.rgb(200, 200, 200), Color.WHITE)
+        var predictDataset = getChartDps(predictedDPs, "Predict Times", Color.rgb(255, 50, 50), Color.WHITE)
         if (historicDataset != null || predictDataset != null) {
             var xAxisFormatter = HourAxisTimeValueFormatter()
             waitTimeChart.xAxis.setValueFormatter(xAxisFormatter)
@@ -234,7 +282,7 @@ class RideFragment : Fragment() {
         if (!infoSet) {
             var picUrl = ride.picURL
             if (picUrl != null) {
-                GlobalScope.launch(Dispatchers.IO) {
+                async(Dispatchers.IO) {
                     picUrl = picUrl?.substring(0, picUrl?.length!! - 4) + "-2" + picUrl?.substring(picUrl?.length!! - 4)
                     Log.d("STATE", "PICURL: " + picUrl)
                     cfm.download(picUrl.toString(), object : CloudFileListener() {
@@ -246,7 +294,7 @@ class RideFragment : Fragment() {
 
                         override fun onComplete(id: Int, file: File) {
                             Log.d("STATE", "Ride download complete")
-                            GlobalScope.launch(Dispatchers.Main) {
+                            async(Dispatchers.Main) {
                                 rideImg.setImageURI(Uri.fromFile(file))
                             }
                         }
@@ -262,9 +310,11 @@ class RideFragment : Fragment() {
 
     fun updateTimes(ride: CRInfo) {
         if (ride.waitTime != null) {
-            rideWaitText.text =ride.waitTime.toString()
-        } else {
             rideWaitText.text = ride.waitTime.toString()
+            minuteWaitLabel.text = "Minute Wait"
+        } else {
+            rideWaitText.text = ride.status
+            minuteWaitLabel.text = ""
         }
         var fpTimeStr = ride.fpTime
         if (fpTimeStr != null) {
@@ -274,28 +324,59 @@ class RideFragment : Fragment() {
             var dispStr1 = dateDispFormat.format(date)
             cal.add(Calendar.HOUR, 1)
             var dispStr2 = dateDispFormat.format(cal.time)
+            rideFPLabel.text = "FastPasses For"
             rideFPText.text = dispStr1 + " to " + dispStr2
+            rideFPSubLabel.text = "Are Being Distributed"
         } else {
+            rideFPLabel.text = "FastPasses Are"
             rideFPText.text = "Not Available"
+            rideFPSubLabel.text = ""
         }
         var wr = ride.waitRating
         if (wr != null) {
             rideRatingText.text = ratingFormat.format(wr)
+            rideRatingSubLabel.text = "Wait Rating"
         } else {
             rideRatingText.text = "No Rating"
+            rideRatingSubLabel.text = ""
+        }
+        lastUpdated = ride.lastChangeTime
+        displayLastUpdated.invoke()
+        if (lastUpdateRefreshHandler == null) {
+            lastUpdateRefreshHandler = Handler()
+            lastUpdateRefreshHandler?.postDelayed(displayLastUpdated, 60 * 1000)
+        }
+        waitTime = ride.waitTime
+        fastPassTime = ride.fpTime
+        var rideDPs = this@RideFragment.rideDPs
+        if (rideDPs != null) {
+            initMultiChart(rideDPs)
         }
     }
 
+    fun initMultiChart(rideDPs: AppSyncTest.DisRideDPs) {
+        if (rideDPs.rideDPs.size > 0 && waitTime == rideDPs.rideDPs.last().waitTime()) {
+            rideDPs.rideDPs.removeAt(rideDPs.rideDPs.lastIndex)
+        }
+        if (waitTime != null) {
+            rideDPs!!.rideDPs.add(DisRideDP("__DisRideDP", waitTime, fastPassTime, dateParser.format(Date())))
+        }
+        if (rideDPs == null || !initMultiChart(rideDPs.rideDPs, rideDPs.predictedDPs)) {
+            noDataText.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
+        }
+    }
+
+
     override fun onResume() {
         super.onResume()
-        GlobalScope.launch(Dispatchers.Main) {
+        async(Dispatchers.Main) {
             rideManager.getRideDPs(rideID, object: AppSyncTest.GetRideDPsCallback {
                 override fun onResponse(rideDPs: AppSyncTest.DisRideDPs?) {
-                    GlobalScope.launch(Dispatchers.Main) {
-                        Log.d("STATE", "COMPLETED RideDPS")
-                        if (rideDPs == null || !initMultiChart(rideDPs)) {
-                            noDataText.visibility = View.VISIBLE
-                            progressBar.visibility = View.GONE
+                    GlobalScope.async(Dispatchers.Main) {
+                        if (rideDPs != null) {
+                            this@RideFragment.rideDPs = rideDPs
+                            initMultiChart(rideDPs!!)
                         }
                     }
                 }
@@ -314,6 +395,12 @@ class RideFragment : Fragment() {
                 }
             })
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        lastUpdateRefreshHandler?.removeCallbacks(displayLastUpdated)
+        lastUpdateRefreshHandler = null
     }
 
     companion object {

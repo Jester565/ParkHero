@@ -100,7 +100,7 @@ class VideoFragment : Fragment() {
     }
 
     fun download() {
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             var getURIJob = async(Dispatchers.IO) {
                 cfm.genPresignedURI(key!!.toString(), 60)
             }

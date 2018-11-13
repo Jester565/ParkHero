@@ -6,13 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".ParkScheduleActivity"
     android:orientation="vertical">
-    <TextView
+    <LinearLayout
+        android:id="@+id/parkschedule_passLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Park Schedules"
-        android:textSize="32dp"
-        android:textStyle="bold"
-        android:gravity="center_horizontal" />
+        android:orientation="vertical" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -24,7 +24,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -74,7 +74,7 @@ class HourlyWeatherFragment : Fragment() {
         var dateStr = hourDateFormat.format(date)
         appSync.getHourlyWeather(dateStr, object: AppSyncTest.GetHourlyWeatherCallback {
             override fun onResponse(data: List<GetHourlyWeatherQuery.Weather>) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     Log.d("STATE: ", "Hourly weather response")
                     weatherProgress.visibility = View.GONE
                     if (displayWeather(data)) {

@@ -90,7 +90,7 @@ class GalleryFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
-            GlobalScope.launch(Dispatchers.Main) {
+            GlobalScope.async(Dispatchers.Main) {
                 adapter.notifyItemRangeRemoved(0, pictures.size)
                 pictures.clear()
                 if (subTransferToken != null) {
@@ -98,7 +98,7 @@ class GalleryFragment : Fragment() {
                 }
 
                 subTransferToken = cfm.addTransferListener({ objKey, transferType ->
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         Log.d("STATE", "TRANSFER CALLED")
                         if (transferType == TransferType.UPLOAD) {
                             pictures.add(0, objKey)
@@ -283,7 +283,7 @@ class GalleryFragment : Fragment() {
                 holder!!.ctx.startActivity(intent)
             }
 
-            GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.async(Dispatchers.IO) {
                 var objKey = dataset[position]
                 var file = cfm.upload(objKey, null, object : CloudFileListener() {
                     override fun onError(id: Int, ex: Exception?) {
@@ -291,7 +291,7 @@ class GalleryFragment : Fragment() {
 
                     override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
                         Log.d("STATE", "Progress change called: " + bytesCurrent + "/" + bytesTotal)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder!!.upArrow.visibility = View.VISIBLE
                             var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.ctx, R.anim.pulse)
                             holder!!.upArrow.startAnimation(pulseAnimation)
@@ -302,14 +302,14 @@ class GalleryFragment : Fragment() {
                     }
 
                     override fun onComplete(id: Int, file: File) {
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder!!.upArrow.clearAnimation()
                             holder!!.upArrow.visibility = View.GONE
                         }
                     }
                 })
                 if (file != null) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         holder!!.upArrow.visibility = View.VISIBLE
                         var pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(holder!!.upArrow.context, R.anim.pulse)
                         holder!!.upArrow.startAnimation(pulseAnimation)
@@ -324,7 +324,7 @@ class GalleryFragment : Fragment() {
                     options.inJustDecodeBounds = false
                     options.inSampleSize = imgScale
                     var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         holder?.imgView?.setImageBitmap(bmap)
                     }
                 } else {
@@ -350,7 +350,7 @@ class GalleryFragment : Fragment() {
                                 options.inJustDecodeBounds = false
                                 options.inSampleSize = imgScale
                                 var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                GlobalScope.launch(Dispatchers.Main) {
+                                GlobalScope.async(Dispatchers.Main) {
                                     holder?.imgView?.setImageBitmap(bmap)
                                 }
                             }

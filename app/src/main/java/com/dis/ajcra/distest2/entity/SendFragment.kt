@@ -13,7 +13,7 @@ import com.dis.ajcra.distest2.prof.Profile
 import com.dis.ajcra.distest2.prof.ProfileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 class SendFragment: DialogFragment() {
     companion object {
@@ -56,7 +56,7 @@ class SendFragment: DialogFragment() {
         if (view != null) {
             sendButton = view.findViewById(R.id.entitysend_sendbutton)
             sendButton.setOnClickListener {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     sendButton.isEnabled = false
                     var dismiss = sendCallback?.invoke(friendListFragment.getSelected()!!)
                     if (dismiss != null && dismiss) {

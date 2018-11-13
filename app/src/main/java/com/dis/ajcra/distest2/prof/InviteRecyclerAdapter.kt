@@ -18,7 +18,7 @@ import com.dis.ajcra.distest2.media.CloudFileListener
 import com.dis.ajcra.distest2.media.CloudFileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.io.File
 
 /**
@@ -47,7 +47,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             holder!!.acceptButton.visibility = View.VISIBLE
             holder!!.declineButton.visibility = View.VISIBLE
             holder!!.acceptButton.setOnClickListener {v ->
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     dataset[holder!!.adapterPosition].target.addFriend().await()
                     v.isEnabled = false
                     dataset[holder!!.adapterPosition].accept()
@@ -56,7 +56,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                 }
             }
             holder!!.declineButton.setOnClickListener {v ->
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     dataset[holder!!.adapterPosition].target.removeFriend().await()
                     v.isEnabled = false
                     dataset[holder!!.adapterPosition].decline()
@@ -71,7 +71,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             intent.putExtra("id", profile.id)
             holder!!.ctx.startActivity(intent)
         }
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             holder!!.profNameView.text = dataset[position].target.getName().await()
             var inviteStatus = dataset[position].target.getInviteStatus().await()
             if (inviteStatus == 1) {
@@ -83,7 +83,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
             }
             Log.d("STATE", "Name set: " + holder!!.profNameView.text)
         }
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             var profilePicUrl = dataset[position].target.getProfilePicUrl().await()
             if (profilePicUrl == null) {
                 profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -102,7 +102,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                 }
 
                 override fun onComplete(id: Int, file: File) {
-                    GlobalScope.launch(Dispatchers.IO) {
+                    GlobalScope.async(Dispatchers.IO) {
                         var options = BitmapFactory.Options()
                         options.inJustDecodeBounds = true
                         BitmapFactory.decodeFile(file.absolutePath, options)
@@ -113,7 +113,7 @@ class InviteRecyclerAdapter: RecyclerView.Adapter<InviteRecyclerAdapter.ViewHold
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder!!.profImgView!!.setImageBitmap(bmap)
                         }
                     }

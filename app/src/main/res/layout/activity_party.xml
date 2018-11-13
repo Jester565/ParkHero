@@ -7,6 +7,13 @@
     tools:context=".PartyActivity"
     android:orientation="vertical">
     <LinearLayout
+        android:id="@+id/partyactivity_passLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    </LinearLayout>
+    <LinearLayout
         android:id="@+id/partyactivity_partyLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

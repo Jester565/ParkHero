@@ -16,7 +16,6 @@ import com.github.chrisbanes.photoview.PhotoView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 
@@ -92,12 +91,12 @@ class PictureFragment : Fragment() {
     }
 
     fun download() {
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             cfm.download(key.toString(), object : CloudFileListener() {
                 override fun onComplete(id: Int, file: File) {
                     async(Dispatchers.IO) {
                         var bmp = BitmapFactory.decodeFile(file.absolutePath)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             photoView?.setImageBitmap(bmp)
                         }
                     }

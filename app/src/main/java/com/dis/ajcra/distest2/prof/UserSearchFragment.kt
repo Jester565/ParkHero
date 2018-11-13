@@ -17,7 +17,7 @@ import com.dis.ajcra.distest2.prof.ProfileManager
 import com.dis.ajcra.distest2.prof.ProfileRecyclerAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 class UserSearchFragment : Fragment() {
     private lateinit var cognitoManager: CognitoManager
@@ -62,7 +62,7 @@ class UserSearchFragment : Fragment() {
                     override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
                     override fun onTextChanged(inStr: CharSequence?, start: Int, before: Int, count: Int) {
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             var profiles = profileManager.getUsers(inStr.toString()).await()
                             var i = 0
                             var j = 0

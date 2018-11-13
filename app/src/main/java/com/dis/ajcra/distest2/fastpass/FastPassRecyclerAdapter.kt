@@ -15,7 +15,7 @@ import com.dis.ajcra.distest2.ride.RideManager
 import com.dis.ajcra.fastpass.fragment.DisFastPassTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.io.File
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -80,7 +80,7 @@ class FastPassRecyclerAdapter(private var transactions: List<DisFastPassTransact
                     var picUrl = ride.picURL
                     if (picUrl != null && !holder.imgSet) {
                         holder.imgSet = true
-                        GlobalScope.launch(Dispatchers.IO) {
+                        GlobalScope.async(Dispatchers.IO) {
                             picUrl = ride.picURL?.substring(0, picUrl?.length!! - 4) + "-2" + picUrl?.substring(picUrl?.length!! - 4)
                             cfm.download(picUrl!!, object : CloudFileListener() {
                                 override fun onComplete(id: Int, file: File) {

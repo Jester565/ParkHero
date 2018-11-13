@@ -75,7 +75,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         }
 
         override fun onPictureTaken(jpeg: ByteArray?) {
-            GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.async(Dispatchers.IO) {
                 //Save jpeg byte array to file
                 var jpegFile = File(appCtx.filesDir, UUID.randomUUID().toString() + ".jpg")
                 if (jpeg != null) {
@@ -100,7 +100,7 @@ class CameraFragment : Fragment(), GalleryFragmentListener {
         override fun onVideoTaken(file: File?) {
             if (file != null) {
                 Log.d("STATE", "Uploading video")
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.async(Dispatchers.IO) {
                     var objKey = "media/" + cognitoManager.federatedID + "/" + file.name
                     cloudFileManager.upload(objKey, file.toURI(), object : CloudFileListener() {
                         override fun onComplete(id: Int, file: File) {

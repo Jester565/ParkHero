@@ -119,7 +119,7 @@ class ScrollGalleryFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     var pagerI = pagerAdapter.init(arguments!!.getString(OBJKEY_PARAM)).await()
                     viewPager.currentItem = pagerI
                 }

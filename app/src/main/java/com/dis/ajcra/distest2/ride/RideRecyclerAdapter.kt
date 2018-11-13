@@ -19,7 +19,7 @@ import com.dis.ajcra.distest2.media.CloudFileManager
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -120,7 +120,7 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
         if (picUrl != null && holder.imgKey != picUrl)
         {
             holder.imgKey = picUrl
-            GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.async(Dispatchers.IO) {
                 picUrl = picUrl?.substring(0, picUrl?.length!! - 4) + "-0" + picUrl?.substring(picUrl?.length!! - 4)
                 Log.d("STATE", "PICURL: " + picUrl)
                 cfm.download(picUrl.toString(), object : CloudFileListener() {
@@ -130,7 +130,7 @@ class RideRecyclerAdapter: RecyclerView.Adapter<RideRecyclerAdapter.ViewHolder> 
 
                     override fun onComplete(id: Int, file: File) {
                         Log.d("STATE", "Ride download complete")
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             holder.imgView.setImageURI(Uri.fromFile(file))
                         }
                     }

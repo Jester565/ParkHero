@@ -29,7 +29,7 @@ import com.dis.ajcra.distest2.media.CloudFileManager
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import tutorial.Acceleration
 import java.io.File
 import java.util.*
@@ -201,7 +201,7 @@ class AccelService2 : Service() {
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                 firebaseAnalytics.logEvent("RIDE_STORE", bundle)
             }
-            GlobalScope.launch(Dispatchers.Default) {
+            GlobalScope.async(Dispatchers.Default) {
                 cfm.upload("recs/" + ridename + ".3gpp", audioFile.toURI(), object : CloudFileListener() {
                     override fun onComplete(id: Int, file: File) {
                         super.onComplete(id, file)
@@ -219,7 +219,7 @@ class AccelService2 : Service() {
             }
         }
 
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             uploadAcceleration("rideAccels/" + ridename, ridename!!)
             accelDataBuilder.clear()
             ridename = null
@@ -241,7 +241,7 @@ class AccelService2 : Service() {
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
             firebaseAnalytics.logEvent("RIDE_STORE", bundle)
         }
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             cfm.upload(objKey, file.toURI(), object : CloudFileListener() {
                 override fun onError(id: Int, ex: Exception?) {
                     Log.d("ACCEL", "Upload error: " + ex?.message)

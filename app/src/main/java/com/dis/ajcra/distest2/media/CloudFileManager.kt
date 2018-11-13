@@ -16,7 +16,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import java.io.File
 import java.net.URI
 import java.util.*
@@ -104,7 +104,7 @@ class AWSCloudFileObserver: CloudFileObserver {
     }
 
     override fun onStateChanged(id: Int, state: TransferState?) {
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             Log.d("CFM", "TransferState: " + state)
             if (state == TransferState.COMPLETED) {
                 cfi.fileURI = file.toURI().toString()
@@ -158,7 +158,7 @@ class HttpCloudFileObserver: CloudFileObserver {
     }
 
     override fun onStateChanged(id: Int, state: TransferState?) {
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             if (state == TransferState.COMPLETED) {
                 cfi.fileURI = file.toURI().toString()
                 cfi.lastAccessed = Date().time
@@ -224,7 +224,7 @@ class CloudFileManager {
         transferUtility = TransferUtility(s3Client, appContext)
         httpUtility = HttpDownloadUtility()
         cfiDb = Room.databaseBuilder(appContext, CloudFileDatabase::class.java, "cfi").build()
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             initTransfers()
             displayFileInfo()
         }

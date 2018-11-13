@@ -27,7 +27,6 @@ import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.io.File
 
 class PassFragment : Fragment() {
@@ -70,7 +69,7 @@ class PassFragment : Fragment() {
 
     private var listPassCB = object: PassManager.ListPassesCB {
         override fun passUpdated(userID: String, passes: List<DisPass>) {
-            GlobalScope.launch(Dispatchers.Main) {
+            GlobalScope.async(Dispatchers.Main) {
                 var profile: Profile?
                 var profileI = passProfiles.indexOfFirst { it ->
                     it.id == userID
@@ -115,7 +114,7 @@ class PassFragment : Fragment() {
         }
 
         override fun updateCompleted() {
-            GlobalScope.launch(Dispatchers.Main) {
+            GlobalScope.async(Dispatchers.Main) {
                 var updated = onLoadCB?.invoke(dataset)
                 if (updated != null && updated) {
                     adapter.notifyDataSetChanged()
@@ -249,7 +248,7 @@ class PassFragment : Fragment() {
         recyclerView.setBackgroundColor(colorArr.get(position % colorArr.size))
         var profile = passProfiles.get(position)
         passChangeCB?.invoke(dataset[position])
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.async(Dispatchers.IO) {
             if (profile != null) {
                 Log.d("STATE", "PROFILE IS NULL")
             }
@@ -270,7 +269,7 @@ class PassFragment : Fragment() {
                         options.inJustDecodeBounds = false
                         options.inSampleSize = imgScale
                         var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             profileImg.setImageBitmap(bmap)
                         }
                     }

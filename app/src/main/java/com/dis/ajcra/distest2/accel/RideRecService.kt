@@ -26,7 +26,7 @@ import com.google.android.gms.location.ActivityRecognitionResult
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import tutorial.Acceleration
 import java.io.File
 import java.io.FileInputStream
@@ -568,7 +568,7 @@ class RideRecService : Service() {
         geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         linearAccelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         if (testStr != null) {
-            var job = GlobalScope.launch(Dispatchers.Main) {
+            var job = GlobalScope.async(Dispatchers.Main) {
                 var cfm = CloudFileManager.GetInstance(CognitoManager.GetInstance(applicationContext), applicationContext)
                 Log.d("RIDE_MATCH", "Downloading test file")
                 cfm.download("rideAccels/" + testStr, object : CloudFileListener() {

@@ -8,7 +8,7 @@ import com.dis.ajcra.fastpass.ListPassesQuery
 import com.dis.ajcra.fastpass.fragment.DisPass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -73,7 +73,7 @@ class PassManager {
     suspend fun addPass(passID: String) = suspendCoroutine<DisPass> { cont ->
         appSync.addPass(passID, object: AppSyncTest.AddPassCallback {
             override fun onResponse(response: DisPass) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     var myProfile = profileManager.genMyProfile().await()
                     var dpList = arrayListOf(response)
                     for (subscriber in subscribers) {
@@ -93,7 +93,7 @@ class PassManager {
     suspend fun removePass(passID: String) = suspendCoroutine<Boolean> { cont ->
         appSync.removePass(passID, object: AppSyncTest.RemovePassCallback {
             override fun onResponse(response: Boolean) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     for (subscriber in subscribers) {
                         subscriber.passRemoved(passID)
                         subscriber.updateCompleted()

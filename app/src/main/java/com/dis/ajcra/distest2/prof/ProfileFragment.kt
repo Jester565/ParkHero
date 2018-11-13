@@ -108,7 +108,7 @@ class ProfileFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.async(Dispatchers.IO) {
                     var profilePicUrl = profile.getProfilePicUrl().await()
                     if (profilePicUrl == null) {
                         profilePicUrl = "profileImgs/blank-profile-picture-973460_640.png"
@@ -130,14 +130,14 @@ class ProfileFragment : Fragment() {
                                 options.inJustDecodeBounds = false
                                 options.inSampleSize = imgScale
                                 var bmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                                launch(Dispatchers.Main) {
+                                async(Dispatchers.Main) {
                                     profImg.setImageBitmap(bmap)
                                 }
                             }
                         }
                     }, null, true)
                 }
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     nameText.setText(profile.getName().await())
                     var status = profile.getInviteStatus().await()
                     var type = profile.getInviteType().await()
@@ -168,7 +168,7 @@ class ProfileFragment : Fragment() {
             acceptButton.text = "Send Friend Request"
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     var nowFriend = profile.addFriend().await()
                     if (nowFriend) {
                         initFriendStatus(3)
@@ -183,7 +183,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Cancel Friend Request"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -197,7 +197,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     var nowFriend = profile.addFriend().await()
                     if (nowFriend) {
                         initFriendStatus(3)
@@ -210,7 +210,7 @@ class ProfileFragment : Fragment() {
             declineButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -221,7 +221,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.addToParty().await()
                     initPartyStatus(1)
                 }
@@ -230,7 +230,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Unfriend"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.removeFriend().await()
                     initFriendStatus(0)
                 }
@@ -249,7 +249,7 @@ class ProfileFragment : Fragment() {
             declineButton.text = "Cancel Party Invite"
             declineButton.setOnClickListener {
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.removePartyInvite().await()
                     initFriendStatus(3)
                 }
@@ -263,7 +263,7 @@ class ProfileFragment : Fragment() {
             acceptButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.addToParty().await()
                     initFriendStatus(3)
                 }
@@ -272,7 +272,7 @@ class ProfileFragment : Fragment() {
             declineButton.setOnClickListener {
                 acceptButton.isEnabled = false
                 declineButton.isEnabled = false
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profile.removePartyInvite().await()
                     initFriendStatus(3)
                 }

@@ -69,7 +69,7 @@ class RenameProfileFragment : DialogFragment() {
     }
 
     fun rename(name: String) {
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             nameEditText.setFocusable(false)
             checkButton.visibility = View.GONE
             changeProgressBar.visibility = View.VISIBLE

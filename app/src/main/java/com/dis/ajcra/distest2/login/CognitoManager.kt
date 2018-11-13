@@ -91,7 +91,7 @@ class CognitoManager {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "REFRESH_LOGIN")
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
         }
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             refreshHandler?.removeCallbacks(refreshCB)
             refreshHandler = null
             refreshCB = null
@@ -133,7 +133,7 @@ class CognitoManager {
                             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
                         }
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             addLogin("accounts.google.com", result.getResult().idToken!!).await()
                             for (entry in loginHandlers) {
                                 entry.value.invoke(null)
@@ -163,7 +163,7 @@ class CognitoManager {
                     bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "text")
                     firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle)
                 }
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken).await()
                     for (entry in loginHandlers) {
                         entry.value.invoke(null)
@@ -205,13 +205,13 @@ class CognitoManager {
     fun subscribeToLogin(cb: (Exception?) -> Unit): String {
         var token = UUID.randomUUID().toString()
         loginHandlers[token] = cb
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             try {
                 if (credentialsProvider.sessionCredentitalsExpiration > Date()) {
                     cb(null)
                 }
             } catch (ex: Exception) {  //sessionCredentialsExpiration is null, so the user is not logged in (happens on firsttime boot)
-                cb(null)
+                cb(ex)
             }
         }
         return token
@@ -316,7 +316,7 @@ class CognitoManager {
     fun login(pwd: String, cb: LoginHandler) {
         val handler = object : AuthenticationHandler {
             override fun onSuccess(userSession: CognitoUserSession?, device: CognitoDevice?) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     addLogin(COGNITO_USER_POOL_ARN, userSession!!.idToken.jwtToken)
                     refreshLogin()
                     cb.onSuccess()
@@ -408,7 +408,7 @@ class CognitoManager {
             }
             Log.e("COGNITOMANAGER", "ADDLOGIN EXCEPTION: " + ex.message)
         }
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             try {
                 refreshCB = Runnable {
                     refreshLogin()

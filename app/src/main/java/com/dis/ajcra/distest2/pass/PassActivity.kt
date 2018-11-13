@@ -12,7 +12,7 @@ import com.dis.ajcra.distest2.R
 import com.dis.ajcra.distest2.login.CognitoManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 
 class PassActivity : FragmentActivity() {
@@ -57,7 +57,7 @@ class PassActivity : FragmentActivity() {
             val dialogClickListener = DialogInterface.OnClickListener { dialog, which ->
                 when (which) {
                     DialogInterface.BUTTON_POSITIVE -> {
-                        GlobalScope.launch(Dispatchers.Main) {
+                        GlobalScope.async(Dispatchers.Main) {
                             var removed = passManager.removePass(pass.id()!!)
                             if (removed) {
                                 Toast.makeText(this@PassActivity, "Pass Deleted", Toast.LENGTH_SHORT).show()

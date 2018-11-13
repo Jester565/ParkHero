@@ -35,7 +35,6 @@ import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -119,10 +118,10 @@ class HomeFragment : Fragment() {
         super.onResume()
         subLoginToken = cognitoManager.subscribeToLogin { ex ->
             if (ex == null) {
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     myProfile = profileManager.genMyProfile().await()
                     if (myProfile == null) {
-                        return@launch
+                        return@async
                     }
                     profileNameText.text = myProfile!!.getName().await()
                     if (!cognitoManager.hasCredentials().await()) {
@@ -187,7 +186,7 @@ class HomeFragment : Fragment() {
         cfm.download(objKey, object: CloudFileListener() {
             override fun onComplete(id: Int, file: File) {
                 super.onComplete(id, file)
-                GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.async(Dispatchers.Main) {
                     profilePicView.setImageURI(Uri.fromFile(file))
                 }
             }

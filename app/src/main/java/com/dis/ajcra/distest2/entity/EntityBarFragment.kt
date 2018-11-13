@@ -13,7 +13,7 @@ import com.dis.ajcra.distest2.media.CloudFileManager
 import com.dis.ajcra.distest2.prof.ProfileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 interface EntityBarListener {
     fun onGetObjKeys(): ArrayList<String>
@@ -65,11 +65,11 @@ class EntityBarFragment : Fragment() {
                 esf.show(childFragmentManager, "Entity Send")
             }
             deleteButton.setOnClickListener {
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.async(Dispatchers.IO) {
                     this@EntityBarFragment.listener!!.onGetObjKeys().forEach { it ->
                         cfm.delete(it)
                     }
-                    GlobalScope.launch(Dispatchers.Main) {
+                    GlobalScope.async(Dispatchers.Main) {
                         this@EntityBarFragment.listener!!.onDelete()
                     }
                 }
