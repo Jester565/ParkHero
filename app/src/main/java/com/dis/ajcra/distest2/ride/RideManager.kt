@@ -238,6 +238,6 @@ class RideManager {
     }
 
     fun getRideDPs(rideID: String, cb: AppSyncTest.GetRideDPsCallback) {
-        appSync.getRideDPs(rideID, cb)
+        appSync.getRideDPsForRide(rideID, cb)
     }
 }

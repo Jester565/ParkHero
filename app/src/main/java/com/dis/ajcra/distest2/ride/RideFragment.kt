@@ -209,7 +209,7 @@ class RideFragment : CoroutineScope, Fragment() {
                     if (lastDow != null && lastDow != dow) {
                         hour += 24
                     }
-                    Log.d("RIDEDP", "X: " + (hour.toFloat() * 100f + (mins.toFloat()/60f) * 100f))
+                    Log.d("RIDEDP", "X: " + (hour.toFloat() * 100f + (mins.toFloat()/60f) * 100f) + "  Y: " + waitMins)
                     graphEntries.add(Entry(hour.toFloat() * 100f + (mins.toFloat()/60f) * 100f, waitMins.toFloat()))
                 }
             }

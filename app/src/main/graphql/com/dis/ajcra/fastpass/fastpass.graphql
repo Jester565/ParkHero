@@ -175,6 +175,7 @@ subscription RidesUpdated {
 
 query GetRideDPs($rideID:String) {
     getRideDPs(rideID:$rideID) {
+        rideID
         rideTimes {
             ...DisRideDP
         }

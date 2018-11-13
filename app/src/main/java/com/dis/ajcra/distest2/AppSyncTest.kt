@@ -354,7 +354,7 @@ class AppSyncTest {
         fun onError(ec: Int?, msg: String?)
     }
 
-    fun getRideDPs(rideID: String, cb: GetRideDPsCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.NETWORK_ONLY) {
+    fun getRideDPsForRide(rideID: String, cb: GetRideDPsCallback, fetcher: ResponseFetcher = AppSyncResponseFetchers.NETWORK_ONLY) {
         (client as AWSAppSyncClient).query(GetRideDPsQuery.builder().rideID(rideID).build())
                 .responseFetcher(fetcher)
                 .enqueue(object: GraphQLCall.Callback<GetRideDPsQuery.Data>() {
@@ -368,10 +368,10 @@ class AppSyncTest {
                             if (response.data() != null && response.data()?.rideDPs != null) {
                                 var dpResp = response.data()!!.rideDPs!!
                                 var disRideDPs = DisRideDPs()
-                                for (dp in dpResp.rideTimes()!!) {
+                                for (dp in dpResp[0].rideTimes()!!) {
                                     disRideDPs.rideDPs.add(dp.fragments().disRideDP())
                                 }
-                                for (dp in dpResp.predictTimes()!!) {
+                                for (dp in dpResp[0].predictTimes()!!) {
                                     disRideDPs.predictedDPs.add(dp.fragments().disRideDP())
                                 }
                                 cb.onResponse(disRideDPs)
